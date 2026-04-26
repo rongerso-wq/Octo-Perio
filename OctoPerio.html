@@ -1,0 +1,1535 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'none'"/>
+  <meta name="referrer" content="no-referrer"/>
+  <title>OctoPerio — כלי תמיכה קלינית פריו-אימפלנט | רמב"ם</title>
+  <link href="vendor/fonts/google-fonts.css" rel="stylesheet"/>
+  <script src="vendor/react.production.min.js"></script>
+  <script src="vendor/react-dom.production.min.js"></script>
+  <script src="vendor/babel.min.js"></script>
+  <script src="vendor/tailwind.min.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            perio: {
+              bg: '#060D14', surface: '#0C1A28', panel: '#0F2035',
+              border: '#1A3050', accent: '#2DD4BF', accentDim: '#1A8A7B',
+              text: '#E2E8F0', textDim: '#94A3B8', muted: '#64748B',
+            }
+          },
+          fontFamily: {
+            heb: ['Heebo','Arial','sans-serif'],
+            en:  ['Inter','system-ui','sans-serif'],
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;}
+    html{font-family:'Heebo',Arial,sans-serif;}
+    body{background:#060D14;color:#E2E8F0;min-height:100vh;}
+    ::-webkit-scrollbar{width:5px;height:5px;}
+    ::-webkit-scrollbar-track{background:#0C1A28;}
+    ::-webkit-scrollbar-thumb{background:#1A3050;border-radius:4px;}
+
+    .field-input{
+      background:#0C1A28;border:1px solid #1A3050;border-radius:8px;
+      color:#E2E8F0;font-family:'Heebo',Arial,sans-serif;
+      font-size:.875rem;padding:8px 12px;width:100%;transition:border-color .15s;
+    }
+    .field-input:focus{outline:none;border-color:#2DD4BF;box-shadow:0 0 0 3px rgba(45,212,191,.12);}
+    select.field-input option{background:#0C1A28;}
+    input[type="number"].field-input,input[type="date"].field-input{direction:ltr;text-align:left;font-family:'Inter',sans-serif;}
+
+    .card{background:#0C1A28;border:1px solid #1A3050;border-radius:16px;padding:20px;}
+    .card-title{font-size:.68rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#2DD4BF;margin-bottom:14px;}
+
+    .tab-btn{padding:12px 22px;font-weight:700;font-size:.82rem;border-bottom:2px solid transparent;
+      color:#64748B;cursor:pointer;transition:all .15s;white-space:nowrap;
+      background:none;border-top:none;border-left:none;border-right:none;font-family:'Heebo',Arial,sans-serif;}
+    .tab-btn:hover{color:#94A3B8;}
+    .tab-btn:focus-visible{outline:none;box-shadow:inset 0 0 0 2px #2DD4BF;border-radius:6px;}
+    .tab-active{border-bottom-color:#2DD4BF!important;color:#2DD4BF!important;}
+
+    button:focus-visible{outline:2px solid #2DD4BF;outline-offset:2px;}
+
+    .reasoning-row{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid #0F2035;}
+    .reasoning-row:last-child{border-bottom:none;}
+
+    .clinical-num{direction:ltr;font-family:'Inter',system-ui,sans-serif;font-variant-numeric:tabular-nums;}
+
+    .author-signature{
+      position:fixed;bottom:14px;
+      inset-inline-end:18px;
+      z-index:50;pointer-events:none;
+      font-family:'Caveat','Heebo',cursive;
+      font-weight:600;font-size:1.05rem;
+      direction:ltr;
+      color:#5EEAD4;opacity:.42;
+      letter-spacing:.01em;
+      text-shadow:0 1px 8px rgba(45,212,191,.18);
+      transition:opacity .25s ease;
+      user-select:none;-webkit-user-select:none;
+      white-space:nowrap;
+      display:flex;align-items:baseline;gap:6px;
+    }
+    .author-signature:hover{opacity:.88;}
+    .author-signature .sig-prefix{
+      font-family:'Inter',sans-serif;font-weight:400;
+      font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;
+      color:#64748B;
+    }
+    .author-signature .sig-name{
+      font-size:1.25rem;line-height:1;
+      background:linear-gradient(95deg,#5EEAD4 0%,#2DD4BF 60%,#0EA5A0 100%);
+      -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+    }
+    @media (max-width:520px){
+      .author-signature{bottom:8px;inset-inline-end:10px;}
+      .author-signature .sig-prefix{display:none;}
+      .author-signature .sig-name{font-size:1.05rem;}
+    }
+
+    .fade-in{animation:fadeIn .22s ease;}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(7px);}to{opacity:1;transform:translateY(0);}}
+
+    textarea.field-input{resize:vertical;min-height:340px;line-height:1.75;font-size:.82rem;}
+
+    .print-only{display:none;}
+
+    @media (max-width:780px){
+      .idra-grid{grid-template-columns:1fr!important;}
+    }
+
+    @media print{
+      *,*::before,*::after{
+        background:transparent!important;color:#000!important;
+        box-shadow:none!important;text-shadow:none!important;
+        -webkit-print-color-adjust:exact;print-color-adjust:exact;color-adjust:exact;
+      }
+      .no-print,textarea.field-input{display:none!important;}
+      .print-only{display:block!important;}
+      html,body{background:#fff!important;}
+      .card{background:#fff!important;border:1px solid #cbd5e1!important;page-break-inside:avoid;border-radius:6px!important;padding:14px!important;margin-bottom:10px!important;}
+      .card-title{color:#334155!important;border-bottom:1px solid #cbd5e1;padding-bottom:4px;margin-bottom:8px;font-size:9pt!important;}
+      .reasoning-row{border-bottom:1px solid #e2e8f0!important;}
+      .print-letter{
+        font-family:'Heebo',Arial,sans-serif;
+        font-size:11pt;line-height:1.65;
+        white-space:pre-wrap;word-break:break-word;
+        padding:0;margin:0;color:#000;
+      }
+      .print-header{
+        border-bottom:2px solid #1A3050;padding-bottom:6mm;margin-bottom:8mm;
+        font-family:'Heebo',Arial,sans-serif;
+      }
+      .print-header h1{font-size:16pt;font-weight:800;margin:0 0 2mm;}
+      .print-header .meta{font-size:10pt;color:#475569!important;}
+      .field-input{border:1px solid #cbd5e1!important;background:#fff!important;color:#000!important;}
+      @page{margin:18mm;size:A4;}
+    }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useMemo, useCallback } = React;
+
+/* ─── BILINGUAL STRINGS ───────────────────────────────────────────────── */
+const S = {
+  he: {
+    appSub:'כלי תמיכה קלינית פריו-אימפלנט', rambam:'רמב"ם | פריודונטולוגיה',
+    tabInput:'טופס קליני', tabDx:'אבחנה', tabIDRA:'IDRA', tabOut:'פלט מקצועי',
+    secPt:'פרטי מטופל', ptName:'שם מלא', ptDOB:'תאריך לידה', ptGender:'מגדר',
+    gM:'זכר', gF:'נקבה', gO:'אחר',
+    patientID:'תעודת זהות', idInvalid:'ת"ז לא תקפה (כשל ספרת ביקורת)',
+    mrn:'מס׳ מטופל (Rambam MRN)',
+    secRecords:'חתימה ותיוק (חוזר מנכ"ל 2/2012)',
+    residentName:'שם מתמחה/רופא מבצע', licenseNo:'מס׳ רישיון',
+    attendingName:'שם רופא בכיר חתום', attendingLicense:'רישיון רופא בכיר',
+    secCaseType:'סוג מקרה (טריאז׳ Tonetti 2018)',
+    caseType:'סוג מקרה', ctAuto:'אוטומטי', ctHealth:'בריאות פריודונטלית',
+    ctGingivitis:'דלקת חניכיים', ctNPD:'מחלה פריודונטלית נמקית (NPD)',
+    ctEndoPerio:'נגע אנדו-פריו', ctPerio:'פריודונטיטיס',
+    txStatus:'מצב טיפולי (Chapple 2018)',
+    txUntreated:'לא טופל', txTherapy:'בטיפול פעיל',
+    txStable:'יציב (Stable)', txRemission:'בהפוגה (Remission)', txUnstable:'לא יציב (Unstable)',
+    icdLabel:'קוד ICD-10',
+    secSys:'גורמי סיכון מערכתיים', smoking:'עישון (סיגריות / יום)',
+    hba1c:'HbA1c (%)', smokeNote:'≥10 → Grade C', hba1cNote:'≥7.0% → Grade C',
+    packYears:'Pack-Years (חבילות-שנה)', packYearsNote:'מינון מצטבר — סיכון לפריו-אימפלנטיטיס',
+    secPerio:'פרמטרים פריודונטליים',
+    calWorst:'CAL גרוע ביותר (מ"מ)', rbl:'RBL רדיוגרפי (%)',
+    maxPD:'עומק בדיקה מרבי — PD (מ"מ)', vbl:'אובדן עצם אנכי — VBL (מ"מ)',
+    furc:'מעורבות פיפורקציה', mob:'ניידות שיניים',
+    bop:'BOP (%)', tLost:'שיניים אבודות (פריודונטיטיס)',
+    tAffected:'שיניים מעורבות (%)', mastDys:'כשל לעיסתי',
+    secIDRA:'פרמטרי IDRA (שתלים)',
+    histPerioL:'היסטוריית פריודונטיטיס', pdSitesL:'אתרים עם PD ≥5 מ"מ',
+    blAgeL:'יחס BL/גיל (אוטומטי)', suspL:'רגישות לפריודונטיטיס',
+    sptL:'ציות ל-SPT', restL:'שוליים רסטורטיביים', cleanL:'נקיון הפרוטזה',
+    f0:'ללא (Class 0)', f1:'Class I', f2:'Class II', f3:'Class III',
+    m0:'תקין (Degree 0)', m1:'Degree 1', m2:'Degree 2', m3:'Degree 3',
+    hp1:'ללא היסטוריה', hp2:'היסטוריה / מטופל', hp3:'פעיל',
+    pd1:'0 אתרים', pd2:'1–4 אתרים', pd3:'≥5 אתרים',
+    susp1:'נמוך / יציב', susp2:'בינוני', susp3:'גבוה',
+    spt1:'קבוע', spt2:'לא קבוע', spt3:'ללא',
+    rm1:'על-חניכית', rm2:'ברמת החניכית', rm3:'תת-חניכית',
+    cl1:'בקלות', cl2:'בקושי', cl3:'לא ניתן לניקוי',
+    btnCompute:'חשב אבחנה', btnComputeDisabled:'יש להזין CAL או %RBL',
+    btnCopy:'העתק מכתב', btnCopied:'הועתק!',
+    btnPrint:'הדפסה', btnLang:'EN',
+    tabRefs:'מקורות', refsTitle:'מקורות וקישורים מקצועיים',
+    refsSubtitle:'כל אלגוריתם וערך-סף בכלי מבוסס על המקור המתאים. לחץ לפתיחת המאמר.',
+    refsUsedFor:'בשימוש ב-', refsOpen:'פתח מקור',
+    refsDisclaim:'המידע באתר הוא כלי תמיכה קלינית בלבד ואינו מחליף שיקול דעת קליני. כל החלטה טיפולית באחריות הרופא המטפל.',
+    extLabel:'היקף', localized:'מוקדי (<30%)', generalized:'מוכלל (≥30%)', undef:'לא הוגדר',
+    reasonTitle:'נימוק קליני',
+    rCAL:'CAL גרוע ביותר', rRBL:'%RBL',
+    rBase:'Stage בסיסי', rComplex:'שדרוגי מורכבות',
+    rFinalStage:'Stage סופי', rGScore:'Grade Score (%RBL / גיל)',
+    rGMod:'שדרוגי Grade', rFinalGrade:'Grade סופי', rExtent:'היקף מחלה',
+    idraTitle:'הערכת סיכון לשתלים — IDRA',
+    idraVec:'וקטור', idraScoreH:'ציון', idraZone:'איזור', idraRiskH:'רמת סיכון',
+    idraLow:'סיכון נמוך', idraMod:'סיכון בינוני', idraHigh:'סיכון גבוה',
+    idraLowD:'ניתן לשקול שתלים בתנאים מתאימים',
+    idraModD:'נדרש ייצוב ומעקב הדוק לפני שתלים',
+    idraHighD:'יש לייצב מחלה פריודונטלית לפני כל שיקול לשתלים',
+    diagTitle:'אבחנה לתיק הרפואי', letterTitle:'מכתב הפנייה',
+    noData:'יש להזין נתונים בטופס הקליני תחילה',
+    sptInt:'מרווח SPT מומלץ',
+    sptHigh:'כל 3 חודשים', sptMod:'כל 6 חודשים', sptLow:'כל 12 חודשים',
+    sptSrc:'מבוסס Heitz-Mayfield 2020',
+    secPI:'אבחנה פריו-אימפלנט (Berglundh 2018)',
+    piHas:'למטופל יש שתלים?', piYes:'כן', piNo:'לא',
+    piBOPSup:'BOP/הפרשה מוגלתית סביב השתל',
+    piBL:'אובדן עצם רדיוגרפי (מ"מ)',
+    piPDC:'שינוי PD מקו הבסיס (מ"מ)',
+    piHasBaseline:'קיים צילום בסיס (1 שנה לאחר העמסה)',
+    piTitle:'מצב פריו-אימפלנט',
+    piHealth:'בריאות פריו-אימפלנט',
+    piMucositis:'מוקוזיטיס פריו-אימפלנט',
+    piPeriImpl:'פריו-אימפלנטיטיס',
+    piHealthD:'אין סימני דלקת — המשך SPT שגרתי',
+    piMucositisD:'דלקת רקמה רכה ללא אובדן עצם — נדרשת התערבות לא-ניתוחית',
+    piPeriImplD:'דלקת + אובדן עצם — נדרשת התערבות ניתוחית/לא-ניתוחית מבוססת ראיות',
+    piNotApplicable:'אין שתלים — לא רלוונטי',
+  },
+  en: {
+    appSub:'Perio-Implant Clinical Decision Support', rambam:'Rambam | Periodontology',
+    tabInput:'Clinical Input', tabDx:'Diagnosis', tabIDRA:'IDRA', tabOut:'Output',
+    secPt:'Patient Details', ptName:'Full Name', ptDOB:'Date of Birth', ptGender:'Gender',
+    gM:'Male', gF:'Female', gO:'Other',
+    patientID:'National ID', idInvalid:'Invalid ID (checksum failed)',
+    mrn:'Rambam MRN',
+    secRecords:'Signing & Records (MoH 2/2012)',
+    residentName:'Resident / Treating Doctor', licenseNo:'License No.',
+    attendingName:'Attending Physician', attendingLicense:'Attending License No.',
+    secCaseType:'Case Type (Tonetti 2018 triage)',
+    caseType:'Case Type', ctAuto:'Auto', ctHealth:'Periodontal Health',
+    ctGingivitis:'Gingivitis', ctNPD:'Necrotizing Periodontal Disease (NPD)',
+    ctEndoPerio:'Endo-Perio Lesion', ctPerio:'Periodontitis',
+    txStatus:'Treatment Status (Chapple 2018)',
+    txUntreated:'Untreated', txTherapy:'Active Therapy',
+    txStable:'Stable', txRemission:'In Remission', txUnstable:'Unstable',
+    icdLabel:'ICD-10 Code',
+    secSys:'Systemic Risk Factors', smoking:'Smoking (cigarettes/day)',
+    hba1c:'HbA1c (%)', smokeNote:'≥10 → Grade C', hba1cNote:'≥7.0% → Grade C',
+    packYears:'Pack-Years', packYearsNote:'Cumulative dose — peri-implantitis risk',
+    secPerio:'Periodontal Parameters',
+    calWorst:'Worst-site CAL (mm)', rbl:'Radiographic Bone Loss — RBL (%)',
+    maxPD:'Max Probing Depth — PD (mm)', vbl:'Vertical Bone Loss — VBL (mm)',
+    furc:'Furcation Involvement', mob:'Tooth Mobility',
+    bop:'BOP (%)', tLost:'Teeth Lost (periodontitis)',
+    tAffected:'Teeth Affected (%)', mastDys:'Masticatory Dysfunction',
+    secIDRA:'IDRA Parameters (Implants)',
+    histPerioL:'History of Periodontitis', pdSitesL:'Sites with PD ≥5mm',
+    blAgeL:'BL/Age Ratio (auto)', suspL:'2018 Perio Susceptibility',
+    sptL:'SPT Compliance', restL:'Restorative Margin', cleanL:'Prosthesis Cleanability',
+    f0:'None (Class 0)', f1:'Class I', f2:'Class II', f3:'Class III',
+    m0:'Normal (Degree 0)', m1:'Degree 1', m2:'Degree 2', m3:'Degree 3',
+    hp1:'No history', hp2:'History / Treated', hp3:'Active',
+    pd1:'0 sites', pd2:'1–4 sites', pd3:'≥5 sites',
+    susp1:'Low / Stable', susp2:'Moderate', susp3:'High',
+    spt1:'Regular', spt2:'Irregular', spt3:'None',
+    rm1:'Supragingival', rm2:'At margin', rm3:'Subgingival',
+    cl1:'Easily cleanable', cl2:'Difficult to clean', cl3:'Not cleanable',
+    btnCompute:'Compute Diagnosis', btnComputeDisabled:'Enter CAL or %RBL to continue',
+    btnCopy:'Copy Letter', btnCopied:'Copied!',
+    btnPrint:'Print', btnLang:'עב',
+    tabRefs:'References', refsTitle:'Sources & Professional Links',
+    refsSubtitle:'Every algorithm and threshold in this tool is anchored to the source paper. Click to open.',
+    refsUsedFor:'Used for: ', refsOpen:'Open source',
+    refsDisclaim:'This tool is clinical decision support only and does not replace clinical judgement. All treatment decisions remain the responsibility of the treating clinician.',
+    extLabel:'Extent', localized:'Localized (<30%)', generalized:'Generalized (≥30%)', undef:'Not Defined',
+    reasonTitle:'Clinical Reasoning',
+    rCAL:'Worst-site CAL', rRBL:'%RBL',
+    rBase:'Base Stage', rComplex:'Complexity Upgrades',
+    rFinalStage:'Final Stage', rGScore:'Grade Score (%RBL / Age)',
+    rGMod:'Grade Modifiers', rFinalGrade:'Final Grade', rExtent:'Disease Extent',
+    idraTitle:'Implant Disease Risk Assessment — IDRA',
+    idraVec:'Vector', idraScoreH:'Score', idraZone:'Zone', idraRiskH:'Risk Level',
+    idraLow:'Low Risk', idraMod:'Moderate Risk', idraHigh:'High Risk',
+    idraLowD:'Implants may be considered under appropriate conditions',
+    idraModD:'Stabilization and close monitoring required before implants',
+    idraHighD:'Periodontal disease must be stabilized before any implant consideration',
+    diagTitle:'Diagnosis for Records', letterTitle:'Referral Letter',
+    noData:'Please enter clinical data in the Clinical Input tab first',
+    sptInt:'Recommended SPT Interval',
+    sptHigh:'Every 3 months', sptMod:'Every 6 months', sptLow:'Every 12 months',
+    sptSrc:'Per Heitz-Mayfield 2020',
+    secPI:'Peri-Implant Diagnosis (Berglundh 2018)',
+    piHas:'Patient has implants?', piYes:'Yes', piNo:'No',
+    piBOPSup:'BOP / Suppuration at implant',
+    piBL:'Radiographic Bone Loss (mm)',
+    piPDC:'PD Change vs Baseline (mm)',
+    piHasBaseline:'Baseline radiograph (1-yr post-loading) available',
+    piTitle:'Peri-Implant Status',
+    piHealth:'Peri-Implant Health',
+    piMucositis:'Peri-Implant Mucositis',
+    piPeriImpl:'Peri-Implantitis',
+    piHealthD:'No inflammation — continue routine SPT',
+    piMucositisD:'Soft-tissue inflammation, no bone loss — non-surgical intervention required',
+    piPeriImplD:'Inflammation with bone loss — evidence-based surgical/non-surgical intervention required',
+    piNotApplicable:'No implants — not applicable',
+  }
+};
+
+/* ─── PROFESSIONAL REFERENCES ────────────────────────────────────────────── */
+const REFERENCES = [
+  {
+    id:'tonetti2018',
+    authors:'Tonetti MS, Greenwell H, Kornman KS',
+    year:2018,
+    title:'Staging and grading of periodontitis: framework and proposal of a new classification and case definition',
+    journal:'J Periodontol 89 Suppl 1:S159–S172',
+    pmid:'29926952',
+    usedHe:'אלגוריתם Staging & Grading; Grade Score = %RBL/גיל',
+    usedEn:'Staging & Grading algorithm; Grade Score = %RBL/Age',
+    url:'https://pubmed.ncbi.nlm.nih.gov/29926952/'
+  },
+  {
+    id:'papapanou2018',
+    authors:'Papapanou PN, Sanz M, et al.',
+    year:2018,
+    title:'Periodontitis: Consensus report — 2017 World Workshop on the Classification of Periodontal and Peri-Implant Diseases and Conditions',
+    journal:'J Clin Periodontol 45 Suppl 20:S162–S170',
+    pmid:'29926490',
+    usedHe:'הגדרת מקרה פריודונטיטיס וקריטריונים לסיווג',
+    usedEn:'Periodontitis case definition & complexity criteria',
+    url:'https://pubmed.ncbi.nlm.nih.gov/29926490/'
+  },
+  {
+    id:'chapple2018',
+    authors:'Chapple ILC, Mealey BL, et al.',
+    year:2018,
+    title:'Periodontal health and gingival diseases and conditions on an intact and a reduced periodontium: Consensus report — 2017 World Workshop',
+    journal:'J Periodontol 89 Suppl 1:S74–S84',
+    pmid:'29926944',
+    usedHe:'מצב טיפולי — Stable / Remission / Unstable',
+    usedEn:'Treatment status — Stable / Remission / Unstable',
+    url:'https://pubmed.ncbi.nlm.nih.gov/29926944/'
+  },
+  {
+    id:'berglundh2018',
+    authors:'Berglundh T, Armitage G, et al.',
+    year:2018,
+    title:'Peri-implant diseases and conditions: Consensus report — 2017 World Workshop',
+    journal:'J Clin Periodontol 45 Suppl 20:S286–S291',
+    pmid:'29926948',
+    usedHe:'אבחנת מצב פריו-אימפלנט (בריאות / מוקוזיטיס / פריו-אימפלנטיטיס)',
+    usedEn:'Peri-implant case definitions (health / mucositis / peri-implantitis)',
+    url:'https://pubmed.ncbi.nlm.nih.gov/29926948/'
+  },
+  {
+    id:'heitzmayfield2020',
+    authors:'Heitz-Mayfield LJA, Heitz F, Lang NP',
+    year:2020,
+    title:'Implant Disease Risk Assessment IDRA — a tool for preventing peri-implant disease',
+    journal:'Periodontol 2000',
+    pmid:'32780477',
+    usedHe:'IDRA — אוקטגון 8-וקטורים, מרווחי SPT (3/6/12 חודשים)',
+    usedEn:'IDRA 8-vector octagon; risk-titrated SPT recall (3/6/12 months)',
+    url:'https://pubmed.ncbi.nlm.nih.gov/32780477/'
+  },
+  {
+    id:'sanz2020',
+    authors:'Sanz M, Herrera D, Kebschull M, et al.',
+    year:2020,
+    title:'Treatment of stage I–III periodontitis — The EFP S3 level clinical practice guideline',
+    journal:'J Clin Periodontol 47 Suppl 22:4–60',
+    pmid:'32383274',
+    doi:'10.1111/jcpe.13290',
+    usedHe:'המלצות טיפול שלב 1–4 (Step 1: התנהגות; Step 2: SRP; Step 3: ניתוח; Step 4: SPT)',
+    usedEn:'Step 1–4 treatment recommendations (behavioural → SRP → surgery → SPT)',
+    url:'https://pubmed.ncbi.nlm.nih.gov/32383274/'
+  },
+  {
+    id:'herrera2022',
+    authors:'Herrera D, Sanz M, Kebschull M, et al.',
+    year:2022,
+    title:'Treatment of stage IV periodontitis — The EFP S3 level clinical practice guideline',
+    journal:'J Clin Periodontol 49 Suppl 24:4–71',
+    pmid:'35688447',
+    doi:'10.1111/jcpe.13639',
+    usedHe:'ניהול רב-תחומי ל-Stage IV (אורתודונטיה / פרוסטודונטיה / סד-לעיסה)',
+    usedEn:'Multidisciplinary Stage IV management (orthodontic / prosthodontic / occlusal splint)',
+    url:'https://pubmed.ncbi.nlm.nih.gov/35688447/'
+  },
+  {
+    id:'icd10',
+    authors:'World Health Organization',
+    year:2019,
+    title:'ICD-10 — International Statistical Classification of Diseases and Related Health Problems',
+    journal:'Chapter K05 (Gingivitis & periodontal diseases) · K04.7 · A69.1',
+    usedHe:'מיפוי קודי ICD-10 (K05.31/32/33, K05.10, A69.1, K04.7, Z01.20)',
+    usedEn:'ICD-10 code mapping (K05.31/32/33, K05.10, A69.1, K04.7, Z01.20)',
+    url:'https://icd.who.int/browse10/2019/en#/K05'
+  },
+  {
+    id:'mohil2012',
+    authors:'משרד הבריאות — מדינת ישראל',
+    year:2012,
+    title:'חוזר מנכ"ל 2/2012 — ניהול הרשומה הרפואית',
+    journal:'מינהל רפואה',
+    usedHe:'דרישת תעודת זהות, חתימת רופא מבצע ורופא בכיר על מסמך קליני',
+    usedEn:'Israeli MoH requirement for patient national ID + treating + attending clinician signatures',
+    url:'https://www.gov.il/he/departments/ministry_of_health'
+  }
+];
+
+/* ─── IDRA AXES ──────────────────────────────────────────────────────────── */
+const AXES = [
+  'History of\nPeriodontitis','BOP %','PD ≥5mm\nSites',
+  'BL/Age\nRatio','Perio\nSusc.','SPT\nCompliance',
+  'Restorative\nMargin','Cleanability',
+];
+
+/* ─── CORE ALGORITHMS ────────────────────────────────────────────────────── */
+function toRoman(n){ return ['','I','II','III','IV'][n]||'?'; }
+
+function computeDiagnosis({ calWorst,rblPercent,maxPD,vbl,furcation,mobility,
+    teethLost,teethAffected,mastDys,smokingCigs,hba1c,age }){
+  const cal = parseFloat(calWorst), rbl = parseFloat(rblPercent);
+  if(isNaN(cal)||isNaN(rbl)) return null;
+  const pd = parseFloat(maxPD), vblV = parseFloat(vbl);
+  const steps = [];
+
+  // Stage from CAL
+  let stageCAL = cal<2?1:cal<=4?2:3;
+  steps.push({ key:'rCAL', val:`${cal}mm → Stage ${toRoman(stageCAL)}` });
+
+  // Stage from RBL
+  let stageRBL = rbl<15?1:rbl<=33?2:3;
+  steps.push({ key:'rRBL', val:`${rbl}% → Stage ${toRoman(stageRBL)}` });
+
+  // Base
+  let stage = Math.max(stageCAL,stageRBL);
+  steps.push({ key:'rBase', val:`Stage ${toRoman(stage)}` });
+
+  // Complexity upgrades
+  const cx=[];
+  if(!isNaN(pd)&&pd>=6&&stage<3){ stage=3; cx.push(`PD ${pd}mm ≥6mm → III`); }
+  if(!isNaN(vblV)&&vblV>=3&&stage<3){ stage=3; cx.push(`VBL ${vblV}mm ≥3mm → III`); }
+  if(furcation==='2'&&stage<3){ stage=3; cx.push('Furcation II → III'); }
+  if(furcation==='3'&&stage<4){ stage=4; cx.push('Furcation III → IV'); }
+  if(parseInt(mobility)>=2&&stage<4){ stage=4; cx.push(`Mobility ${mobility} → IV`); }
+  if(mastDys&&stage<4){ stage=4; cx.push('Masticatory dysfunction → IV'); }
+  const tl=parseInt(teethLost)||0;
+  if(tl>=5&&stage<4){ stage=4; cx.push(`${tl} teeth lost → IV`); }
+  else if(tl>=1&&tl<=4&&stage<3){ stage=3; cx.push(`${tl} teeth lost → III`); }
+  if(cx.length) steps.push({ key:'rComplex', val:cx.join(' | ') });
+  steps.push({ key:'rFinalStage', val:`Stage ${toRoman(stage)}`, hl:true });
+
+  // Grade
+  let grade='B', gradeScore=null;
+  if(age&&age>0){
+    gradeScore=rbl/age;
+    grade=gradeScore<0.25?'A':gradeScore<=1.0?'B':'C';
+    steps.push({ key:'rGScore', val:`${rbl}/${age} = ${gradeScore.toFixed(3)} → Grade ${grade}` });
+  } else {
+    steps.push({ key:'rGScore', val:'Age unknown — Grade B (default)' });
+  }
+
+  const mods=[];
+  const cigs=parseInt(smokingCigs)||0;
+  const hval=parseFloat(hba1c);
+  if(cigs>=10&&grade!=='C'){ grade='C'; mods.push(`Smoking ${cigs} cig/day ≥10 → C`); }
+  if(!isNaN(hval)&&hval>=7.0&&grade!=='C'){ grade='C'; mods.push(`HbA1c ${hval}% ≥7.0% → C`); }
+  if(mods.length) steps.push({ key:'rGMod', val:mods.join(' | ') });
+  steps.push({ key:'rFinalGrade', val:`Grade ${grade}`, hl:true });
+
+  const pct=parseFloat(teethAffected);
+  const extent=isNaN(pct)?'undef':pct<30?'localized':'generalized';
+  steps.push({ key:'rExtent', val:extent });
+
+  return { stage:toRoman(stage), stageN:stage, grade, extent, gradeScore, steps };
+}
+
+function computeIDRARisk(scores){
+  const any3=scores.some(s=>s===3), c2=scores.filter(s=>s===2).length;
+  if(!any3&&scores.every(s=>s===1)) return 'LOW';
+  if(any3||c2>=3) return 'HIGH';
+  return 'MODERATE';
+}
+
+/* Peri-Implant case definitions (Berglundh et al. 2018, J Clin Periodontol — PMID 29926948).
+   Health: no BOP/SUP, no progressive bone loss.
+   Mucositis: BOP/SUP present, no bone loss beyond physiologic remodeling.
+   Peri-implantitis: BOP/SUP + radiographic BL ≥3 mm (no baseline) OR ≥2 mm vs baseline 1-yr post-loading film. */
+function computePeriImplantDx({hasImplants, bopSup, bl, hasBaseline}){
+  if(!hasImplants) return null;
+  if(!bopSup) return 'health';
+  const blN = parseFloat(bl);
+  if(isNaN(blN) || blN <= 0) return 'mucositis';
+  const thresh = hasBaseline ? 2 : 3;
+  return blN >= thresh ? 'periimplantitis' : 'mucositis';
+}
+
+/* SPT interval titrated to IDRA risk (Heitz-Mayfield et al. 2020, Periodontol 2000 — PMID 32780477). */
+function sptIntervalKey(risk){
+  return risk==='HIGH' ? 'sptHigh' : risk==='LOW' ? 'sptLow' : 'sptMod';
+}
+
+/* Israeli National ID — 9 digits, mod-10 checksum (Luhn-like, alternating ×1/×2, sum digits if >9). */
+function validIsraeliID(id){
+  if(!/^\d{9}$/.test(id||'')) return false;
+  let sum=0;
+  for(let i=0;i<9;i++){
+    let d=parseInt(id[i],10)*((i%2===0)?1:2);
+    if(d>9) d=Math.floor(d/10)+(d%10);
+    sum+=d;
+  }
+  return sum%10===0;
+}
+
+/* Auto case-type triage (Tonetti/Greenwell/Kornman 2018, J Periodontol — PMID 29926952).
+   Periodontitis case definition: interdental CAL ≥1 mm at ≥2 non-adjacent teeth. */
+function autoCaseType({calWorst, bopPercent}){
+  const cal=parseFloat(calWorst), bop=parseFloat(bopPercent);
+  if((isNaN(cal)||cal===0) && (isNaN(bop)||bop<10)) return 'health';
+  if((isNaN(cal)||cal===0) && bop>=10) return 'gingivitis';
+  return 'periodontitis';
+}
+
+/* Treatment-status auto-detect (Chapple 2018, J Periodontol — PMID 29926944).
+   Stable: BOP <10%, max PD ≤4 mm, no BOP at 4-mm sites, no sites ≥5 mm.
+   Remission: BOP <10%, residual PD ≥5 mm but no BOP.
+   Unstable: PD ≥6 mm, OR PD ≥5 mm with BOP. */
+function autoTxStatus({maxPD, bopPercent}){
+  const pd=parseFloat(maxPD), bop=parseFloat(bopPercent);
+  if(isNaN(pd)||isNaN(bop)) return 'untreated';
+  if(pd>=6) return 'unstable';
+  if(pd>=5 && bop>=10) return 'unstable';
+  if(pd>=5 && bop<10) return 'remission';
+  if(pd<=4 && bop<10) return 'stable';
+  return 'untreated';
+}
+
+/* ICD-10 mapping for AAP/EFP 2018 case types & stages. */
+function icd10For({caseType, stage}){
+  if(caseType==='health') return 'Z01.20';
+  if(caseType==='gingivitis') return 'K05.10';
+  if(caseType==='npd') return 'A69.1';
+  if(caseType==='endoPerio') return 'K04.7';
+  if(caseType==='periodontitis'){
+    if(stage==='I') return 'K05.31';
+    if(stage==='II') return 'K05.32';
+    if(stage==='III'||stage==='IV') return 'K05.33';
+    return 'K05.30';
+  }
+  return 'K05.6';
+}
+
+/* EFP S3 Stepwise Treatment (Sanz, Herrera et al. 2020, J Clin Periodontol — DOI 10.1111/jcpe.13290; PMID 32383274).
+   Stage IV: Herrera, Sanz, Kebschull et al. 2022 — DOI 10.1111/jcpe.13639. */
+function s3Steps({lang, stage, grade, extent, sptHe, sptEn}){
+  const he = lang==='he';
+  const adjAB = (grade==='C' && extent==='generalized');
+  const lines = [];
+  lines.push(he?'• שלב 1 — שינוי התנהגותי, OHI, הסרת רובד על-חניכי, הנחיית חדילה מעישון':
+                 '• Step 1 — Behavioural change, OHI, supragingival biofilm/calculus removal, smoking-cessation counselling');
+  lines.push(he?'• שלב 2 — אינסטרומנטציה תת-חניכית (SRP); הערכה מחדש לאחר 8–12 שבועות':
+                 '• Step 2 — Subgingival instrumentation (SRP); re-evaluation at 8–12 weeks');
+  if(adjAB) lines.push(he?'   ↳ שיקול תוספת אנטיביוטיקה סיסטמית (Stage III גנרליזד, Grade C, מטופל צעיר)':
+                            '   ↳ Consider adjunctive systemic antibiotics (Stage III generalized, Grade C, young patient)');
+  if(stage==='III'||stage==='IV') lines.push(he?'• שלב 3 — ניתוח פריודונטלי לכיסים שיוריים ≥6 מ"מ (resective/regenerative)':
+                                                  '• Step 3 — Periodontal surgery for residual pockets ≥6 mm (resective/regenerative)');
+  if(stage==='IV') lines.push(he?'• ניהול רב-תחומי — אורתודונטיה, פרוסטודונטיה, סד-לעיסה לפי הצורך (CPG Stage IV — Herrera 2022)':
+                                  '• Multidisciplinary management — orthodontic, prosthodontic, occlusal splint as indicated (Stage IV CPG, Herrera 2022)');
+  lines.push(he?`• שלב 4 — תחזוקה (SPT) ${sptHe} מבוסס IDRA`:
+                 `• Step 4 — Supportive Periodontal Therapy (SPT) ${sptEn} (IDRA-based)`);
+  return lines.join('\n');
+}
+
+/* ─── OCTAGON SVG HELPERS ────────────────────────────────────────────────── */
+const CX=230, CY=230;
+const ZONE_R={1:62,2:114,3:166}, LABEL_R=200;
+
+function axPt(i,r){
+  const a=(i*45-90)*Math.PI/180;
+  return {x:CX+r*Math.cos(a), y:CY+r*Math.sin(a)};
+}
+function pts(radii){ return radii.map((r,i)=>{ const p=axPt(i,r); return `${p.x},${p.y}`; }).join(' '); }
+function zonePts(r){ return pts(AXES.map(()=>r)); }
+function dataPts(scores){ return pts(scores.map(s=>ZONE_R[s]||ZONE_R[1])); }
+
+/* ─── REFERRAL LETTER ────────────────────────────────────────────────────── */
+function makeLetter({ lang,name,age,patientID,mrn,stage,grade,extent,caseType,txStatus,icd,
+  cal,rbl,pd,bop,cigs,packYears,hba1c,idraRisk,periDx,
+  residentName,licenseNo,attendingName,attendingLicense }){
+  const today=new Date().toLocaleDateString(lang==='he'?'he-IL':'en-GB',{year:'numeric',month:'long',day:'numeric'});
+  const extHe=extent==='localized'?'מוקדי':extent==='generalized'?'מוכלל':'—';
+  const extEn=extent==='localized'?'Localized':extent==='generalized'?'Generalized':'—';
+  const idraHe=idraRisk==='LOW'?'נמוך':idraRisk==='MODERATE'?'בינוני':'גבוה';
+  const idraEn=idraRisk==='LOW'?'Low':idraRisk==='MODERATE'?'Moderate':'High';
+  const cigsN=parseInt(cigs)||0;
+  const pyN=parseFloat(packYears);
+  const hval=parseFloat(hba1c);
+  const sptHe=idraRisk==='HIGH'?'כל 3 חודשים':idraRisk==='LOW'?'כל 12 חודשים':'כל 6 חודשים';
+  const sptEn=idraRisk==='HIGH'?'every 3 months':idraRisk==='LOW'?'every 12 months':'every 6 months';
+  const piHe={health:'בריאות פריו-אימפלנט',mucositis:'מוקוזיטיס פריו-אימפלנט',periimplantitis:'פריו-אימפלנטיטיס'};
+  const piEn={health:'Peri-Implant Health',mucositis:'Peri-Implant Mucositis',periimplantitis:'Peri-Implantitis'};
+  const ctHe={health:'בריאות פריודונטלית',gingivitis:'דלקת חניכיים',npd:'מחלה פריודונטלית נמקית',endoPerio:'נגע אנדו-פריו',periodontitis:'פריודונטיטיס'};
+  const ctEn={health:'Periodontal Health',gingivitis:'Gingivitis',npd:'Necrotizing Periodontal Disease',endoPerio:'Endo-Perio Lesion',periodontitis:'Periodontitis'};
+  const txHe={untreated:'לא טופל',therapy:'בטיפול פעיל',stable:'יציב',remission:'בהפוגה',unstable:'לא יציב'};
+  const txEn={untreated:'Untreated',therapy:'Active therapy',stable:'Stable',remission:'In remission',unstable:'Unstable'};
+  const isPerio = caseType==='periodontitis';
+
+  if(lang==='he'){
+    const dxLine = isPerio
+      ? `אבחנה: פריודונטיטיס Stage ${stage} Grade ${grade} — ${extHe} · ${txHe[txStatus]||'—'}`
+      : `אבחנה: ${ctHe[caseType]||'—'}`;
+    const recs = isPerio
+      ? s3Steps({lang:'he',stage,grade,extent,sptHe,sptEn})
+      : caseType==='gingivitis'
+        ? '• הסרת רובד וטרטר על-חניכי\n• הדרכת היגיינה אישית\n• הערכה מחדש לאחר 4–6 שבועות'
+        : caseType==='health'
+          ? '• המשך תחזוקה שגרתית כל 6–12 חודשים'
+          : caseType==='npd'
+            ? '• דחוף — דה-בריימנט עדין, אנטיביוטיקה סיסטמית, ייצוב מצב מערכתי'
+            : '• אבחנה משולבת אנדו-פריו: טיפול שורש + טיפול פריודונטלי, הערכה לאחר 6 שבועות';
+    return `מחלקת פריודונטולוגיה
+המרכז הרפואי רמב"ם, חיפה
+${today}
+
+לכבוד רופא/ת השיניים המטפל/ת,
+
+הרינו להפנות לטיפולך את המטופל/ת:
+שם: ${name||'_______________'}
+ת"ז: ${patientID||'_________'}${mrn?`\nמס׳ מטופל: ${mrn}`:''}
+גיל: ${age?`${age} שנים`:'___'}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+סיכום אבחנה פריודונטלית — AAP/EFP 2018
+
+${dxLine}
+ICD-10: ${icd||'—'}${isPerio?'':''}
+
+ממצאים עיקריים:
+• CAL גרוע ביותר: ${cal||'—'} מ"מ
+• אובדן עצם רדיוגרפי (RBL): ${rbl||'—'}%
+• עומק בדיקה מרבי (PD): ${pd||'—'} מ"מ
+• BOP: ${bop||'—'}%${cigsN>=10?`\n• עישון: ${cigsN} סיגריות/יום (Grade C)`:''}${!isNaN(pyN)&&pyN>0?`\n• מינון מצטבר: ${pyN} pack-years`:''}${!isNaN(hval)&&hval>=7.0?`\n• סוכרת: HbA1c ${hval}% — לא מאוזן (Grade C)`:''}
+
+הערכת סיכון לשתלים (IDRA): ${idraHe}${idraRisk==='HIGH'?'\n⚠ נדרש ייצוב פריודונטלי מלא לפני שיקול שתלים':''}${periDx?`\nאבחנה פריו-אימפלנט (Berglundh 2018): ${piHe[periDx]}`:''}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+המלצות טיפול (EFP S3 — Sanz/Herrera 2020):
+${recs}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+בברכת רפואה שלמה,
+
+${residentName||'דר׳ _______________'}
+מתמחה/רופא מבצע · רישיון: ${licenseNo||'_______________'}
+
+${attendingName?`רופא בכיר חתום: ${attendingName}\nרישיון: ${attendingLicense||'_______________'}`:'רופא בכיר חתום: _______________\nרישיון: _______________'}
+
+מחלקת פריודונטולוגיה — המרכז הרפואי רמב"ם
+חתימה: ____________   תאריך: ${today}
+
+[נוצר בעזרת OctoPerio — כלי תמיכה קלינית · ע"פ AAP/EFP 2018, EFP S3 CPG, Berglundh 2018, Heitz-Mayfield 2020]`.trim();
+  } else {
+    const dxLine = isPerio
+      ? `Diagnosis: Periodontitis Stage ${stage} Grade ${grade} — ${extEn} · ${txEn[txStatus]||'—'}`
+      : `Diagnosis: ${ctEn[caseType]||'—'}`;
+    const recs = isPerio
+      ? s3Steps({lang:'en',stage,grade,extent,sptHe,sptEn})
+      : caseType==='gingivitis'
+        ? '• Supragingival biofilm/calculus removal\n• Personalised oral hygiene instruction\n• Re-evaluation at 4–6 weeks'
+        : caseType==='health'
+          ? '• Continue routine maintenance every 6–12 months'
+          : caseType==='npd'
+            ? '• Urgent — gentle debridement, systemic antibiotics, address systemic status'
+            : '• Combined endo-perio: endodontic + periodontal therapy, re-evaluate at 6 weeks';
+    return `Department of Periodontology
+Rambam Health Care Campus, Haifa
+${today}
+
+Dear Colleague,
+
+We are referring to your care the following patient:
+Name: ${name||'_______________'}
+National ID: ${patientID||'_________'}${mrn?`\nMRN: ${mrn}`:''}
+Age: ${age?`${age} years`:'___'}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Periodontal Diagnosis Summary — AAP/EFP 2018
+
+${dxLine}
+ICD-10: ${icd||'—'}
+
+Key Findings:
+• Worst-site CAL: ${cal||'—'} mm
+• Radiographic Bone Loss (RBL): ${rbl||'—'}%
+• Max Probing Depth (PD): ${pd||'—'} mm
+• BOP: ${bop||'—'}%${cigsN>=10?`\n• Smoking: ${cigsN} cig/day (Grade C modifier)`:''}${!isNaN(pyN)&&pyN>0?`\n• Cumulative dose: ${pyN} pack-years`:''}${!isNaN(hval)&&hval>=7.0?`\n• Diabetes: HbA1c ${hval}% — uncontrolled (Grade C modifier)`:''}
+
+Implant Disease Risk Assessment (IDRA): ${idraEn}${idraRisk==='HIGH'?'\n⚠ Full periodontal stabilization required before implant consideration':''}${periDx?`\nPeri-Implant Diagnosis (Berglundh 2018): ${piEn[periDx]}`:''}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Treatment Recommendations (EFP S3 — Sanz/Herrera 2020):
+${recs}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Sincerely,
+
+${residentName||'Dr. _______________'}
+Resident / Treating clinician · License: ${licenseNo||'_______________'}
+
+${attendingName?`Attending: ${attendingName}\nLicense: ${attendingLicense||'_______________'}`:'Attending: _______________\nLicense: _______________'}
+
+Department of Periodontology — Rambam Health Care Campus
+Signature: ____________   Date: ${today}
+
+[Generated by OctoPerio — Clinical Decision Support · per AAP/EFP 2018, EFP S3 CPG, Berglundh 2018, Heitz-Mayfield 2020]`.trim();
+  }
+}
+
+/* ─── INLINE ICONS ────────────────────────────────────────────────────────── */
+const IconGlobe=()=>(
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/>
+    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+  </svg>
+);
+const IconPrint=()=>(
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="6 9 6 2 18 2 18 9"/>
+    <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+    <rect x="6" y="14" width="12" height="8"/>
+  </svg>
+);
+const IconCopy=()=>(
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+  </svg>
+);
+const IconCheck=()=>(
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="20 6 9 17 4 12"/>
+  </svg>
+);
+const IconTooth=()=>(
+  <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#2DD4BF" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 2C9 2 7 4 7 6.5c0 1.5.5 2.8 1 4.2L9 18c.3 1.5 1 2.5 3 2.5s2.7-1 3-2.5l1-7.3c.5-1.4 1-2.7 1-4.2C17 4 15 2 12 2z"/>
+    <path d="M9 8.5c1 .5 2 .7 3 .7s2-.2 3-.7" strokeWidth="1.2"/>
+  </svg>
+);
+
+/* ─── SMALL UI COMPONENTS ────────────────────────────────────────────────── */
+function FLabel({ label, note }){
+  return (
+    <div style={{marginBottom:4}}>
+      <label style={{fontSize:'.76rem',fontWeight:600,color:'#94A3B8'}}>{label}</label>
+      {note&&<span style={{fontSize:'.66rem',color:'#F59E0B',marginRight:8,marginLeft:6}}>{note}</span>}
+    </div>
+  );
+}
+function FInput({ label,note,type='text',value,onChange,min,max,step,placeholder }){
+  return (
+    <div style={{marginBottom:14}}>
+      <FLabel label={label} note={note}/>
+      <input className="field-input" type={type} value={value}
+        onChange={e=>onChange(e.target.value)}
+        min={min} max={max} step={step} placeholder={placeholder}/>
+    </div>
+  );
+}
+function FSelect({ label,note,value,onChange,opts }){
+  return (
+    <div style={{marginBottom:14}}>
+      <FLabel label={label} note={note}/>
+      <select className="field-input" value={value} onChange={e=>onChange(e.target.value)}>
+        {opts.map(o=><option key={o.v} value={o.v}>{o.l}</option>)}
+      </select>
+    </div>
+  );
+}
+function FCheck({ label,checked,onChange }){
+  return (
+    <div style={{marginBottom:14,display:'flex',alignItems:'center',gap:10}}>
+      <input type="checkbox" checked={checked} onChange={e=>onChange(e.target.checked)}
+        style={{width:16,height:16,accentColor:'#2DD4BF',cursor:'pointer',flexShrink:0}}/>
+      <span style={{fontSize:'.84rem',color:'#94A3B8',cursor:'pointer'}} onClick={()=>onChange(!checked)}>{label}</span>
+    </div>
+  );
+}
+function Card({ title,children,style }){
+  return (
+    <div className="card" style={style}>
+      {title&&<div className="card-title">{title}</div>}
+      {children}
+    </div>
+  );
+}
+
+/* ─── BADGE COMPONENTS ────────────────────────────────────────────────────── */
+const STAGE_C={I:{bg:'#1E1B4B',c:'#A5B4FC'},II:{bg:'#082038',c:'#7DD3FC'},III:{bg:'#2D1B00',c:'#FCD34D'},IV:{bg:'#2D0D0D',c:'#FCA5A5'}};
+const GRADE_C={A:{bg:'#052E16',c:'#4ADE80'},B:{bg:'#2D1B00',c:'#FCD34D'},C:{bg:'#2D0D0D',c:'#FCA5A5'}};
+const RISK_C={LOW:{bg:'#052E16',c:'#4ADE80'},MODERATE:{bg:'#2D1B00',c:'#FCD34D'},HIGH:{bg:'#2D0D0D',c:'#FCA5A5'}};
+
+function StageBadge({stage}){
+  const s=STAGE_C[stage]||{bg:'#0C1A28',c:'#E2E8F0'};
+  return (
+    <div style={{background:s.bg,color:s.c,fontFamily:'Inter,sans-serif',fontWeight:800,fontSize:'2.4rem',
+      borderRadius:16,padding:'14px 32px',textAlign:'center',border:`1px solid ${s.c}33`,direction:'ltr',minWidth:110}}>
+      <div style={{fontSize:'.6rem',fontWeight:600,letterSpacing:'.12em',opacity:.65,marginBottom:4}}>STAGE</div>
+      {stage}
+    </div>
+  );
+}
+function GradeBadge({grade}){
+  const g=GRADE_C[grade]||{bg:'#0C1A28',c:'#E2E8F0'};
+  return (
+    <div style={{background:g.bg,color:g.c,fontFamily:'Inter,sans-serif',fontWeight:800,fontSize:'2.4rem',
+      borderRadius:16,padding:'14px 32px',textAlign:'center',border:`1px solid ${g.c}33`,direction:'ltr',minWidth:110}}>
+      <div style={{fontSize:'.6rem',fontWeight:600,letterSpacing:'.12em',opacity:.65,marginBottom:4}}>GRADE</div>
+      {grade}
+    </div>
+  );
+}
+function RiskBadge({risk,label}){
+  const r=RISK_C[risk]||RISK_C.MODERATE;
+  return (
+    <div style={{background:r.bg,color:r.c,borderRadius:10,padding:'10px 20px',
+      fontWeight:700,fontSize:'1rem',border:`1px solid ${r.c}40`,display:'inline-block'}}>
+      {label}
+    </div>
+  );
+}
+
+/* ─── OCTAGON SVG ─────────────────────────────────────────────────────────── */
+function OctagonSVG({scores}){
+  const V=460;
+  return (
+    <svg viewBox={`0 0 ${V} ${V}`} style={{width:'100%',maxWidth:520,display:'block'}}>
+      <rect width={V} height={V} fill="#0C1A28" rx="12"/>
+      {/* Zone fills */}
+      <polygon points={zonePts(ZONE_R[3])} fill="#EF444418" stroke="#EF444438" strokeWidth="1"/>
+      <polygon points={zonePts(ZONE_R[2])} fill="#F59E0B14" stroke="#F59E0B28" strokeWidth="1"/>
+      <polygon points={zonePts(ZONE_R[1])} fill="#22C55E14" stroke="#22C55E2A" strokeWidth="1"/>
+      {/* Axis lines */}
+      {AXES.map((_,i)=>{ const e=axPt(i,ZONE_R[3]); return <line key={i} x1={CX} y1={CY} x2={e.x} y2={e.y} stroke="#1A3050" strokeWidth="1"/>; })}
+      {/* Data polygon */}
+      <polygon points={dataPts(scores)} fill="rgba(45,212,191,.16)" stroke="#2DD4BF" strokeWidth="2.2" strokeLinejoin="round"/>
+      {/* Score dots */}
+      {scores.map((s,i)=>{
+        const p=axPt(i,ZONE_R[s]||ZONE_R[1]);
+        const dc=s===1?'#22C55E':s===2?'#F59E0B':'#EF4444';
+        return <circle key={i} cx={p.x} cy={p.y} r="6" fill={dc} stroke="#060D14" strokeWidth="1.5"/>;
+      })}
+      {/* Axis labels */}
+      {AXES.map((ax,i)=>{
+        const p=axPt(i,LABEL_R); const ls=ax.split('\n'); const lh=14;
+        return (
+          <text key={i} x={p.x} y={p.y-(ls.length-1)*lh/2} textAnchor="middle" fontSize="12" fill="#CBD5E1" fontFamily="Inter,sans-serif" fontWeight="500">
+            {ls.map((l,j)=><tspan key={j} x={p.x} dy={j===0?0:lh}>{l}</tspan>)}
+          </text>
+        );
+      })}
+      {/* Center */}
+      <circle cx={CX} cy={CY} r="4" fill="#2DD4BF" opacity=".55"/>
+      {/* Zone labels inline */}
+      <text x={CX+(ZONE_R[1]+ZONE_R[1]*.0)*.55} y={CY-4} textAnchor="middle" fontSize="10" fill="#22C55EAA" fontFamily="Inter" fontWeight="700" letterSpacing="1">LOW</text>
+      <text x={CX+(ZONE_R[1]+ZONE_R[2])/2} y={CY-4} textAnchor="middle" fontSize="10" fill="#F59E0BAA" fontFamily="Inter" fontWeight="700" letterSpacing="1">MOD</text>
+      <text x={CX+(ZONE_R[2]+ZONE_R[3])/2} y={CY-4} textAnchor="middle" fontSize="10" fill="#EF4444AA" fontFamily="Inter" fontWeight="700" letterSpacing="1">HIGH</text>
+    </svg>
+  );
+}
+
+/* ─── REASONING PANEL ──────────────────────────────────────────────────────── */
+function ReasoningPanel({steps,t}){
+  const extMap={localized:t('localized'),generalized:t('generalized'),undef:t('undef')};
+  return (
+    <div>
+      {steps.map((st,i)=>{
+        const val=extMap[st.val]||st.val;
+        return (
+          <div key={i} className="reasoning-row"
+            style={st.hl?{background:'#0F2035',borderRadius:8,padding:'10px 12px',marginBottom:4}:{}}>
+            <div style={{width:22,height:22,borderRadius:'50%',
+              background:st.hl?'#2DD4BF':'#1A3050',color:st.hl?'#060D14':'#2DD4BF',
+              display:'flex',alignItems:'center',justifyContent:'center',
+              fontSize:'.62rem',fontWeight:800,fontFamily:'Inter',flexShrink:0,marginTop:1}}>
+              {i+1}
+            </div>
+            <div style={{flex:1}}>
+              <div style={{fontSize:'.72rem',color:'#64748B',marginBottom:2}}>{t(st.key)}</div>
+              <div style={{fontSize:'.86rem',fontFamily:'Inter,sans-serif',direction:'ltr',
+                color:st.hl?'#E2E8F0':'#CBD5E1',fontWeight:st.hl?700:400}}>
+                {val}
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ─── CLINICAL INPUT TAB ────────────────────────────────────────────────────── */
+function InputTab({st,set,t,idValid,onCompute}){
+  const furcOpts=[{v:'0',l:t('f0')},{v:'1',l:t('f1')},{v:'2',l:t('f2')},{v:'3',l:t('f3')}];
+  const ctOpts=[{v:'auto',l:t('ctAuto')},{v:'health',l:t('ctHealth')},{v:'gingivitis',l:t('ctGingivitis')},{v:'periodontitis',l:t('ctPerio')},{v:'npd',l:t('ctNPD')},{v:'endoPerio',l:t('ctEndoPerio')}];
+  const txOpts=[{v:'auto',l:t('ctAuto')},{v:'untreated',l:t('txUntreated')},{v:'therapy',l:t('txTherapy')},{v:'stable',l:t('txStable')},{v:'remission',l:t('txRemission')},{v:'unstable',l:t('txUnstable')}];
+  const mobOpts=[{v:'0',l:t('m0')},{v:'1',l:t('m1')},{v:'2',l:t('m2')},{v:'3',l:t('m3')}];
+  const hpOpts=[{v:'1',l:t('hp1')},{v:'2',l:t('hp2')},{v:'3',l:t('hp3')}];
+  const pdOpts=[{v:'1',l:t('pd1')},{v:'2',l:t('pd2')},{v:'3',l:t('pd3')}];
+  const suspOpts=[{v:'1',l:t('susp1')},{v:'2',l:t('susp2')},{v:'3',l:t('susp3')}];
+  const sptOpts=[{v:'1',l:t('spt1')},{v:'2',l:t('spt2')},{v:'3',l:t('spt3')}];
+  const rmOpts=[{v:'1',l:t('rm1')},{v:'2',l:t('rm2')},{v:'3',l:t('rm3')}];
+  const clOpts=[{v:'1',l:t('cl1')},{v:'2',l:t('cl2')},{v:'3',l:t('cl3')}];
+  const gOpts=[{v:'',l:'—'},{v:'male',l:t('gM')},{v:'female',l:t('gF')},{v:'other',l:t('gO')}];
+
+  return (
+    <div className="fade-in" style={{padding:'20px 16px',maxWidth:960,margin:'0 auto'}}>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))',gap:16,marginBottom:16}}>
+        <Card title={t('secPt')}>
+          <FInput label={t('ptName')} value={st.patientName} onChange={v=>set('patientName',v)} placeholder="—"/>
+          <FInput label={t('patientID')} note={!idValid?t('idInvalid'):''} value={st.patientID} onChange={v=>set('patientID',v)} placeholder="123456789" inputMode="numeric"/>
+          <FInput label={t('mrn')} value={st.mrn} onChange={v=>set('mrn',v)} placeholder="—"/>
+          <FInput label={t('ptDOB')} type="date" value={st.patientDOB} onChange={v=>set('patientDOB',v)}/>
+          <FSelect label={t('ptGender')} value={st.patientGender} onChange={v=>set('patientGender',v)} opts={gOpts}/>
+        </Card>
+        <Card title={t('secSys')}>
+          <FInput label={t('smoking')} note={t('smokeNote')} type="number" min="0" max="80" value={st.smokingCigs} onChange={v=>set('smokingCigs',v)} placeholder="0"/>
+          <FInput label={t('packYears')} note={t('packYearsNote')} type="number" min="0" max="200" step=".5" value={st.packYears} onChange={v=>set('packYears',v)} placeholder="0"/>
+          <FInput label={t('hba1c')} note={t('hba1cNote')} type="number" min="4" max="15" step=".1" value={st.hba1c} onChange={v=>set('hba1c',v)} placeholder="—"/>
+        </Card>
+      </div>
+
+      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))',gap:16,marginBottom:16}}>
+        <Card title={t('secCaseType')}>
+          <FSelect label={t('caseType')} value={st.caseTypeOverride} onChange={v=>set('caseTypeOverride',v)} opts={ctOpts}/>
+          <FSelect label={t('txStatus')} value={st.txStatusOverride} onChange={v=>set('txStatusOverride',v)} opts={txOpts}/>
+        </Card>
+        <Card title={t('secRecords')}>
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'0 12px'}}>
+            <FInput label={t('residentName')} value={st.residentName} onChange={v=>set('residentName',v)} placeholder="—"/>
+            <FInput label={t('licenseNo')} value={st.licenseNo} onChange={v=>set('licenseNo',v)} placeholder="—"/>
+            <FInput label={t('attendingName')} value={st.attendingName} onChange={v=>set('attendingName',v)} placeholder="—"/>
+            <FInput label={t('attendingLicense')} value={st.attendingLicense} onChange={v=>set('attendingLicense',v)} placeholder="—"/>
+          </div>
+        </Card>
+      </div>
+
+      <Card title={t('secPerio')} style={{marginBottom:16}}>
+        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(190px,1fr))',gap:'12px 20px'}}>
+          <FInput label={t('calWorst')} type="number" min="0" max="20" step=".5" value={st.calWorst} onChange={v=>set('calWorst',v)} placeholder="mm"/>
+          <FInput label={t('rbl')} type="number" min="0" max="100" value={st.rblPercent} onChange={v=>set('rblPercent',v)} placeholder="%"/>
+          <FInput label={t('maxPD')} type="number" min="0" max="20" step=".5" value={st.maxPD} onChange={v=>set('maxPD',v)} placeholder="mm"/>
+          <FInput label={t('vbl')} type="number" min="0" max="20" step=".5" value={st.vbl} onChange={v=>set('vbl',v)} placeholder="mm"/>
+          <FSelect label={t('furc')} value={st.furcation} onChange={v=>set('furcation',v)} opts={furcOpts}/>
+          <FSelect label={t('mob')} value={st.mobility} onChange={v=>set('mobility',v)} opts={mobOpts}/>
+          <FInput label={t('bop')} type="number" min="0" max="100" value={st.bopPercent} onChange={v=>set('bopPercent',v)} placeholder="%"/>
+          <FInput label={t('tLost')} type="number" min="0" max="32" value={st.teethLost} onChange={v=>set('teethLost',v)} placeholder="0"/>
+          <FInput label={t('tAffected')} type="number" min="0" max="100" value={st.teethAffected} onChange={v=>set('teethAffected',v)} placeholder="%"/>
+          <div style={{paddingTop:22}}><FCheck label={t('mastDys')} checked={st.mastDys} onChange={v=>set('mastDys',v)}/></div>
+        </div>
+      </Card>
+
+      <Card title={t('secIDRA')} style={{marginBottom:16}}>
+        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))',gap:'12px 20px'}}>
+          <FSelect label={t('histPerioL')} value={st.histPerio} onChange={v=>set('histPerio',v)} opts={hpOpts}/>
+          <FSelect label={t('pdSitesL')} value={st.pdSites} onChange={v=>set('pdSites',v)} opts={pdOpts}/>
+          <FInput label={t('blAgeL')} type="number" min="0" max="5" step=".01" value={st.blAgeRatio} onChange={v=>set('blAgeRatio',v)} placeholder="auto"/>
+          <FSelect label={t('suspL')} value={st.suspClass} onChange={v=>set('suspClass',v)} opts={suspOpts}/>
+          <FSelect label={t('sptL')} value={st.sptComp} onChange={v=>set('sptComp',v)} opts={sptOpts}/>
+          <FSelect label={t('restL')} value={st.restMargin} onChange={v=>set('restMargin',v)} opts={rmOpts}/>
+          <FSelect label={t('cleanL')} value={st.cleanability} onChange={v=>set('cleanability',v)} opts={clOpts}/>
+        </div>
+      </Card>
+
+      <Card title={t('secPI')} style={{marginBottom:20}}>
+        <FCheck label={t('piHas')} checked={st.hasImplants} onChange={v=>set('hasImplants',v)}/>
+        {st.hasImplants && (
+          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))',gap:'12px 20px',marginTop:12}}>
+            <div style={{paddingTop:6}}><FCheck label={t('piBOPSup')} checked={st.piBOPSup} onChange={v=>set('piBOPSup',v)}/></div>
+            <FInput label={t('piBL')} type="number" min="0" max="20" step=".5" value={st.piBL} onChange={v=>set('piBL',v)} placeholder="mm"/>
+            <FInput label={t('piPDC')} type="number" min="0" max="20" step=".5" value={st.piPDC} onChange={v=>set('piPDC',v)} placeholder="mm"/>
+            <div style={{paddingTop:6}}><FCheck label={t('piHasBaseline')} checked={st.piHasBaseline} onChange={v=>set('piHasBaseline',v)}/></div>
+          </div>
+        )}
+      </Card>
+
+      {(() => {
+        const isPerio = (st.caseTypeOverride==='periodontitis' || st.caseTypeOverride==='auto');
+        const hasInput = !isPerio || (st.calWorst!=='' || st.rblPercent!=='');
+        return (
+          <button onClick={onCompute} disabled={!hasInput} title={!hasInput?t('btnComputeDisabled'):''} style={{
+            width:'100%',padding:'14px 0',
+            background:hasInput?'#2DD4BF':'#1A3050',
+            color:hasInput?'#060D14':'#64748B',
+            fontWeight:800,fontSize:'1rem',borderRadius:12,border:'none',
+            cursor:hasInput?'pointer':'not-allowed',
+            fontFamily:'Heebo,Arial,sans-serif',
+            boxShadow:hasInput?'0 2px 12px rgba(45,212,191,.15)':'none',
+            transition:'all .15s'
+          }}>
+            {hasInput?t('btnCompute'):t('btnComputeDisabled')}
+          </button>
+        );
+      })()}
+    </div>
+  );
+}
+
+/* ─── DIAGNOSIS TAB ──────────────────────────────────────────────────────────── */
+function DiagTab({dx,caseType,txStatus,icd,t}){
+  const isPerio = caseType==='periodontitis';
+  if(!isPerio){
+    const ctMap={health:t('ctHealth'),gingivitis:t('ctGingivitis'),npd:t('ctNPD'),endoPerio:t('ctEndoPerio')};
+    const ctColor=caseType==='health'?'#22C55E':caseType==='gingivitis'?'#F59E0B':'#EF4444';
+    return (
+      <div className="fade-in" style={{padding:'20px 16px',maxWidth:960,margin:'0 auto'}}>
+        <div style={{background:'#0F2035',borderRadius:14,padding:'24px 22px',marginBottom:18,textAlign:'center'}}>
+          <div style={{fontSize:'.66rem',fontWeight:700,color:'#64748B',letterSpacing:'.12em',marginBottom:8}}>CASE TYPE — Tonetti 2018</div>
+          <div style={{fontSize:'1.4rem',fontWeight:800,color:ctColor,marginBottom:6}}>{ctMap[caseType]||t('undef')}</div>
+          <div style={{fontSize:'.78rem',color:'#94A3B8',fontFamily:'Inter,sans-serif',direction:'ltr'}}>ICD-10: {icd||'—'}</div>
+        </div>
+        <Card>
+          <div style={{fontSize:'.85rem',color:'#94A3B8',lineHeight:1.7}}>
+            {caseType==='health'?'No periodontitis case definition met. Continue routine maintenance.':
+             caseType==='gingivitis'?'Plaque-induced gingivitis (Chapple 2018). Reversible — supragingival therapy + OHI indicated.':
+             caseType==='npd'?'Necrotizing periodontal disease — urgent. Address underlying systemic status.':
+             caseType==='endoPerio'?'Endo-perio lesion. Combined endodontic + periodontal therapy required.':''}
+          </div>
+        </Card>
+      </div>
+    );
+  }
+  if(!dx) return <div style={{padding:48,textAlign:'center',color:'#64748B'}}>{t('noData')}</div>;
+  const extLabel=t(dx.extent)||t('undef');
+  const txLabel=txStatus==='stable'?t('txStable'):txStatus==='remission'?t('txRemission'):txStatus==='unstable'?t('txUnstable'):txStatus==='therapy'?t('txTherapy'):t('txUntreated');
+  const txColor=txStatus==='stable'?'#22C55E':txStatus==='remission'?'#F59E0B':txStatus==='unstable'?'#EF4444':'#94A3B8';
+  return (
+    <div className="fade-in" style={{padding:'20px 16px',maxWidth:960,margin:'0 auto'}}>
+      <div style={{display:'flex',gap:14,marginBottom:18,flexWrap:'wrap',justifyContent:'center'}}>
+        <StageBadge stage={dx.stage}/>
+        <GradeBadge grade={dx.grade}/>
+        <div style={{background:'#0C1A28',border:'1px solid #1A3050',borderRadius:16,
+          padding:'14px 28px',textAlign:'center',minWidth:110}}>
+          <div style={{fontSize:'.6rem',fontWeight:600,letterSpacing:'.1em',color:'#64748B',marginBottom:4}}>{t('extLabel').toUpperCase()}</div>
+          <div style={{fontWeight:700,fontSize:'1.1rem',color:'#E2E8F0'}}>{extLabel}</div>
+        </div>
+        <div style={{background:'#0C1A28',border:`1px solid ${txColor}55`,borderRadius:16,
+          padding:'14px 24px',textAlign:'center',minWidth:130}}>
+          <div style={{fontSize:'.6rem',fontWeight:600,letterSpacing:'.1em',color:'#64748B',marginBottom:4}}>STATUS</div>
+          <div style={{fontWeight:700,fontSize:'.95rem',color:txColor}}>{txLabel}</div>
+        </div>
+      </div>
+
+      {/* Full diagnosis line */}
+      <div style={{background:'#0F2035',borderRadius:11,padding:'13px 18px',marginBottom:14,
+        direction:'ltr',fontFamily:'Inter,sans-serif',fontSize:'.98rem',fontWeight:600,
+        color:'#5EEAD4',textAlign:'center',letterSpacing:'.01em'}}>
+        Periodontitis Stage {dx.stage} Grade {dx.grade} — {extLabel}
+        {dx.gradeScore!==null&&<span style={{marginRight:14,marginLeft:14,color:'#94A3B8',fontWeight:400,fontSize:'.8rem',fontVariantNumeric:'tabular-nums'}}>
+          (Grade Score: {dx.gradeScore.toFixed(3)})
+        </span>}
+      </div>
+
+      {/* ICD-10 + tx-status row */}
+      <div style={{display:'flex',gap:10,marginBottom:20,flexWrap:'wrap',alignItems:'center',justifyContent:'center'}}>
+        <span style={{fontSize:'.7rem',fontWeight:700,letterSpacing:'.08em',color:'#64748B'}}>{t('icdLabel').toUpperCase()}:</span>
+        <span style={{background:'#0C1A28',border:'1px solid #1A3050',borderRadius:6,padding:'4px 10px',fontFamily:'Inter,sans-serif',fontWeight:700,color:'#5EEAD4',fontSize:'.86rem'}}>{icd||'—'}</span>
+      </div>
+
+      <Card title={t('reasonTitle')}>
+        <ReasoningPanel steps={dx.steps} t={t}/>
+      </Card>
+    </div>
+  );
+}
+
+/* ─── IDRA TAB ───────────────────────────────────────────────────────────────── */
+function IDRATab({scores,risk,periDx,t}){
+  const SC={1:'#22C55E',2:'#F59E0B',3:'#EF4444'};
+  const SL={1:'LOW',2:'MOD',3:'HIGH'};
+  const riskLabel=risk==='LOW'?t('idraLow'):risk==='MODERATE'?t('idraMod'):t('idraHigh');
+  const riskDesc=risk==='LOW'?t('idraLowD'):risk==='MODERATE'?t('idraModD'):t('idraHighD');
+  const piColor=periDx==='health'?'#22C55E':periDx==='mucositis'?'#F59E0B':'#EF4444';
+  const piLabel=periDx==='health'?t('piHealth'):periDx==='mucositis'?t('piMucositis'):periDx==='periimplantitis'?t('piPeriImpl'):t('piNotApplicable');
+  const piDesc=periDx==='health'?t('piHealthD'):periDx==='mucositis'?t('piMucositisD'):periDx==='periimplantitis'?t('piPeriImplD'):'';
+  return (
+    <div className="fade-in" style={{padding:'20px 16px',maxWidth:960,margin:'0 auto'}}>
+      <div style={{fontSize:'.72rem',fontWeight:700,letterSpacing:'.08em',color:'#2DD4BF',
+        textTransform:'uppercase',marginBottom:18}}>{t('idraTitle')}</div>
+
+      <div style={{display:'grid',gridTemplateColumns:'minmax(0,1.15fr) minmax(0,1fr)',gap:18,marginBottom:18}} className="idra-grid">
+        <Card>
+          <div style={{display:'flex',justifyContent:'center'}}>
+            <OctagonSVG scores={scores}/>
+          </div>
+        </Card>
+        <Card>
+          <div className="card-title">{t('idraScoreH')}</div>
+          <table style={{width:'100%',borderCollapse:'collapse'}}>
+            <thead>
+              <tr>
+                <th style={{textAlign:'start',fontSize:'.68rem',color:'#64748B',paddingBottom:8,fontWeight:600}}>{t('idraVec')}</th>
+                <th style={{textAlign:'center',fontSize:'.68rem',color:'#64748B',paddingBottom:8,fontWeight:600,width:70}}>{t('idraScoreH')}</th>
+                <th style={{textAlign:'center',fontSize:'.68rem',color:'#64748B',paddingBottom:8,fontWeight:600,width:52}}>{t('idraZone')}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {scores.map((s,i)=>(
+                <tr key={i} style={{borderTop:'1px solid #0F2035'}}>
+                  <td style={{padding:'8px 0 8px 2px',fontSize:'.78rem',color:'#94A3B8'}}>
+                    {AXES[i].replace('\n',' ')}
+                  </td>
+                  <td style={{textAlign:'center'}}>
+                    <div style={{display:'flex',justifyContent:'center',gap:4}}>
+                      {[1,2,3].map(d=>(
+                        <div key={d} style={{width:10,height:10,borderRadius:'50%',
+                          background:d<=s?SC[s]:'#1A3050'}}/>
+                      ))}
+                    </div>
+                  </td>
+                  <td style={{textAlign:'center'}}>
+                    <span style={{fontSize:'.7rem',fontWeight:700,color:SC[s],fontFamily:'Inter',direction:'ltr',display:'inline-block'}}>
+                      {SL[s]}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </Card>
+      </div>
+
+      <Card style={{marginBottom:14}}>
+        <div style={{display:'flex',alignItems:'center',gap:18,flexWrap:'wrap'}}>
+          <div>
+            <div style={{fontSize:'.68rem',color:'#64748B',marginBottom:8,fontWeight:600,
+              letterSpacing:'.08em',textTransform:'uppercase'}}>{t('idraRiskH')}</div>
+            <RiskBadge risk={risk} label={riskLabel}/>
+          </div>
+          <div style={{flex:1,fontSize:'.87rem',color:'#94A3B8',lineHeight:1.65,minWidth:200}}>
+            {riskDesc}
+          </div>
+        </div>
+      </Card>
+
+      <Card>
+        <div style={{fontSize:'.68rem',fontWeight:700,letterSpacing:'.08em',color:'#2DD4BF',
+          textTransform:'uppercase',marginBottom:10}}>{t('piTitle')}</div>
+        <div style={{display:'flex',alignItems:'center',gap:18,flexWrap:'wrap'}}>
+          <div style={{
+            background:periDx?(periDx==='health'?'#052E16':periDx==='mucositis'?'#2D1B00':'#2D0D0D'):'#0F2035',
+            color:periDx?piColor:'#64748B',
+            borderRadius:10,padding:'10px 20px',fontWeight:700,fontSize:'.95rem',
+            border:`1px solid ${periDx?piColor+'55':'#1A3050'}`
+          }}>
+            {piLabel}
+          </div>
+          <div style={{flex:1,fontSize:'.85rem',color:'#94A3B8',lineHeight:1.65,minWidth:200}}>
+            {piDesc||t('piNotApplicable')}
+          </div>
+        </div>
+        <div style={{marginTop:10,fontSize:'.7rem',color:'#475569',fontFamily:'Inter'}}>
+          Berglundh et al. 2018, J Clin Periodontol — PMID 29926948
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+/* ─── OUTPUT TAB ─────────────────────────────────────────────────────────────── */
+function OutputTab({dx,risk,periDx,caseType,txStatus,icd,st,lang,age,t}){
+  const [copied,setCopied]=useState(false);
+
+  const letter=useMemo(()=>{
+    return makeLetter({
+      lang, name:st.patientName, age,
+      patientID:st.patientID, mrn:st.mrn,
+      stage:dx?dx.stage:null, grade:dx?dx.grade:null, extent:dx?dx.extent:null,
+      caseType, txStatus, icd,
+      cal:st.calWorst, rbl:st.rblPercent, pd:st.maxPD,
+      bop:st.bopPercent, cigs:st.smokingCigs, packYears:st.packYears,
+      hba1c:st.hba1c, idraRisk:risk, periDx,
+      residentName:st.residentName, licenseNo:st.licenseNo,
+      attendingName:st.attendingName, attendingLicense:st.attendingLicense
+    });
+  },[dx,risk,periDx,caseType,txStatus,icd,st,lang,age]);
+
+  const isPerio = caseType==='periodontitis';
+  if(isPerio && !dx) return <div style={{padding:48,textAlign:'center',color:'#64748B'}}>{t('noData')}</div>;
+
+  const extLabel = dx ? (t(dx.extent)||t('undef')) : '';
+  const ctKey = {health:'ctHealth',gingivitis:'ctGingivitis',npd:'ctNPD',endoPerio:'ctEndoPerio',periodontitis:'ctPerio'}[caseType];
+  const diagLine = isPerio
+    ? `Periodontitis Stage ${dx.stage} Grade ${dx.grade} — ${extLabel} | ICD: ${icd} | IDRA: ${risk}`
+    : `${ctKey?t(ctKey):(caseType||'—')} | ICD: ${icd}`;
+
+  const handleCopy=()=>{
+    navigator.clipboard.writeText(letter).then(()=>{
+      setCopied(true); setTimeout(()=>setCopied(false),2500);
+    });
+  };
+
+  const today = new Date().toLocaleDateString(lang==='he'?'he-IL':'en-GB');
+
+  return (
+    <div className="fade-in" style={{padding:'20px 16px',maxWidth:960,margin:'0 auto'}}>
+      {/* Print-only header — appears only on printed page */}
+      <div className="print-only print-header" dir={lang==='he'?'rtl':'ltr'}>
+        <h1>{lang==='he'?'מכתב הפנייה — מחלקת פריודונטולוגיה רמב"ם':'Referral Letter — Rambam Periodontology'}</h1>
+        <div className="meta">
+          <div>{(lang==='he'?'מטופל: ':'Patient: ') + (st.patientName||'—') + (age?` · ${lang==='he'?'גיל':'Age'}: ${age}`:'')}</div>
+          <div>{(lang==='he'?'תאריך: ':'Date: ') + today}</div>
+          <div className="clinical-num" style={{marginTop:'2mm'}}>{diagLine}</div>
+        </div>
+      </div>
+
+      <Card title={t('diagTitle')} style={{marginBottom:16}}>
+        <div style={{background:'#0F2035',borderRadius:10,padding:'13px 16px',
+          fontFamily:'Inter,sans-serif',fontSize:'.96rem',fontWeight:600,color:'#5EEAD4',
+          direction:'ltr',letterSpacing:'.01em'}}>
+          {diagLine}
+        </div>
+        <div style={{marginTop:10,display:'flex',gap:10,alignItems:'center',flexWrap:'wrap'}}>
+          <span style={{fontSize:'.76rem',color:'#64748B'}}>{t('sptInt')}:</span>
+          <span style={{fontSize:'.84rem',fontWeight:700,color:'#5EEAD4',fontFamily:'Inter'}}>{t(sptIntervalKey(risk))}</span>
+          <span style={{fontSize:'.68rem',color:'#475569',marginInlineStart:8}}>{t('sptSrc')}</span>
+        </div>
+      </Card>
+
+      <Card title={t('letterTitle')}>
+        {/* Screen view: editable-feel textarea (hidden on print via CSS) */}
+        <textarea className="field-input"
+          readOnly value={letter}
+          style={{direction:lang==='he'?'rtl':'ltr',textAlign:lang==='he'?'right':'left'}}/>
+        {/* Print view: full-flow letter (hidden on screen via CSS) */}
+        <div className="print-only print-letter" dir={lang==='he'?'rtl':'ltr'}>{letter}</div>
+        <div style={{display:'flex',gap:12,marginTop:14}}>
+          <button onClick={handleCopy} style={{
+            display:'flex',alignItems:'center',gap:7,
+            background:copied?'#052E16':'#0F2035',
+            color:copied?'#4ADE80':'#2DD4BF',
+            border:`1px solid ${copied?'#4ADE8055':'#2DD4BF44'}`,
+            borderRadius:8,padding:'9px 18px',cursor:'pointer',
+            fontFamily:'Heebo,Arial,sans-serif',fontWeight:600,fontSize:'.84rem',transition:'all .2s'
+          }}>
+            {copied?<IconCheck/>:<IconCopy/>}
+            {copied?t('btnCopied'):t('btnCopy')}
+          </button>
+          <button onClick={()=>window.print()} style={{
+            display:'flex',alignItems:'center',gap:7,
+            background:'#0F2035',color:'#94A3B8',border:'1px solid #1A3050',
+            borderRadius:8,padding:'9px 18px',cursor:'pointer',
+            fontFamily:'Heebo,Arial,sans-serif',fontWeight:600,fontSize:'.84rem'
+          }}>
+            <IconPrint/> {t('btnPrint')}
+          </button>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+/* ─── REFERENCES TAB ─────────────────────────────────────────────────────────── */
+const IconExtLink=()=>(
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+    <polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+  </svg>
+);
+
+function RefsTab({lang,t}){
+  return (
+    <div className="fade-in" style={{padding:'20px 16px',maxWidth:960,margin:'0 auto'}}>
+      <div style={{fontSize:'.72rem',fontWeight:700,letterSpacing:'.08em',color:'#2DD4BF',
+        textTransform:'uppercase',marginBottom:6}}>{t('refsTitle')}</div>
+      <div style={{fontSize:'.84rem',color:'#94A3B8',marginBottom:18,lineHeight:1.6}}>{t('refsSubtitle')}</div>
+
+      <div style={{display:'grid',gap:12,marginBottom:18}}>
+        {REFERENCES.map(r=>(
+          <div key={r.id} className="card" style={{padding:'14px 16px'}}>
+            <div style={{display:'flex',alignItems:'flex-start',gap:14,flexWrap:'wrap'}}>
+              <div style={{flex:'1 1 320px',minWidth:0}}>
+                <div style={{fontFamily:'Inter,sans-serif',fontSize:'.92rem',fontWeight:600,color:'#E2E8F0',marginBottom:4,direction:'ltr',lineHeight:1.45}}>
+                  {r.title}
+                </div>
+                <div style={{fontFamily:'Inter,sans-serif',fontSize:'.78rem',color:'#94A3B8',marginBottom:6,direction:'ltr'}}>
+                  {r.authors} · {r.year} · <span style={{color:'#64748B'}}>{r.journal}</span>
+                </div>
+                <div style={{fontSize:'.76rem',color:'#5EEAD4',lineHeight:1.55}}>
+                  <span style={{color:'#64748B',fontWeight:600}}>{t('refsUsedFor')}</span>
+                  {lang==='he'?r.usedHe:r.usedEn}
+                </div>
+                <div style={{display:'flex',gap:8,marginTop:6,flexWrap:'wrap'}}>
+                  {r.pmid && <span style={{fontFamily:'Inter,sans-serif',fontSize:'.7rem',color:'#475569',background:'#0F2035',border:'1px solid #1A3050',borderRadius:5,padding:'2px 7px',direction:'ltr'}}>PMID: {r.pmid}</span>}
+                  {r.doi && <span style={{fontFamily:'Inter,sans-serif',fontSize:'.7rem',color:'#475569',background:'#0F2035',border:'1px solid #1A3050',borderRadius:5,padding:'2px 7px',direction:'ltr'}}>DOI: {r.doi}</span>}
+                </div>
+              </div>
+              <a href={r.url} target="_blank" rel="noopener noreferrer" style={{
+                display:'inline-flex',alignItems:'center',gap:6,
+                background:'#0F2035',color:'#2DD4BF',border:'1px solid #2DD4BF44',
+                borderRadius:8,padding:'7px 14px',cursor:'pointer',
+                fontFamily:'Heebo,Arial,sans-serif',fontWeight:600,fontSize:'.78rem',
+                textDecoration:'none',whiteSpace:'nowrap',flexShrink:0
+              }}>
+                <IconExtLink/> {t('refsOpen')}
+              </a>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{background:'#2D1B0033',border:'1px solid #F59E0B44',borderRadius:10,padding:'12px 14px',
+        fontSize:'.78rem',color:'#FCD34D',lineHeight:1.6}}>
+        ⚠ {t('refsDisclaim')}
+      </div>
+    </div>
+  );
+}
+
+/* ─── NAVBAR ─────────────────────────────────────────────────────────────────── */
+function Navbar({t,lang,onToggle}){
+  return (
+    <div className="no-print" style={{
+      position:'sticky',top:0,zIndex:100,background:'#060D14',
+      borderBottom:'1px solid #1A3050',padding:'0 18px',height:54,
+      display:'flex',alignItems:'center',gap:11
+    }}>
+      <IconTooth/>
+      <div>
+        <span style={{fontFamily:'Inter,sans-serif',fontWeight:800,fontSize:'1.05rem',color:'#E2E8F0'}}>OctoPerio</span>
+        <span style={{display:'inline-block',width:1,height:14,background:'#334155',margin:'0 10px',verticalAlign:'middle'}}></span>
+        <span style={{fontSize:'.7rem',color:'#94A3B8'}}>{t('appSub')}</span>
+      </div>
+      <div style={{marginInlineStart:'auto',display:'flex',alignItems:'center',gap:9}}>
+        <span style={{fontSize:'.66rem',fontWeight:700,letterSpacing:'.06em',
+          background:'#0F2035',color:'#2DD4BF',borderRadius:6,padding:'3px 10px',border:'1px solid #1A8A7B44'}}>
+          {t('rambam')}
+        </span>
+        <button onClick={onToggle} style={{
+          display:'flex',alignItems:'center',gap:5,
+          background:'#0F2035',color:'#94A3B8',border:'1px solid #1A3050',
+          borderRadius:6,padding:'4px 10px',cursor:'pointer',fontSize:'.72rem',fontWeight:600,fontFamily:'Inter'
+        }}>
+          <IconGlobe/> {t('btnLang')}
+        </button>
+        <button onClick={()=>window.print()} style={{
+          background:'none',color:'#64748B',border:'none',cursor:'pointer',padding:4,display:'flex'
+        }}>
+          <IconPrint/>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ─── TAB BAR ─────────────────────────────────────────────────────────────────── */
+function TabBar({active,setActive,t}){
+  const tabs=[['tabInput'],['tabDx'],['tabIDRA'],['tabOut'],['tabRefs']];
+  return (
+    <div className="no-print" style={{
+      position:'sticky',top:54,zIndex:90,background:'#060D14',
+      borderBottom:'1px solid #1A3050',display:'flex',overflowX:'auto',paddingInlineStart:10
+    }}>
+      {tabs.map(([k],i)=>(
+        <button key={k} className={`tab-btn${active===i?' tab-active':''}`} onClick={()=>setActive(i)}>
+          {t(k)}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/* ─── APP ─────────────────────────────────────────────────────────────────────── */
+function App(){
+  const [lang,setLang]=useState('he');
+  const [activeTab,setActiveTab]=useState(0);
+
+  /* Patient */
+  const [patientName,setPatientName]=useState('');
+  const [patientID,setPatientID]=useState('');
+  const [mrn,setMrn]=useState('');
+  const [patientDOB,setPatientDOB]=useState('');
+  const [patientGender,setPatientGender]=useState('');
+  /* Clinician records (MoH 2/2012) */
+  const [residentName,setResidentName]=useState('');
+  const [licenseNo,setLicenseNo]=useState('');
+  const [attendingName,setAttendingName]=useState('');
+  const [attendingLicense,setAttendingLicense]=useState('');
+  /* Case-type triage (Tonetti 2018) + Treatment status (Chapple 2018) */
+  const [caseTypeOverride,setCaseTypeOverride]=useState('auto');
+  const [txStatusOverride,setTxStatusOverride]=useState('auto');
+  const [smokingCigs,setSmokingCigs]=useState('');
+  const [packYears,setPackYears]=useState('');
+  const [hba1c,setHba1c]=useState('');
+  /* Peri-Implant (Berglundh 2018) */
+  const [hasImplants,setHasImplants]=useState(false);
+  const [piBOPSup,setPiBOPSup]=useState(false);
+  const [piBL,setPiBL]=useState('');
+  const [piPDC,setPiPDC]=useState('');
+  const [piHasBaseline,setPiHasBaseline]=useState(false);
+  /* Perio */
+  const [calWorst,setCalWorst]=useState('');
+  const [rblPercent,setRblPercent]=useState('');
+  const [maxPD,setMaxPD]=useState('');
+  const [vbl,setVbl]=useState('');
+  const [furcation,setFurcation]=useState('0');
+  const [mobility,setMobility]=useState('0');
+  const [bopPercent,setBopPercent]=useState('');
+  const [teethLost,setTeethLost]=useState('');
+  const [teethAffected,setTeethAffected]=useState('');
+  const [mastDys,setMastDys]=useState(false);
+  /* IDRA */
+  const [histPerio,setHistPerio]=useState('1');
+  const [pdSites,setPdSites]=useState('1');
+  const [blAgeRatio,setBlAgeRatio]=useState('');
+  const [suspClass,setSuspClass]=useState('1');
+  const [sptComp,setSptComp]=useState('1');
+  const [restMargin,setRestMargin]=useState('1');
+  const [cleanability,setCleanability]=useState('1');
+
+  const t=useCallback(k=>S[lang][k]??k,[lang]);
+
+  const toggleLang=()=>{
+    const next=lang==='he'?'en':'he';
+    document.documentElement.lang=next;
+    document.documentElement.dir=next==='he'?'rtl':'ltr';
+    setLang(next);
+  };
+
+  const age=useMemo(()=>{
+    if(!patientDOB) return null;
+    const now=new Date(), birth=new Date(patientDOB);
+    let a=now.getFullYear()-birth.getFullYear();
+    const m=now.getMonth()-birth.getMonth();
+    if(m<0||(m===0&&now.getDate()<birth.getDate())) a--;
+    return a>0?a:null;
+  },[patientDOB]);
+
+  const dx=useMemo(()=>computeDiagnosis({
+    calWorst,rblPercent,maxPD,vbl,furcation,mobility,
+    teethLost,teethAffected,mastDys,smokingCigs,hba1c,age
+  }),[calWorst,rblPercent,maxPD,vbl,furcation,mobility,
+    teethLost,teethAffected,mastDys,smokingCigs,hba1c,age]);
+
+  const blAgeComp=useMemo(()=>{
+    if(blAgeRatio!=='') return parseFloat(blAgeRatio);
+    if(!age||!rblPercent) return null;
+    return parseFloat(rblPercent)/age;
+  },[blAgeRatio,rblPercent,age]);
+
+  const blAgeScore=blAgeComp===null?1:blAgeComp<=0.5?1:blAgeComp<=1.0?2:3;
+
+  const bopScore=useMemo(()=>{
+    const b=parseFloat(bopPercent);
+    if(isNaN(b)) return 1;
+    return b<=10?1:b<=30?2:3;
+  },[bopPercent]);
+
+  const idraScores=useMemo(()=>[
+    parseInt(histPerio),bopScore,parseInt(pdSites),
+    blAgeScore,parseInt(suspClass),parseInt(sptComp),
+    parseInt(restMargin),parseInt(cleanability),
+  ],[histPerio,bopScore,pdSites,blAgeScore,suspClass,sptComp,restMargin,cleanability]);
+
+  const idraRisk=useMemo(()=>computeIDRARisk(idraScores),[idraScores]);
+
+  const periDx=useMemo(()=>computePeriImplantDx({
+    hasImplants, bopSup:piBOPSup, bl:piBL, hasBaseline:piHasBaseline
+  }),[hasImplants,piBOPSup,piBL,piHasBaseline]);
+
+  const caseType=useMemo(()=>caseTypeOverride==='auto'
+    ? autoCaseType({calWorst,bopPercent})
+    : caseTypeOverride,
+    [caseTypeOverride,calWorst,bopPercent]);
+
+  const txStatus=useMemo(()=>txStatusOverride==='auto'
+    ? autoTxStatus({maxPD,bopPercent})
+    : txStatusOverride,
+    [txStatusOverride,maxPD,bopPercent]);
+
+  const icd=useMemo(()=>icd10For({caseType,stage:dx?dx.stage:null}),[caseType,dx]);
+
+  const idValid=useMemo(()=>!patientID||validIsraeliID(patientID),[patientID]);
+
+  const state={
+    patientName,patientID,mrn,patientDOB,patientGender,smokingCigs,packYears,hba1c,
+    residentName,licenseNo,attendingName,attendingLicense,
+    caseTypeOverride,txStatusOverride,
+    calWorst,rblPercent,maxPD,vbl,furcation,mobility,bopPercent,
+    teethLost,teethAffected,mastDys,
+    histPerio,pdSites,blAgeRatio,suspClass,sptComp,restMargin,cleanability,
+    hasImplants,piBOPSup,piBL,piPDC,piHasBaseline
+  };
+
+  const SETTERS={
+    patientName:setPatientName,patientID:setPatientID,mrn:setMrn,
+    patientDOB:setPatientDOB,patientGender:setPatientGender,
+    smokingCigs:setSmokingCigs,packYears:setPackYears,hba1c:setHba1c,
+    residentName:setResidentName,licenseNo:setLicenseNo,
+    attendingName:setAttendingName,attendingLicense:setAttendingLicense,
+    caseTypeOverride:setCaseTypeOverride,txStatusOverride:setTxStatusOverride,
+    calWorst:setCalWorst,rblPercent:setRblPercent,maxPD:setMaxPD,vbl:setVbl,
+    furcation:setFurcation,mobility:setMobility,bopPercent:setBopPercent,
+    teethLost:setTeethLost,teethAffected:setTeethAffected,mastDys:setMastDys,
+    histPerio:setHistPerio,pdSites:setPdSites,blAgeRatio:setBlAgeRatio,
+    suspClass:setSuspClass,sptComp:setSptComp,restMargin:setRestMargin,cleanability:setCleanability,
+    hasImplants:setHasImplants,piBOPSup:setPiBOPSup,piBL:setPiBL,
+    piPDC:setPiPDC,piHasBaseline:setPiHasBaseline
+  };
+  const set=(k,v)=>SETTERS[k]&&SETTERS[k](v);
+
+  return (
+    <div style={{minHeight:'100vh',background:'#060D14'}}>
+      <Navbar t={t} lang={lang} onToggle={toggleLang}/>
+      <TabBar active={activeTab} setActive={setActiveTab} t={t}/>
+      {activeTab===0&&<InputTab st={state} set={set} t={t} idValid={idValid} onCompute={()=>setActiveTab(1)}/>}
+      {activeTab===1&&<DiagTab dx={dx} caseType={caseType} txStatus={txStatus} icd={icd} t={t}/>}
+      {activeTab===2&&<IDRATab scores={idraScores} risk={idraRisk} periDx={periDx} t={t}/>}
+      {activeTab===3&&<OutputTab dx={dx} risk={idraRisk} periDx={periDx} caseType={caseType} txStatus={txStatus} icd={icd} st={state} lang={lang} age={age} t={t}/>}
+      {activeTab===4&&<RefsTab lang={lang} t={t}/>}
+
+      <div className="author-signature no-print" aria-hidden="true">
+        <span className="sig-prefix">created&nbsp;by</span>
+        <span className="sig-name">Dr Roni Gershonovitch</span>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
