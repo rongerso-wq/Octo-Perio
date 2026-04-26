@@ -10,7 +10,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 There is no build, package manager, or test runner. To run:
 
-- Open `OctoPerio.html` directly in Chrome (`file://` works — the CSP and vendored assets are designed for offline operation).
+- Open `index.html` directly in Chrome (`file://` works — the CSP and vendored assets are designed for offline operation).
 - For testing: enter CAL 6mm, RBL 40%, Age 45, PD 7mm, Furcation III, Smoking 15 cig/day → expect Stage IV Grade C.
 
 ## Architecture — Single-File Standalone Artifact
