@@ -107,6 +107,34 @@
       .idra-grid{grid-template-columns:1fr!important;}
     }
 
+    /* ───── Mobile / smartphone layout (≤640px) ───── */
+    @media (max-width:640px){
+      .card{padding:14px!important;border-radius:12px!important;}
+      .card-title{font-size:.62rem;margin-bottom:10px;}
+      .field-input{font-size:.92rem;padding:9px 11px;}
+      .tab-btn{padding:11px 14px!important;font-size:.78rem!important;}
+      textarea.field-input{min-height:240px;font-size:.86rem;line-height:1.65;}
+      .reasoning-row{padding:8px 0;}
+      .nav-subtitle{display:none!important;}
+      .nav-rambam{font-size:.6rem!important;padding:2px 8px!important;}
+      .records-grid{grid-template-columns:1fr!important;}
+      /* Stage / Grade / Status badges shrink on phones */
+      .badge-sg{font-size:1.55rem!important;padding:10px 18px!important;min-width:78px!important;}
+      .badge-ext, .badge-status{padding:10px 14px!important;min-width:80px!important;}
+      .badge-ext > div:last-child, .badge-status > div:last-child{font-size:.86rem!important;}
+      .diag-line{font-size:.84rem!important;padding:11px 13px!important;line-height:1.55;}
+      .diag-line span{display:block;margin:4px 0 0!important;}
+      .tab-content{padding:14px 12px!important;}
+      .navbar-root{padding:0 12px!important;gap:8px!important;}
+      /* References cards: button below text on phones */
+      .refs-card{flex-direction:column;align-items:stretch!important;}
+      .refs-card a{align-self:flex-start;}
+    }
+    @media (max-width:380px){
+      .badge-sg{font-size:1.3rem!important;padding:8px 13px!important;min-width:62px!important;}
+      .tab-btn{padding:10px 11px!important;font-size:.74rem!important;}
+    }
+
     @media print{
       *,*::before,*::after{
         background:transparent!important;color:#000!important;
@@ -805,7 +833,7 @@ const RISK_C={LOW:{bg:'#052E16',c:'#4ADE80'},MODERATE:{bg:'#2D1B00',c:'#FCD34D'}
 function StageBadge({stage}){
   const s=STAGE_C[stage]||{bg:'#0C1A28',c:'#E2E8F0'};
   return (
-    <div style={{background:s.bg,color:s.c,fontFamily:'Inter,sans-serif',fontWeight:800,fontSize:'2.4rem',
+    <div className="badge-sg" style={{background:s.bg,color:s.c,fontFamily:'Inter,sans-serif',fontWeight:800,fontSize:'2.4rem',
       borderRadius:16,padding:'14px 32px',textAlign:'center',border:`1px solid ${s.c}33`,direction:'ltr',minWidth:110}}>
       <div style={{fontSize:'.6rem',fontWeight:600,letterSpacing:'.12em',opacity:.65,marginBottom:4}}>STAGE</div>
       {stage}
@@ -815,7 +843,7 @@ function StageBadge({stage}){
 function GradeBadge({grade}){
   const g=GRADE_C[grade]||{bg:'#0C1A28',c:'#E2E8F0'};
   return (
-    <div style={{background:g.bg,color:g.c,fontFamily:'Inter,sans-serif',fontWeight:800,fontSize:'2.4rem',
+    <div className="badge-sg" style={{background:g.bg,color:g.c,fontFamily:'Inter,sans-serif',fontWeight:800,fontSize:'2.4rem',
       borderRadius:16,padding:'14px 32px',textAlign:'center',border:`1px solid ${g.c}33`,direction:'ltr',minWidth:110}}>
       <div style={{fontSize:'.6rem',fontWeight:600,letterSpacing:'.12em',opacity:.65,marginBottom:4}}>GRADE</div>
       {grade}
@@ -916,7 +944,7 @@ function InputTab({st,set,t,idValid,onCompute}){
   const gOpts=[{v:'',l:'—'},{v:'male',l:t('gM')},{v:'female',l:t('gF')},{v:'other',l:t('gO')}];
 
   return (
-    <div className="fade-in" style={{padding:'20px 16px',maxWidth:960,margin:'0 auto'}}>
+    <div className="fade-in tab-content" style={{padding:'20px 16px',maxWidth:960,margin:'0 auto'}}>
       <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))',gap:16,marginBottom:16}}>
         <Card title={t('secPt')}>
           <FInput label={t('ptName')} value={st.patientName} onChange={v=>set('patientName',v)} placeholder="—"/>
@@ -938,7 +966,7 @@ function InputTab({st,set,t,idValid,onCompute}){
           <FSelect label={t('txStatus')} value={st.txStatusOverride} onChange={v=>set('txStatusOverride',v)} opts={txOpts}/>
         </Card>
         <Card title={t('secRecords')}>
-          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'0 12px'}}>
+          <div className="records-grid" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'0 12px'}}>
             <FInput label={t('residentName')} value={st.residentName} onChange={v=>set('residentName',v)} placeholder="—"/>
             <FInput label={t('licenseNo')} value={st.licenseNo} onChange={v=>set('licenseNo',v)} placeholder="—"/>
             <FInput label={t('attendingName')} value={st.attendingName} onChange={v=>set('attendingName',v)} placeholder="—"/>
@@ -1015,7 +1043,7 @@ function DiagTab({dx,caseType,txStatus,icd,t}){
     const ctMap={health:t('ctHealth'),gingivitis:t('ctGingivitis'),npd:t('ctNPD'),endoPerio:t('ctEndoPerio')};
     const ctColor=caseType==='health'?'#22C55E':caseType==='gingivitis'?'#F59E0B':'#EF4444';
     return (
-      <div className="fade-in" style={{padding:'20px 16px',maxWidth:960,margin:'0 auto'}}>
+      <div className="fade-in tab-content" style={{padding:'20px 16px',maxWidth:960,margin:'0 auto'}}>
         <div style={{background:'#0F2035',borderRadius:14,padding:'24px 22px',marginBottom:18,textAlign:'center'}}>
           <div style={{fontSize:'.66rem',fontWeight:700,color:'#64748B',letterSpacing:'.12em',marginBottom:8}}>CASE TYPE — Tonetti 2018</div>
           <div style={{fontSize:'1.4rem',fontWeight:800,color:ctColor,marginBottom:6}}>{ctMap[caseType]||t('undef')}</div>
@@ -1037,16 +1065,16 @@ function DiagTab({dx,caseType,txStatus,icd,t}){
   const txLabel=txStatus==='stable'?t('txStable'):txStatus==='remission'?t('txRemission'):txStatus==='unstable'?t('txUnstable'):txStatus==='therapy'?t('txTherapy'):t('txUntreated');
   const txColor=txStatus==='stable'?'#22C55E':txStatus==='remission'?'#F59E0B':txStatus==='unstable'?'#EF4444':'#94A3B8';
   return (
-    <div className="fade-in" style={{padding:'20px 16px',maxWidth:960,margin:'0 auto'}}>
+    <div className="fade-in tab-content" style={{padding:'20px 16px',maxWidth:960,margin:'0 auto'}}>
       <div style={{display:'flex',gap:14,marginBottom:18,flexWrap:'wrap',justifyContent:'center'}}>
         <StageBadge stage={dx.stage}/>
         <GradeBadge grade={dx.grade}/>
-        <div style={{background:'#0C1A28',border:'1px solid #1A3050',borderRadius:16,
+        <div className="badge-ext" style={{background:'#0C1A28',border:'1px solid #1A3050',borderRadius:16,
           padding:'14px 28px',textAlign:'center',minWidth:110}}>
           <div style={{fontSize:'.6rem',fontWeight:600,letterSpacing:'.1em',color:'#64748B',marginBottom:4}}>{t('extLabel').toUpperCase()}</div>
           <div style={{fontWeight:700,fontSize:'1.1rem',color:'#E2E8F0'}}>{extLabel}</div>
         </div>
-        <div style={{background:'#0C1A28',border:`1px solid ${txColor}55`,borderRadius:16,
+        <div className="badge-status" style={{background:'#0C1A28',border:`1px solid ${txColor}55`,borderRadius:16,
           padding:'14px 24px',textAlign:'center',minWidth:130}}>
           <div style={{fontSize:'.6rem',fontWeight:600,letterSpacing:'.1em',color:'#64748B',marginBottom:4}}>STATUS</div>
           <div style={{fontWeight:700,fontSize:'.95rem',color:txColor}}>{txLabel}</div>
@@ -1054,7 +1082,7 @@ function DiagTab({dx,caseType,txStatus,icd,t}){
       </div>
 
       {/* Full diagnosis line */}
-      <div style={{background:'#0F2035',borderRadius:11,padding:'13px 18px',marginBottom:14,
+      <div className="diag-line" style={{background:'#0F2035',borderRadius:11,padding:'13px 18px',marginBottom:14,
         direction:'ltr',fontFamily:'Inter,sans-serif',fontSize:'.98rem',fontWeight:600,
         color:'#5EEAD4',textAlign:'center',letterSpacing:'.01em'}}>
         Periodontitis Stage {dx.stage} Grade {dx.grade} — {extLabel}
@@ -1086,7 +1114,7 @@ function IDRATab({scores,risk,periDx,t}){
   const piLabel=periDx==='health'?t('piHealth'):periDx==='mucositis'?t('piMucositis'):periDx==='periimplantitis'?t('piPeriImpl'):t('piNotApplicable');
   const piDesc=periDx==='health'?t('piHealthD'):periDx==='mucositis'?t('piMucositisD'):periDx==='periimplantitis'?t('piPeriImplD'):'';
   return (
-    <div className="fade-in" style={{padding:'20px 16px',maxWidth:960,margin:'0 auto'}}>
+    <div className="fade-in tab-content" style={{padding:'20px 16px',maxWidth:960,margin:'0 auto'}}>
       <div style={{fontSize:'.72rem',fontWeight:700,letterSpacing:'.08em',color:'#2DD4BF',
         textTransform:'uppercase',marginBottom:18}}>{t('idraTitle')}</div>
 
@@ -1205,7 +1233,7 @@ function OutputTab({dx,risk,periDx,caseType,txStatus,icd,st,lang,age,t}){
   const today = new Date().toLocaleDateString(lang==='he'?'he-IL':'en-GB');
 
   return (
-    <div className="fade-in" style={{padding:'20px 16px',maxWidth:960,margin:'0 auto'}}>
+    <div className="fade-in tab-content" style={{padding:'20px 16px',maxWidth:960,margin:'0 auto'}}>
       {/* Print-only header — appears only on printed page */}
       <div className="print-only print-header" dir={lang==='he'?'rtl':'ltr'}>
         <h1>{lang==='he'?'מכתב הפנייה — מחלקת פריודונטולוגיה רמב"ם':'Referral Letter — Rambam Periodontology'}</h1>
@@ -1272,7 +1300,7 @@ const IconExtLink=()=>(
 
 function RefsTab({lang,t}){
   return (
-    <div className="fade-in" style={{padding:'20px 16px',maxWidth:960,margin:'0 auto'}}>
+    <div className="fade-in tab-content" style={{padding:'20px 16px',maxWidth:960,margin:'0 auto'}}>
       <div style={{fontSize:'.72rem',fontWeight:700,letterSpacing:'.08em',color:'#2DD4BF',
         textTransform:'uppercase',marginBottom:6}}>{t('refsTitle')}</div>
       <div style={{fontSize:'.84rem',color:'#94A3B8',marginBottom:18,lineHeight:1.6}}>{t('refsSubtitle')}</div>
@@ -1280,7 +1308,7 @@ function RefsTab({lang,t}){
       <div style={{display:'grid',gap:12,marginBottom:18}}>
         {REFERENCES.map(r=>(
           <div key={r.id} className="card" style={{padding:'14px 16px'}}>
-            <div style={{display:'flex',alignItems:'flex-start',gap:14,flexWrap:'wrap'}}>
+            <div className="refs-card" style={{display:'flex',alignItems:'flex-start',gap:14,flexWrap:'wrap'}}>
               <div style={{flex:'1 1 320px',minWidth:0}}>
                 <div style={{fontFamily:'Inter,sans-serif',fontSize:'.92rem',fontWeight:600,color:'#E2E8F0',marginBottom:4,direction:'ltr',lineHeight:1.45}}>
                   {r.title}
@@ -1322,7 +1350,7 @@ function RefsTab({lang,t}){
 /* ─── NAVBAR ─────────────────────────────────────────────────────────────────── */
 function Navbar({t,lang,onToggle}){
   return (
-    <div className="no-print" style={{
+    <div className="no-print navbar-root" style={{
       position:'sticky',top:0,zIndex:100,background:'#060D14',
       borderBottom:'1px solid #1A3050',padding:'0 18px',height:54,
       display:'flex',alignItems:'center',gap:11
@@ -1330,11 +1358,11 @@ function Navbar({t,lang,onToggle}){
       <IconTooth/>
       <div>
         <span style={{fontFamily:'Inter,sans-serif',fontWeight:800,fontSize:'1.05rem',color:'#E2E8F0'}}>OctoPerio</span>
-        <span style={{display:'inline-block',width:1,height:14,background:'#334155',margin:'0 10px',verticalAlign:'middle'}}></span>
-        <span style={{fontSize:'.7rem',color:'#94A3B8'}}>{t('appSub')}</span>
+        <span className="nav-subtitle" style={{display:'inline-block',width:1,height:14,background:'#334155',margin:'0 10px',verticalAlign:'middle'}}></span>
+        <span className="nav-subtitle" style={{fontSize:'.7rem',color:'#94A3B8'}}>{t('appSub')}</span>
       </div>
       <div style={{marginInlineStart:'auto',display:'flex',alignItems:'center',gap:9}}>
-        <span style={{fontSize:'.66rem',fontWeight:700,letterSpacing:'.06em',
+        <span className="nav-rambam" style={{fontSize:'.66rem',fontWeight:700,letterSpacing:'.06em',
           background:'#0F2035',color:'#2DD4BF',borderRadius:6,padding:'3px 10px',border:'1px solid #1A8A7B44'}}>
           {t('rambam')}
         </span>
