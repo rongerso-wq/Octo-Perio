@@ -211,6 +211,8 @@ const S = {
     rm1:'על-חניכית', rm2:'ברמת החניכית', rm3:'תת-חניכית',
     cl1:'בקלות', cl2:'בקושי', cl3:'לא ניתן לניקוי',
     btnCompute:'חשב אבחנה', btnComputeDisabled:'יש להזין CAL או %RBL',
+    btnLoadDemo:'טען דוגמה קלינית', demoBannerTitle:'דוגמה להדגמה',
+    demoBannerDesc:'יוסי כהן · גבר 58 · מעשן 18 סיג׳/יום · HbA1c 8.4% · אובדן עצם 52% · שתל פעיל',
     btnCopy:'העתק מכתב', btnCopied:'הועתק!',
     btnPrint:'הדפסה', btnLang:'EN',
     tabRefs:'מקורות', refsTitle:'מקורות וקישורים מקצועיים',
@@ -289,6 +291,8 @@ const S = {
     rm1:'Supragingival', rm2:'At margin', rm3:'Subgingival',
     cl1:'Easily cleanable', cl2:'Difficult to clean', cl3:'Not cleanable',
     btnCompute:'Compute Diagnosis', btnComputeDisabled:'Enter CAL or %RBL to continue',
+    btnLoadDemo:'Load Demo Case', demoBannerTitle:'Showcase example',
+    demoBannerDesc:'Yossi Cohen · M 58 · 18 cig/day · HbA1c 8.4% · 52% bone loss · Active implant',
     btnCopy:'Copy Letter', btnCopied:'Copied!',
     btnPrint:'Print', btnLang:'עב',
     tabRefs:'References', refsTitle:'Sources & Professional Links',
@@ -934,6 +938,54 @@ function InputTab({st,set,t,idValid,onCompute}){
   const furcOpts=[{v:'0',l:t('f0')},{v:'1',l:t('f1')},{v:'2',l:t('f2')},{v:'3',l:t('f3')}];
   const ctOpts=[{v:'auto',l:t('ctAuto')},{v:'health',l:t('ctHealth')},{v:'gingivitis',l:t('ctGingivitis')},{v:'periodontitis',l:t('ctPerio')},{v:'npd',l:t('ctNPD')},{v:'endoPerio',l:t('ctEndoPerio')}];
   const txOpts=[{v:'auto',l:t('ctAuto')},{v:'untreated',l:t('txUntreated')},{v:'therapy',l:t('txTherapy')},{v:'stable',l:t('txStable')},{v:'remission',l:t('txRemission')},{v:'unstable',l:t('txUnstable')}];
+
+  /* Demo case — Stage IV Grade C Generalized + High IDRA + Peri-implantitis.
+     ID 123456782 has a valid Israeli mod-10 checksum. */
+  const loadDemo = () => {
+    /* Patient */
+    set('patientName','יוסי כהן');
+    set('patientID','123456782');
+    set('mrn','RMC-8429');
+    set('patientDOB','1968-03-15');
+    set('patientGender','male');
+    /* Systemic — both Grade C modifiers triggered */
+    set('smokingCigs','18');
+    set('packYears','28');
+    set('hba1c','8.4');
+    /* Records */
+    set('residentName','דר׳ רוני גרשונוביץ׳');
+    set('licenseNo','28-12345');
+    set('attendingName','פרופ׳ ראש המחלקה');
+    set('attendingLicense','5-67890');
+    /* Case-type / status — auto */
+    set('caseTypeOverride','auto');
+    set('txStatusOverride','auto');
+    /* Periodontal — Stage IV via furcation III + mobility 2 + 6 teeth lost + mast dysfunction */
+    set('calWorst','7');
+    set('rblPercent','52');
+    set('maxPD','8');
+    set('vbl','4');
+    set('furcation','3');
+    set('mobility','2');
+    set('bopPercent','68');
+    set('teethLost','6');
+    set('teethAffected','65');
+    set('mastDys',true);
+    /* IDRA — drives HIGH risk */
+    set('histPerio','3');
+    set('pdSites','3');
+    set('blAgeRatio','');
+    set('suspClass','3');
+    set('sptComp','2');
+    set('restMargin','3');
+    set('cleanability','2');
+    /* Peri-implant — yields Peri-Implantitis (BL ≥2 mm vs baseline) */
+    set('hasImplants',true);
+    set('piBOPSup',true);
+    set('piBL','4');
+    set('piPDC','3');
+    set('piHasBaseline',true);
+  };
   const mobOpts=[{v:'0',l:t('m0')},{v:'1',l:t('m1')},{v:'2',l:t('m2')},{v:'3',l:t('m3')}];
   const hpOpts=[{v:'1',l:t('hp1')},{v:'2',l:t('hp2')},{v:'3',l:t('hp3')}];
   const pdOpts=[{v:'1',l:t('pd1')},{v:'2',l:t('pd2')},{v:'3',l:t('pd3')}];
@@ -945,6 +997,30 @@ function InputTab({st,set,t,idValid,onCompute}){
 
   return (
     <div className="fade-in tab-content" style={{padding:'20px 16px',maxWidth:960,margin:'0 auto'}}>
+      <div className="demo-banner" style={{
+        display:'flex',alignItems:'center',gap:12,flexWrap:'wrap',
+        background:'linear-gradient(95deg, rgba(45,212,191,.06) 0%, rgba(94,234,212,.10) 100%)',
+        border:'1px solid #2DD4BF44',borderRadius:12,padding:'10px 14px',marginBottom:16
+      }}>
+        <div style={{flex:'1 1 280px',minWidth:0}}>
+          <div style={{fontSize:'.7rem',fontWeight:700,letterSpacing:'.1em',
+            textTransform:'uppercase',color:'#5EEAD4',marginBottom:3}}>
+            ✨ {t('demoBannerTitle')}
+          </div>
+          <div style={{fontSize:'.78rem',color:'#94A3B8',direction:'ltr'}}>
+            {t('demoBannerDesc')}
+          </div>
+        </div>
+        <button onClick={loadDemo} style={{
+          background:'#0F2035',color:'#5EEAD4',border:'1px solid #2DD4BF66',
+          borderRadius:8,padding:'8px 16px',cursor:'pointer',
+          fontFamily:'Heebo,Arial,sans-serif',fontWeight:700,fontSize:'.82rem',
+          whiteSpace:'nowrap',transition:'all .15s'
+        }}>
+          {t('btnLoadDemo')}
+        </button>
+      </div>
+
       <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))',gap:16,marginBottom:16}}>
         <Card title={t('secPt')}>
           <FInput label={t('ptName')} value={st.patientName} onChange={v=>set('patientName',v)} placeholder="—"/>
