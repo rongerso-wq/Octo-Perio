@@ -50,7 +50,7 @@
     .card{background:#0C1A28;border:1px solid #1A3050;border-radius:16px;padding:20px;}
     .card-title{font-size:.68rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#2DD4BF;margin-bottom:14px;}
 
-    .tab-btn{padding:12px 22px;font-weight:700;font-size:.82rem;border-bottom:2px solid transparent;
+    .tab-btn{padding:12px 22px;min-height:44px;font-weight:700;font-size:.82rem;border-bottom:2px solid transparent;
       color:#64748B;cursor:pointer;transition:all .15s;white-space:nowrap;
       background:none;border-top:none;border-left:none;border-right:none;font-family:'Heebo',Arial,sans-serif;}
     .tab-btn:hover{color:#94A3B8;}
@@ -87,13 +87,21 @@
     }
     .author-signature .sig-name{
       font-size:1.25rem;line-height:1;
-      background:linear-gradient(95deg,#5EEAD4 0%,#2DD4BF 60%,#0EA5A0 100%);
+      background:linear-gradient(95deg,#5EEAD4 0%,#2DD4BF 60%,#1A8A7B 100%);
       -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
     }
+    /* Move watermark to bottom-START so it never collides with bottom-END action buttons (Print, etc.) */
+    .author-signature{bottom:14px;inset-inline-start:18px;inset-inline-end:auto;}
     @media (max-width:520px){
-      .author-signature{bottom:8px;inset-inline-end:10px;}
+      .author-signature{bottom:8px;inset-inline-start:10px;}
       .author-signature .sig-prefix{display:none;}
       .author-signature .sig-name{font-size:1.05rem;}
+    }
+    /* Hide the watermark when on the Output tab (the letter is the artefact) */
+    body.tab-output .author-signature{display:none;}
+
+    @media (prefers-reduced-motion: reduce){
+      .fade-in, *{animation:none!important;transition:none!important;}
     }
 
     .fade-in{animation:fadeIn .22s ease;}
@@ -103,8 +111,22 @@
 
     .print-only{display:none;}
 
-    @media (max-width:780px){
+    @media (max-width:900px){
       .idra-grid{grid-template-columns:1fr!important;}
+    }
+
+    /* Tab-bar — fade-edge so users notice horizontal overflow on phones */
+    .tab-bar-wrap{position:relative;}
+    .tab-bar-wrap::after{
+      content:'';position:absolute;top:0;bottom:0;
+      inset-inline-end:0;width:24px;pointer-events:none;
+      background:linear-gradient(to left,#060D14,transparent);
+    }
+    [dir="rtl"] .tab-bar-wrap::after{background:linear-gradient(to right,#060D14,transparent);}
+
+    /* Records grid: collapse to 1-col below tablet so Hebrew labels don't choke at 150px */
+    @media (max-width:780px){
+      .records-grid{grid-template-columns:1fr!important;}
     }
 
     /* ───── Mobile / smartphone layout (≤640px) ───── */
@@ -178,7 +200,7 @@ const S = {
     gM:'זכר', gF:'נקבה', gO:'אחר',
     patientID:'תעודת זהות', idInvalid:'ת"ז לא תקפה (כשל ספרת ביקורת)',
     mrn:'מס׳ מטופל (Rambam MRN)',
-    secRecords:'חתימה ותיוק (חוזר מנכ"ל 2/2012)',
+    secRecords:'חתימה ותיוק', secRecordsCite:'חוזר מנכ"ל 2/2012',
     residentName:'שם מתמחה/רופא מבצע', licenseNo:'מס׳ רישיון',
     attendingName:'שם רופא בכיר חתום', attendingLicense:'רישיון רופא בכיר',
     secCaseType:'סוג מקרה (טריאז׳ Tonetti 2018)',
@@ -213,7 +235,8 @@ const S = {
     btnCompute:'חשב אבחנה', btnComputeDisabled:'יש להזין CAL או %RBL',
     btnLoadDemo:'טען דוגמה קלינית', demoBannerTitle:'דוגמה להדגמה',
     demoBannerDesc:'יוסי כהן · גבר 58 · מעשן 18 סיג׳/יום · HbA1c 8.4% · אובדן עצם 52% · שתל פעיל',
-    btnCopy:'העתק מכתב', btnCopied:'הועתק!',
+    demoDismiss:'סגור', demoConfirm:'יש נתוני מטופל בטופס. לטעון דוגמה ולמחוק את הקיים?',
+    btnCopy:'העתק מכתב', btnCopied:'הועתק!', clipboardNote:'הזיכרון יתנקה אוטומטית בעוד 60 שניות',
     btnPrint:'הדפסה', btnLang:'EN',
     tabRefs:'מקורות', refsTitle:'מקורות וקישורים מקצועיים',
     refsSubtitle:'כל אלגוריתם וערך-סף בכלי מבוסס על המקור המתאים. לחץ לפתיחת המאמר.',
@@ -258,7 +281,7 @@ const S = {
     gM:'Male', gF:'Female', gO:'Other',
     patientID:'National ID', idInvalid:'Invalid ID (checksum failed)',
     mrn:'Rambam MRN',
-    secRecords:'Signing & Records (MoH 2/2012)',
+    secRecords:'Signing & Records', secRecordsCite:'MoH 2/2012',
     residentName:'Resident / Treating Doctor', licenseNo:'License No.',
     attendingName:'Attending Physician', attendingLicense:'Attending License No.',
     secCaseType:'Case Type (Tonetti 2018 triage)',
@@ -293,7 +316,8 @@ const S = {
     btnCompute:'Compute Diagnosis', btnComputeDisabled:'Enter CAL or %RBL to continue',
     btnLoadDemo:'Load Demo Case', demoBannerTitle:'Showcase example',
     demoBannerDesc:'Yossi Cohen · M 58 · 18 cig/day · HbA1c 8.4% · 52% bone loss · Active implant',
-    btnCopy:'Copy Letter', btnCopied:'Copied!',
+    demoDismiss:'Dismiss', demoConfirm:'There is patient data in the form. Load the demo and overwrite it?',
+    btnCopy:'Copy Letter', btnCopied:'Copied!', clipboardNote:'Clipboard auto-clears in 60s',
     btnPrint:'Print', btnLang:'עב',
     tabRefs:'References', refsTitle:'Sources & Professional Links',
     refsSubtitle:'Every algorithm and threshold in this tool is anchored to the source paper. Click to open.',
@@ -783,29 +807,37 @@ const IconTooth=()=>(
 );
 
 /* ─── SMALL UI COMPONENTS ────────────────────────────────────────────────── */
-function FLabel({ label, note }){
+function FLabel({ label, note, htmlFor }){
   return (
     <div style={{marginBottom:4}}>
-      <label style={{fontSize:'.76rem',fontWeight:600,color:'#94A3B8'}}>{label}</label>
+      <label htmlFor={htmlFor} style={{fontSize:'.76rem',fontWeight:600,color:'#94A3B8'}}>{label}</label>
       {note&&<span style={{fontSize:'.66rem',color:'#F59E0B',marginRight:8,marginLeft:6}}>{note}</span>}
     </div>
   );
 }
-function FInput({ label,note,type='text',value,onChange,min,max,step,placeholder }){
+function FInput({ label,note,type='text',value,onChange,min,max,step,placeholder,inputMode,autoComplete,pattern,maxLength }){
+  const id=React.useId();
+  const noteId=note?`${id}-note`:undefined;
+  /* Numeric fields default to 'decimal' so phones open the numeric keypad. */
+  const im = inputMode || (type==='number' ? 'decimal' : undefined);
   return (
     <div style={{marginBottom:14}}>
-      <FLabel label={label} note={note}/>
-      <input className="field-input" type={type} value={value}
+      <FLabel label={label} note={note} htmlFor={id}/>
+      <input id={id} className="field-input" type={type} value={value}
         onChange={e=>onChange(e.target.value)}
-        min={min} max={max} step={step} placeholder={placeholder}/>
+        min={min} max={max} step={step} placeholder={placeholder}
+        inputMode={im} autoComplete={autoComplete} pattern={pattern} maxLength={maxLength}
+        aria-describedby={noteId}/>
+      {noteId&&<span id={noteId} style={{display:'none'}}>{note}</span>}
     </div>
   );
 }
 function FSelect({ label,note,value,onChange,opts }){
+  const id=React.useId();
   return (
     <div style={{marginBottom:14}}>
-      <FLabel label={label} note={note}/>
-      <select className="field-input" value={value} onChange={e=>onChange(e.target.value)}>
+      <FLabel label={label} note={note} htmlFor={id}/>
+      <select id={id} className="field-input" value={value} onChange={e=>onChange(e.target.value)}>
         {opts.map(o=><option key={o.v} value={o.v}>{o.l}</option>)}
       </select>
     </div>
@@ -839,7 +871,7 @@ function StageBadge({stage}){
   return (
     <div className="badge-sg" style={{background:s.bg,color:s.c,fontFamily:'Inter,sans-serif',fontWeight:800,fontSize:'2.4rem',
       borderRadius:16,padding:'14px 32px',textAlign:'center',border:`1px solid ${s.c}33`,direction:'ltr',minWidth:110}}>
-      <div style={{fontSize:'.6rem',fontWeight:600,letterSpacing:'.12em',opacity:.65,marginBottom:4}}>STAGE</div>
+      <div style={{fontSize:'.65rem',fontWeight:700,letterSpacing:'.12em',opacity:.92,marginBottom:4}}>STAGE</div>
       {stage}
     </div>
   );
@@ -849,7 +881,7 @@ function GradeBadge({grade}){
   return (
     <div className="badge-sg" style={{background:g.bg,color:g.c,fontFamily:'Inter,sans-serif',fontWeight:800,fontSize:'2.4rem',
       borderRadius:16,padding:'14px 32px',textAlign:'center',border:`1px solid ${g.c}33`,direction:'ltr',minWidth:110}}>
-      <div style={{fontSize:'.6rem',fontWeight:600,letterSpacing:'.12em',opacity:.65,marginBottom:4}}>GRADE</div>
+      <div style={{fontSize:'.65rem',fontWeight:700,letterSpacing:'.12em',opacity:.92,marginBottom:4}}>GRADE</div>
       {grade}
     </div>
   );
@@ -939,9 +971,12 @@ function InputTab({st,set,t,idValid,onCompute}){
   const ctOpts=[{v:'auto',l:t('ctAuto')},{v:'health',l:t('ctHealth')},{v:'gingivitis',l:t('ctGingivitis')},{v:'periodontitis',l:t('ctPerio')},{v:'npd',l:t('ctNPD')},{v:'endoPerio',l:t('ctEndoPerio')}];
   const txOpts=[{v:'auto',l:t('ctAuto')},{v:'untreated',l:t('txUntreated')},{v:'therapy',l:t('txTherapy')},{v:'stable',l:t('txStable')},{v:'remission',l:t('txRemission')},{v:'unstable',l:t('txUnstable')}];
 
+  const [demoDismissed,setDemoDismissed]=React.useState(false);
+  const formHasData = !!(st.patientName || st.patientID || st.calWorst || st.rblPercent);
+
   /* Demo case — Stage IV Grade C Generalized + High IDRA + Peri-implantitis.
      ID 123456782 has a valid Israeli mod-10 checksum. */
-  const loadDemo = () => {
+  const loadDemoUnsafe = () => {
     /* Patient */
     set('patientName','יוסי כהן');
     set('patientID','123456782');
@@ -986,6 +1021,13 @@ function InputTab({st,set,t,idValid,onCompute}){
     set('piPDC','3');
     set('piHasBaseline',true);
   };
+  const loadDemo = () => {
+    if(formHasData){
+      const ok = window.confirm(t('demoConfirm'));
+      if(!ok) return;
+    }
+    loadDemoUnsafe();
+  };
   const mobOpts=[{v:'0',l:t('m0')},{v:'1',l:t('m1')},{v:'2',l:t('m2')},{v:'3',l:t('m3')}];
   const hpOpts=[{v:'1',l:t('hp1')},{v:'2',l:t('hp2')},{v:'3',l:t('hp3')}];
   const pdOpts=[{v:'1',l:t('pd1')},{v:'2',l:t('pd2')},{v:'3',l:t('pd3')}];
@@ -997,36 +1039,49 @@ function InputTab({st,set,t,idValid,onCompute}){
 
   return (
     <div className="fade-in tab-content" style={{padding:'20px 16px',maxWidth:960,margin:'0 auto'}}>
-      <div className="demo-banner" style={{
-        display:'flex',alignItems:'center',gap:12,flexWrap:'wrap',
-        background:'linear-gradient(95deg, rgba(45,212,191,.06) 0%, rgba(94,234,212,.10) 100%)',
-        border:'1px solid #2DD4BF44',borderRadius:12,padding:'10px 14px',marginBottom:16
-      }}>
-        <div style={{flex:'1 1 280px',minWidth:0}}>
-          <div style={{fontSize:'.7rem',fontWeight:700,letterSpacing:'.1em',
-            textTransform:'uppercase',color:'#5EEAD4',marginBottom:3}}>
-            ✨ {t('demoBannerTitle')}
+      {!formHasData && !demoDismissed && (
+        <div className="demo-banner" style={{
+          display:'flex',alignItems:'center',gap:12,flexWrap:'wrap',
+          background:'linear-gradient(95deg, rgba(45,212,191,.06) 0%, rgba(94,234,212,.10) 100%)',
+          border:'1px solid #2DD4BF44',borderRadius:12,padding:'10px 14px',marginBottom:16
+        }}>
+          <div style={{flex:'1 1 260px',minWidth:0,display:'flex',alignItems:'flex-start',gap:9}}>
+            <span style={{display:'inline-block',width:7,height:7,borderRadius:'50%',
+              background:'#5EEAD4',marginTop:7,flexShrink:0}}/>
+            <div style={{minWidth:0}}>
+              <div style={{fontSize:'.7rem',fontWeight:700,letterSpacing:'.1em',
+                textTransform:'uppercase',color:'#5EEAD4',marginBottom:3}}>
+                {t('demoBannerTitle')}
+              </div>
+              <div style={{fontSize:'.78rem',color:'#94A3B8',direction:'ltr'}}>
+                {t('demoBannerDesc')}
+              </div>
+            </div>
           </div>
-          <div style={{fontSize:'.78rem',color:'#94A3B8',direction:'ltr'}}>
-            {t('demoBannerDesc')}
+          <div style={{display:'flex',gap:8,alignItems:'center'}}>
+            <button onClick={loadDemo} style={{
+              background:'#0F2035',color:'#5EEAD4',border:'1px solid #2DD4BF66',
+              borderRadius:8,padding:'8px 16px',cursor:'pointer',minHeight:36,
+              fontFamily:'Heebo,Arial,sans-serif',fontWeight:700,fontSize:'.82rem',
+              whiteSpace:'nowrap',transition:'all .15s'
+            }}>
+              {t('btnLoadDemo')}
+            </button>
+            <button onClick={()=>setDemoDismissed(true)} aria-label={t('demoDismiss')} style={{
+              background:'transparent',color:'#64748B',border:'1px solid transparent',
+              borderRadius:8,width:32,height:32,cursor:'pointer',fontSize:'1.1rem',
+              lineHeight:1,fontFamily:'Inter,sans-serif'
+            }}>×</button>
           </div>
         </div>
-        <button onClick={loadDemo} style={{
-          background:'#0F2035',color:'#5EEAD4',border:'1px solid #2DD4BF66',
-          borderRadius:8,padding:'8px 16px',cursor:'pointer',
-          fontFamily:'Heebo,Arial,sans-serif',fontWeight:700,fontSize:'.82rem',
-          whiteSpace:'nowrap',transition:'all .15s'
-        }}>
-          {t('btnLoadDemo')}
-        </button>
-      </div>
+      )}
 
       <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))',gap:16,marginBottom:16}}>
         <Card title={t('secPt')}>
-          <FInput label={t('ptName')} value={st.patientName} onChange={v=>set('patientName',v)} placeholder="—"/>
-          <FInput label={t('patientID')} note={!idValid?t('idInvalid'):''} value={st.patientID} onChange={v=>set('patientID',v)} placeholder="123456789" inputMode="numeric"/>
+          <FInput label={t('ptName')} value={st.patientName} onChange={v=>set('patientName',v)} placeholder="—" autoComplete="name"/>
+          <FInput label={t('patientID')} note={!idValid?t('idInvalid'):''} value={st.patientID} onChange={v=>set('patientID',v)} placeholder="123456789" inputMode="numeric" pattern="\d{9}" maxLength={9}/>
           <FInput label={t('mrn')} value={st.mrn} onChange={v=>set('mrn',v)} placeholder="—"/>
-          <FInput label={t('ptDOB')} type="date" value={st.patientDOB} onChange={v=>set('patientDOB',v)}/>
+          <FInput label={t('ptDOB')} type="date" value={st.patientDOB} onChange={v=>set('patientDOB',v)} autoComplete="bday"/>
           <FSelect label={t('ptGender')} value={st.patientGender} onChange={v=>set('patientGender',v)} opts={gOpts}/>
         </Card>
         <Card title={t('secSys')}>
@@ -1041,7 +1096,7 @@ function InputTab({st,set,t,idValid,onCompute}){
           <FSelect label={t('caseType')} value={st.caseTypeOverride} onChange={v=>set('caseTypeOverride',v)} opts={ctOpts}/>
           <FSelect label={t('txStatus')} value={st.txStatusOverride} onChange={v=>set('txStatusOverride',v)} opts={txOpts}/>
         </Card>
-        <Card title={t('secRecords')}>
+        <Card title={<span>{t('secRecords')}<span style={{fontSize:'.6rem',fontWeight:500,color:'#475569',marginInlineStart:8,letterSpacing:0,textTransform:'none'}}>· {t('secRecordsCite')}</span></span>}>
           <div className="records-grid" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'0 12px'}}>
             <FInput label={t('residentName')} value={st.residentName} onChange={v=>set('residentName',v)} placeholder="—"/>
             <FInput label={t('licenseNo')} value={st.licenseNo} onChange={v=>set('licenseNo',v)} placeholder="—"/>
@@ -1150,27 +1205,24 @@ function DiagTab({dx,caseType,txStatus,icd,t}){
           <div style={{fontSize:'.6rem',fontWeight:600,letterSpacing:'.1em',color:'#64748B',marginBottom:4}}>{t('extLabel').toUpperCase()}</div>
           <div style={{fontWeight:700,fontSize:'1.1rem',color:'#E2E8F0'}}>{extLabel}</div>
         </div>
-        <div className="badge-status" style={{background:'#0C1A28',border:`1px solid ${txColor}55`,borderRadius:16,
+        <div className="badge-status" style={{background:'#0C1A28',border:`1px solid ${txColor}88`,borderRadius:16,
           padding:'14px 24px',textAlign:'center',minWidth:130}}>
           <div style={{fontSize:'.6rem',fontWeight:600,letterSpacing:'.1em',color:'#64748B',marginBottom:4}}>STATUS</div>
           <div style={{fontWeight:700,fontSize:'.95rem',color:txColor}}>{txLabel}</div>
         </div>
       </div>
 
-      {/* Full diagnosis line */}
-      <div className="diag-line" style={{background:'#0F2035',borderRadius:11,padding:'13px 18px',marginBottom:14,
+      {/* Full diagnosis line — ICD merged in, aria-live for SR announcement on recompute */}
+      <div className="diag-line" role="status" aria-live="polite" aria-atomic="true" lang="en"
+        style={{background:'#0F2035',borderRadius:11,padding:'13px 18px',marginBottom:20,
         direction:'ltr',fontFamily:'Inter,sans-serif',fontSize:'.98rem',fontWeight:600,
         color:'#5EEAD4',textAlign:'center',letterSpacing:'.01em'}}>
         Periodontitis Stage {dx.stage} Grade {dx.grade} — {extLabel}
-        {dx.gradeScore!==null&&<span style={{marginRight:14,marginLeft:14,color:'#94A3B8',fontWeight:400,fontSize:'.8rem',fontVariantNumeric:'tabular-nums'}}>
+        <span style={{marginInlineStart:12,marginInlineEnd:12,color:'#64748B',fontWeight:400,fontSize:'.78rem'}}>·</span>
+        <span style={{color:'#94A3B8',fontWeight:600,fontSize:'.85rem'}}>ICD: <span style={{color:'#5EEAD4'}}>{icd||'—'}</span></span>
+        {dx.gradeScore!==null&&<span style={{marginInlineStart:12,marginInlineEnd:12,color:'#94A3B8',fontWeight:400,fontSize:'.8rem',fontVariantNumeric:'tabular-nums'}}>
           (Grade Score: {dx.gradeScore.toFixed(3)})
         </span>}
-      </div>
-
-      {/* ICD-10 + tx-status row */}
-      <div style={{display:'flex',gap:10,marginBottom:20,flexWrap:'wrap',alignItems:'center',justifyContent:'center'}}>
-        <span style={{fontSize:'.7rem',fontWeight:700,letterSpacing:'.08em',color:'#64748B'}}>{t('icdLabel').toUpperCase()}:</span>
-        <span style={{background:'#0C1A28',border:'1px solid #1A3050',borderRadius:6,padding:'4px 10px',fontFamily:'Inter,sans-serif',fontWeight:700,color:'#5EEAD4',fontSize:'.86rem'}}>{icd||'—'}</span>
       </div>
 
       <Card title={t('reasonTitle')}>
@@ -1254,10 +1306,10 @@ function IDRATab({scores,risk,periDx,t}){
           textTransform:'uppercase',marginBottom:10}}>{t('piTitle')}</div>
         <div style={{display:'flex',alignItems:'center',gap:18,flexWrap:'wrap'}}>
           <div style={{
-            background:periDx?(periDx==='health'?'#052E16':periDx==='mucositis'?'#2D1B00':'#2D0D0D'):'#0F2035',
+            background:'#0C1A28',
             color:periDx?piColor:'#64748B',
             borderRadius:10,padding:'10px 20px',fontWeight:700,fontSize:'.95rem',
-            border:`1px solid ${periDx?piColor+'55':'#1A3050'}`
+            border:`1px solid ${periDx?piColor+'88':'#1A3050'}`
           }}>
             {piLabel}
           </div>
@@ -1300,9 +1352,13 @@ function OutputTab({dx,risk,periDx,caseType,txStatus,icd,st,lang,age,t}){
     ? `Periodontitis Stage ${dx.stage} Grade ${dx.grade} — ${extLabel} | ICD: ${icd} | IDRA: ${risk}`
     : `${ctKey?t(ctKey):(caseType||'—')} | ICD: ${icd}`;
 
+  /* PHI hygiene: clear clipboard after 60s so the patient's letter doesn't sit
+     in the OS paste buffer indefinitely. Best-effort — silently no-ops if the
+     user has copied something else in the meantime (we don't read clipboard). */
   const handleCopy=()=>{
     navigator.clipboard.writeText(letter).then(()=>{
       setCopied(true); setTimeout(()=>setCopied(false),2500);
+      setTimeout(()=>{ try{ navigator.clipboard.writeText(''); }catch(e){} }, 60000);
     });
   };
 
@@ -1326,10 +1382,15 @@ function OutputTab({dx,risk,periDx,caseType,txStatus,icd,st,lang,age,t}){
           direction:'ltr',letterSpacing:'.01em'}}>
           {diagLine}
         </div>
-        <div style={{marginTop:10,display:'flex',gap:10,alignItems:'center',flexWrap:'wrap'}}>
-          <span style={{fontSize:'.76rem',color:'#64748B'}}>{t('sptInt')}:</span>
-          <span style={{fontSize:'.84rem',fontWeight:700,color:'#5EEAD4',fontFamily:'Inter'}}>{t(sptIntervalKey(risk))}</span>
-          <span style={{fontSize:'.68rem',color:'#475569',marginInlineStart:8}}>{t('sptSrc')}</span>
+        <div style={{marginTop:12}}>
+          <div style={{fontSize:'.66rem',fontWeight:700,letterSpacing:'.08em',
+            textTransform:'uppercase',color:'#64748B',marginBottom:6}}>{t('sptInt')}</div>
+          <div style={{display:'inline-flex',alignItems:'center',gap:8,
+            background:'#0C1A28',border:'1px solid #2DD4BF44',borderRadius:8,
+            padding:'6px 14px'}}>
+            <span style={{fontSize:'.95rem',fontWeight:700,color:'#5EEAD4',fontFamily:'Inter,sans-serif'}}>{t(sptIntervalKey(risk))}</span>
+          </div>
+          <div style={{fontSize:'.68rem',color:'#64748B',marginTop:6}}>{t('sptSrc')}</div>
         </div>
       </Card>
 
@@ -1337,6 +1398,8 @@ function OutputTab({dx,risk,periDx,caseType,txStatus,icd,st,lang,age,t}){
         {/* Screen view: editable-feel textarea (hidden on print via CSS) */}
         <textarea className="field-input"
           readOnly value={letter}
+          lang={lang}
+          aria-label={t('letterTitle')}
           style={{direction:lang==='he'?'rtl':'ltr',textAlign:lang==='he'?'right':'left'}}/>
         {/* Print view: full-flow letter (hidden on screen via CSS) */}
         <div className="print-only print-letter" dir={lang==='he'?'rtl':'ltr'}>{letter}</div>
@@ -1361,6 +1424,7 @@ function OutputTab({dx,risk,periDx,caseType,txStatus,icd,st,lang,age,t}){
             <IconPrint/> {t('btnPrint')}
           </button>
         </div>
+        {copied && <div role="status" aria-live="polite" style={{marginTop:8,fontSize:'.7rem',color:'#94A3B8'}}>{t('clipboardNote')}</div>}
       </Card>
     </div>
   );
@@ -1386,20 +1450,23 @@ function RefsTab({lang,t}){
           <div key={r.id} className="card" style={{padding:'14px 16px'}}>
             <div className="refs-card" style={{display:'flex',alignItems:'flex-start',gap:14,flexWrap:'wrap'}}>
               <div style={{flex:'1 1 320px',minWidth:0}}>
-                <div style={{fontFamily:'Inter,sans-serif',fontSize:'.92rem',fontWeight:600,color:'#E2E8F0',marginBottom:4,direction:'ltr',lineHeight:1.45}}>
+                <div style={{fontFamily:'Inter,sans-serif',fontSize:'.93rem',fontWeight:600,color:'#E2E8F0',marginBottom:4,direction:'ltr',lineHeight:1.45}}>
                   {r.title}
                 </div>
-                <div style={{fontFamily:'Inter,sans-serif',fontSize:'.78rem',color:'#94A3B8',marginBottom:6,direction:'ltr'}}>
-                  {r.authors} · {r.year} · <span style={{color:'#64748B'}}>{r.journal}</span>
+                <div style={{fontFamily:'Inter,sans-serif',fontSize:'.76rem',color:'#94A3B8',marginBottom:8,direction:'ltr'}}>
+                  {r.authors} · {r.year} · <span style={{color:'#94A3B8'}}>{r.journal}</span>
                 </div>
-                <div style={{fontSize:'.76rem',color:'#5EEAD4',lineHeight:1.55}}>
-                  <span style={{color:'#64748B',fontWeight:600}}>{t('refsUsedFor')}</span>
+                <div style={{fontSize:'.78rem',color:'#CBD5E1',lineHeight:1.55,marginBottom:6}}>
+                  <span style={{color:'#5EEAD4',fontWeight:700,fontSize:'.66rem',letterSpacing:'.06em',textTransform:'uppercase',marginInlineEnd:6}}>{t('refsUsedFor')}</span>
                   {lang==='he'?r.usedHe:r.usedEn}
                 </div>
-                <div style={{display:'flex',gap:8,marginTop:6,flexWrap:'wrap'}}>
-                  {r.pmid && <span style={{fontFamily:'Inter,sans-serif',fontSize:'.7rem',color:'#475569',background:'#0F2035',border:'1px solid #1A3050',borderRadius:5,padding:'2px 7px',direction:'ltr'}}>PMID: {r.pmid}</span>}
-                  {r.doi && <span style={{fontFamily:'Inter,sans-serif',fontSize:'.7rem',color:'#475569',background:'#0F2035',border:'1px solid #1A3050',borderRadius:5,padding:'2px 7px',direction:'ltr'}}>DOI: {r.doi}</span>}
-                </div>
+                {(r.pmid||r.doi) && (
+                  <div style={{fontFamily:'Inter,sans-serif',fontSize:'.72rem',color:'#64748B',direction:'ltr'}}>
+                    {r.pmid && <span>PMID {r.pmid}</span>}
+                    {r.pmid && r.doi && <span style={{margin:'0 8px',color:'#475569'}}>·</span>}
+                    {r.doi && <span>DOI {r.doi}</span>}
+                  </div>
+                )}
               </div>
               <a href={r.url} target="_blank" rel="noopener noreferrer" style={{
                 display:'inline-flex',alignItems:'center',gap:6,
@@ -1415,9 +1482,13 @@ function RefsTab({lang,t}){
         ))}
       </div>
 
-      <div style={{background:'#2D1B0033',border:'1px solid #F59E0B44',borderRadius:10,padding:'12px 14px',
-        fontSize:'.78rem',color:'#FCD34D',lineHeight:1.6}}>
-        ⚠ {t('refsDisclaim')}
+      <div role="note" style={{background:'#2D1B0033',border:'1px solid #F59E0B44',borderRadius:10,padding:'12px 14px',
+        fontSize:'.78rem',color:'#FCD34D',lineHeight:1.6,display:'flex',gap:10,alignItems:'flex-start'}}>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink:0,marginTop:2}}>
+          <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+        <span>{t('refsDisclaim')}</span>
       </div>
     </div>
   );
@@ -1462,13 +1533,25 @@ function Navbar({t,lang,onToggle}){
 /* ─── TAB BAR ─────────────────────────────────────────────────────────────────── */
 function TabBar({active,setActive,t}){
   const tabs=[['tabInput'],['tabDx'],['tabIDRA'],['tabOut'],['tabRefs']];
+  const onKey = (e, i) => {
+    if(e.key==='ArrowRight' || e.key==='ArrowDown'){ e.preventDefault(); setActive((i+1)%tabs.length); }
+    else if(e.key==='ArrowLeft' || e.key==='ArrowUp'){ e.preventDefault(); setActive((i-1+tabs.length)%tabs.length); }
+    else if(e.key==='Home'){ e.preventDefault(); setActive(0); }
+    else if(e.key==='End'){ e.preventDefault(); setActive(tabs.length-1); }
+  };
   return (
-    <div className="no-print" style={{
+    <div className="no-print tab-bar-wrap" role="tablist" aria-label="Tabs" style={{
       position:'sticky',top:54,zIndex:90,background:'#060D14',
       borderBottom:'1px solid #1A3050',display:'flex',overflowX:'auto',paddingInlineStart:10
     }}>
       {tabs.map(([k],i)=>(
-        <button key={k} className={`tab-btn${active===i?' tab-active':''}`} onClick={()=>setActive(i)}>
+        <button key={k} role="tab"
+          aria-selected={active===i}
+          aria-controls={`panel-${k}`}
+          id={`tab-${k}`}
+          tabIndex={active===i?0:-1}
+          onKeyDown={e=>onKey(e,i)}
+          className={`tab-btn${active===i?' tab-active':''}`} onClick={()=>setActive(i)}>
           {t(k)}
         </button>
       ))}
@@ -1525,6 +1608,12 @@ function App(){
   const [cleanability,setCleanability]=useState('1');
 
   const t=useCallback(k=>S[lang][k]??k,[lang]);
+
+  /* Toggle body class so CSS can hide the author signature on the Output tab. */
+  React.useEffect(()=>{
+    const TAB_NAMES=['input','dx','idra','output','refs'];
+    document.body.className = `tab-${TAB_NAMES[activeTab]||'input'}`;
+  },[activeTab]);
 
   const toggleLang=()=>{
     const next=lang==='he'?'en':'he';
