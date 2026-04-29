@@ -109,6 +109,47 @@
 
     textarea.field-input{resize:vertical;min-height:340px;line-height:1.75;font-size:.82rem;}
 
+    /* ─── Periodontal chart ─── */
+    .perio-chart{display:flex;flex-direction:column;gap:18px;direction:ltr;min-width:1100px;margin:0 auto;}
+    .arch-row{display:flex;gap:3px;justify-content:center;}
+    .arch-divider{height:1px;background:#1A3050;margin:4px 0;}
+    .tooth-col{display:flex;flex-direction:column;gap:2px;align-items:center;width:68px;}
+    .tooth-col.missing .tooth-crown{opacity:.3;border-style:dashed;}
+    .tooth-crown{width:66px;padding:3px 4px;background:#0F2035;border:1px solid #1A3050;border-radius:5px;
+      display:flex;flex-direction:column;align-items:center;gap:2px;font-size:.6rem;}
+    .tooth-num{font-weight:700;color:#94A3B8;font-family:'Inter',sans-serif;letter-spacing:.02em;}
+    .tooth-flags{display:flex;gap:4px;font-size:.55rem;font-family:'Inter',sans-serif;height:11px;align-items:center;}
+    .tooth-actions{display:flex;gap:1px;}
+    .tooth-actions button{background:transparent;color:#475569;border:1px solid transparent;
+      cursor:pointer;padding:1px 4px;font-size:.6rem;font-family:'Inter',sans-serif;border-radius:3px;line-height:1;}
+    .tooth-actions button:hover{color:#5EEAD4;border-color:#1A3050;background:#0C1A28;}
+    .tooth-actions button.active{color:#5EEAD4;background:#0C1A28;border-color:#2DD4BF44;}
+    .site-row{display:flex;gap:1px;}
+    .site-cell{display:flex;flex-direction:column;width:22px;border:1px solid #1A3050;border-radius:3px;
+      background:#0C1A28;overflow:hidden;}
+    .site-cell.pd-mid{background:#2D1B0033;}
+    .site-cell.pd-high{background:#2D0D0D44;}
+    .site-cell input{width:100%;height:18px;text-align:center;background:transparent;color:#E2E8F0;
+      border:none;border-bottom:1px solid #1A3050;font-size:.7rem;font-weight:600;font-family:'Inter',sans-serif;
+      padding:0;outline:none;}
+    .site-cell input::-webkit-inner-spin-button,
+    .site-cell input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0;}
+    .site-cell input.gm{font-weight:400;color:#94A3B8;}
+    .site-cell input.pd-mid{color:#FCD34D;}
+    .site-cell input.pd-high{color:#FCA5A5;}
+    .site-cell input:focus{background:#1A3050;color:#5EEAD4!important;}
+    .site-dots{display:flex;gap:2px;justify-content:center;padding:2px 0;background:#0F2035;}
+    .site-dot{width:6px;height:6px;border-radius:50%;cursor:pointer;background:#1A3050;
+      transition:background .15s, transform .1s;}
+    .site-dot:hover{transform:scale(1.3);}
+    .site-dot.bop{background:#EF4444;}
+    .site-dot.sup{background:#FCD34D;}
+    .site-dot.plaque{background:#94A3B8;}
+    .chart-pill{display:inline-flex;align-items:center;gap:6px;background:#0F2035;border:1px solid #1A3050;
+      border-radius:8px;padding:6px 12px;font-family:'Inter',sans-serif;font-size:.78rem;}
+    .chart-pill .label{color:#64748B;font-size:.65rem;letter-spacing:.06em;text-transform:uppercase;font-weight:700;}
+    .chart-pill .val{color:#5EEAD4;font-weight:700;font-variant-numeric:tabular-nums;}
+
     .print-only{display:none;}
 
     @media (max-width:900px){
@@ -195,7 +236,19 @@ const { useState, useMemo, useCallback } = React;
 const S = {
   he: {
     appSub:'כלי תמיכה קלינית פריו-אימפלנט', rambam:'רמב"ם | פריודונטולוגיה',
-    tabInput:'טופס קליני', tabDx:'אבחנה', tabIDRA:'IDRA', tabOut:'פלט מקצועי',
+    tabInput:'טופס קליני', tabChart:'תרשים פריו', tabDx:'אבחנה', tabIDRA:'IDRA', tabOut:'פלט מקצועי',
+    chartTitle:'תרשים פריודונטלי (6-PPC)',
+    chartSubtitle:'תרשים מלא — 32 שיניים, 6 אתרים לכל שן. לחץ על תא לעריכה. נקודות: דימום / מוגלה / רובד.',
+    chartFMBS:'FMBS', chartFMPS:'FMPS', chartMaxPD:'Max PD', chartWorstCAL:'Worst CAL',
+    chartFurc:'פיפורקציה', chartMobility:'ניידות',
+    chartMissing:'חסר', chartImplant:'שתל',
+    chartMaxilla:'לסת עליונה', chartMandible:'לסת תחתונה',
+    chartBuccal:'בוקאלי', chartLingual:'לשוני / פלטינלי',
+    chartReset:'איפוס תרשים', chartResetConfirm:'לאפס את כל התרשים?',
+    chartLegend:'מקרא', chartLegendBOP:'דימום (BOP)', chartLegendSUP:'מוגלה', chartLegendPlaque:'רובד',
+    chartCellPD:'PD (מ"מ)', chartCellGM:'GM (מ"מ — חיובי = נסיגה)',
+    chartHotkeys:'מקשי קיצור: b דימום · s מוגלה · p רובד · m ניידות · f פיפורקציה · x חסר · i שתל',
+    chartNotMeasured:'—',
     secPt:'פרטי מטופל', ptName:'שם מלא', ptDOB:'תאריך לידה', ptGender:'מגדר',
     gM:'זכר', gF:'נקבה', gO:'אחר',
     patientID:'תעודת זהות', idInvalid:'ת"ז לא תקפה (כשל ספרת ביקורת)',
@@ -276,7 +329,19 @@ const S = {
   },
   en: {
     appSub:'Perio-Implant Clinical Decision Support', rambam:'Rambam | Periodontology',
-    tabInput:'Clinical Input', tabDx:'Diagnosis', tabIDRA:'IDRA', tabOut:'Output',
+    tabInput:'Clinical Input', tabChart:'Periodontal Chart', tabDx:'Diagnosis', tabIDRA:'IDRA', tabOut:'Output',
+    chartTitle:'Periodontal Chart (6-PPC)',
+    chartSubtitle:'Full-mouth chart — 32 teeth, 6 sites per tooth. Click a cell to edit. Dots: bleeding / suppuration / plaque.',
+    chartFMBS:'FMBS', chartFMPS:'FMPS', chartMaxPD:'Max PD', chartWorstCAL:'Worst CAL',
+    chartFurc:'Furcation', chartMobility:'Mobility',
+    chartMissing:'Missing', chartImplant:'Implant',
+    chartMaxilla:'Maxilla', chartMandible:'Mandible',
+    chartBuccal:'Buccal', chartLingual:'Lingual / Palatal',
+    chartReset:'Reset chart', chartResetConfirm:'Reset the entire chart?',
+    chartLegend:'Legend', chartLegendBOP:'Bleeding on Probing', chartLegendSUP:'Suppuration', chartLegendPlaque:'Plaque',
+    chartCellPD:'PD (mm)', chartCellGM:'GM (mm — positive = recession)',
+    chartHotkeys:'Hotkeys: b bleed · s sup · p plaque · m mobility · f furcation · x missing · i implant',
+    chartNotMeasured:'—',
     secPt:'Patient Details', ptName:'Full Name', ptDOB:'Date of Birth', ptGender:'Gender',
     gM:'Male', gF:'Female', gO:'Other',
     patientID:'National ID', idInvalid:'Invalid ID (checksum failed)',
@@ -534,6 +599,26 @@ function computeIDRARisk(scores){
   if(any3||c2>=3) return 'HIGH';
   return 'MODERATE';
 }
+
+/* ─── PERIODONTAL CHART HELPERS ──────────────────────────────────────────── */
+const FDI_MAXILLA = ['18','17','16','15','14','13','12','11','21','22','23','24','25','26','27','28'];
+const FDI_MANDIBLE = ['48','47','46','45','44','43','42','41','31','32','33','34','35','36','37','38'];
+const SITE_KEYS = ['mb','b','db','ml','l','dl'];
+const BUCCAL_KEYS = ['mb','b','db'];
+const LINGUAL_KEYS = ['ml','l','dl'];
+
+function blankSite(){ return {pd:null, gm:null, bop:false, sup:false, plaque:false}; }
+function blankTooth(){
+  return {missing:false, implant:false, mobility:0, furcation:0,
+    sites:{mb:blankSite(),b:blankSite(),db:blankSite(),ml:blankSite(),l:blankSite(),dl:blankSite()}};
+}
+function createBlankChart(){
+  const c={};
+  for(const fdi of [...FDI_MAXILLA, ...FDI_MANDIBLE]) c[fdi]=blankTooth();
+  return c;
+}
+/* Phase 1: chart data captured but not yet derived. Phase 2 will pipe these
+   into computeDiagnosis. Phase 3 will add SVG overlays + keyboard nav. */
 
 /* Peri-Implant case definitions (Berglundh et al. 2018, J Clin Periodontol — PMID 29926948).
    Health: no BOP/SUP, no progressive bone loss.
@@ -1167,6 +1252,183 @@ function InputTab({st,set,t,idValid,onCompute}){
   );
 }
 
+/* ─── PERIO CHART TAB (Phase 1: data capture, no derivation/overlays yet) ───── */
+function SiteCell({site, onUpdate}){
+  const pd = site.pd, gm = site.gm;
+  const pdHigh = pd != null && pd >= 6;
+  const pdMid  = pd != null && pd >= 5 && pd < 6;
+  const pdClass = pdHigh ? 'pd-high' : pdMid ? 'pd-mid' : '';
+  const setNum = (key, v) => {
+    const num = v === '' ? null : parseFloat(v);
+    onUpdate({...site, [key]: isNaN(num) ? null : num});
+  };
+  return (
+    <div className={`site-cell ${pdClass}`}>
+      <input type="number" min="0" max="15" step="1" inputMode="numeric"
+        value={pd ?? ''} onChange={e => setNum('pd', e.target.value)}
+        className={pdClass}
+        title="PD (mm)" aria-label="Probing depth"/>
+      <input type="number" min="-5" max="15" step="1" inputMode="numeric"
+        value={gm ?? ''} onChange={e => setNum('gm', e.target.value)}
+        className="gm" title="GM (mm, + = recession)" aria-label="Gingival margin"/>
+      <div className="site-dots">
+        <span className={`site-dot${site.bop?' bop':''}`} title="BOP" role="checkbox" aria-checked={site.bop}
+          tabIndex={0} onClick={()=>onUpdate({...site, bop:!site.bop})}
+          onKeyDown={e=>{ if(e.key===' '||e.key==='Enter'){ e.preventDefault(); onUpdate({...site, bop:!site.bop}); }}}/>
+        <span className={`site-dot${site.sup?' sup':''}`} title="SUP" role="checkbox" aria-checked={site.sup}
+          tabIndex={0} onClick={()=>onUpdate({...site, sup:!site.sup})}
+          onKeyDown={e=>{ if(e.key===' '||e.key==='Enter'){ e.preventDefault(); onUpdate({...site, sup:!site.sup}); }}}/>
+        <span className={`site-dot${site.plaque?' plaque':''}`} title="Plaque" role="checkbox" aria-checked={site.plaque}
+          tabIndex={0} onClick={()=>onUpdate({...site, plaque:!site.plaque})}
+          onKeyDown={e=>{ if(e.key===' '||e.key==='Enter'){ e.preventDefault(); onUpdate({...site, plaque:!site.plaque}); }}}/>
+      </div>
+    </div>
+  );
+}
+
+function ToothColumn({fdi, tooth, isUpperArch, onUpdateTooth, onUpdateSite}){
+  /* Maxilla: buccal sites above the crown, lingual below.
+     Mandible: lingual above the crown, buccal below — standard 6-PPC convention
+     so buccal sites are always on the OUTER aspect of each arch. */
+  const topKeys    = isUpperArch ? BUCCAL_KEYS  : LINGUAL_KEYS;
+  const bottomKeys = isUpperArch ? LINGUAL_KEYS : BUCCAL_KEYS;
+  const cycleMob   = () => onUpdateTooth({...tooth, mobility: (tooth.mobility+1)%4});
+  const cycleFurc  = () => onUpdateTooth({...tooth, furcation:(tooth.furcation+1)%4});
+  const toggleMissing = () => onUpdateTooth({...tooth, missing:!tooth.missing});
+  const toggleImplant = () => onUpdateTooth({...tooth, implant:!tooth.implant});
+  const romanFurc = ['','I','II','III'][tooth.furcation];
+
+  return (
+    <div className={`tooth-col${tooth.missing?' missing':''}`}>
+      {!tooth.missing && (
+        <div className="site-row">
+          {topKeys.map(k =>
+            <SiteCell key={k} site={tooth.sites[k]} onUpdate={u => onUpdateSite(k, u)}/>
+          )}
+        </div>
+      )}
+      <div className="tooth-crown">
+        <div className="tooth-num">{fdi}</div>
+        <div className="tooth-flags">
+          {tooth.mobility>0 && <span style={{color:'#FCD34D'}}>M{tooth.mobility}</span>}
+          {tooth.furcation>0 && <span style={{color:'#FCA5A5'}}>F{romanFurc}</span>}
+          {tooth.implant && <span style={{color:'#5EEAD4'}}>imp</span>}
+        </div>
+        <div className="tooth-actions">
+          <button onClick={cycleMob}    className={tooth.mobility>0?'active':''}    title="cycle mobility">m</button>
+          <button onClick={cycleFurc}   className={tooth.furcation>0?'active':''}   title="cycle furcation">f</button>
+          <button onClick={toggleImplant} className={tooth.implant?'active':''}     title="toggle implant">i</button>
+          <button onClick={toggleMissing} className={tooth.missing?'active':''}     title="toggle missing">x</button>
+        </div>
+      </div>
+      {!tooth.missing && (
+        <div className="site-row">
+          {bottomKeys.map(k =>
+            <SiteCell key={k} site={tooth.sites[k]} onUpdate={u => onUpdateSite(k, u)}/>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PerioChartTab({chart, setChart, t}){
+  /* Quick live counts for the header pills (lightweight; full derivation comes Phase 2). */
+  const stats = useMemo(() => {
+    let measured=0, bop=0, plaque=0, maxPD=0, worstCAL=0;
+    for(const fdi of Object.keys(chart)){
+      const tooth = chart[fdi];
+      if(tooth.missing) continue;
+      for(const k of SITE_KEYS){
+        const s = tooth.sites[k];
+        if(s.pd != null){
+          measured++;
+          if(s.pd > maxPD) maxPD = s.pd;
+          const cal = (s.pd ?? 0) + (s.gm ?? 0);
+          if(cal > worstCAL) worstCAL = cal;
+        }
+        if(s.bop) bop++;
+        if(s.plaque) plaque++;
+      }
+    }
+    const pct = (n) => measured ? Math.round((n/measured)*100) : 0;
+    return {measured, fmbs:pct(bop), fmps:pct(plaque), maxPD, worstCAL};
+  }, [chart]);
+
+  const updateTooth = (fdi, partial) =>
+    setChart(prev => ({...prev, [fdi]: {...prev[fdi], ...partial}}));
+  const updateSite = (fdi, k, updated) =>
+    setChart(prev => ({...prev, [fdi]: {...prev[fdi], sites: {...prev[fdi].sites, [k]: updated}}}));
+
+  const renderArch = (teeth, isUpperArch) => (
+    <div className="arch-row">
+      {teeth.map(fdi => (
+        <ToothColumn key={fdi} fdi={fdi} tooth={chart[fdi]}
+          isUpperArch={isUpperArch}
+          onUpdateTooth={(partial) => updateTooth(fdi, partial)}
+          onUpdateSite={(k, u) => updateSite(fdi, k, u)}/>
+      ))}
+    </div>
+  );
+
+  const handleReset = () => {
+    if(window.confirm(t('chartResetConfirm'))) setChart(createBlankChart());
+  };
+
+  return (
+    <div className="fade-in tab-content" style={{padding:'20px 12px',maxWidth:1400,margin:'0 auto'}}>
+      <div style={{display:'flex',gap:10,alignItems:'center',marginBottom:6,flexWrap:'wrap'}}>
+        <div style={{fontSize:'.72rem',fontWeight:700,letterSpacing:'.08em',color:'#2DD4BF',
+          textTransform:'uppercase'}}>{t('chartTitle')}</div>
+      </div>
+      <div style={{fontSize:'.78rem',color:'#94A3B8',marginBottom:14,lineHeight:1.55}}>{t('chartSubtitle')}</div>
+
+      {/* Live header pills */}
+      <div style={{display:'flex',gap:8,marginBottom:14,flexWrap:'wrap',alignItems:'center'}}>
+        <span className="chart-pill"><span className="label">{t('chartFMBS')}</span><span className="val">{stats.fmbs}%</span></span>
+        <span className="chart-pill"><span className="label">{t('chartFMPS')}</span><span className="val">{stats.fmps}%</span></span>
+        <span className="chart-pill"><span className="label">{t('chartMaxPD')}</span><span className="val">{stats.maxPD || '—'}{stats.maxPD?' mm':''}</span></span>
+        <span className="chart-pill"><span className="label">{t('chartWorstCAL')}</span><span className="val">{stats.worstCAL || '—'}{stats.worstCAL?' mm':''}</span></span>
+        <span style={{fontSize:'.7rem',color:'#64748B',marginInlineStart:8}}>· {stats.measured} sites</span>
+        <button onClick={handleReset} style={{
+          marginInlineStart:'auto',background:'#0F2035',color:'#94A3B8',
+          border:'1px solid #1A3050',borderRadius:6,padding:'5px 12px',
+          fontSize:'.74rem',cursor:'pointer',fontFamily:'Heebo,Arial,sans-serif'
+        }}>{t('chartReset')}</button>
+      </div>
+
+      {/* Chart — horizontally scrollable on narrow screens */}
+      <div style={{overflowX:'auto',padding:'10px 0',background:'#080F18',borderRadius:10,border:'1px solid #0F2035'}}>
+        <div className="perio-chart">
+          <div style={{fontSize:'.62rem',color:'#475569',letterSpacing:'.1em',textTransform:'uppercase',
+            textAlign:'center',marginBottom:2,fontFamily:'Inter,sans-serif'}}>{t('chartMaxilla')}</div>
+          {renderArch(FDI_MAXILLA, true)}
+          <div className="arch-divider"/>
+          {renderArch(FDI_MANDIBLE, false)}
+          <div style={{fontSize:'.62rem',color:'#475569',letterSpacing:'.1em',textTransform:'uppercase',
+            textAlign:'center',marginTop:2,fontFamily:'Inter,sans-serif'}}>{t('chartMandible')}</div>
+        </div>
+      </div>
+
+      {/* Legend */}
+      <div style={{display:'flex',gap:14,marginTop:14,flexWrap:'wrap',fontSize:'.74rem',color:'#94A3B8',alignItems:'center'}}>
+        <div style={{display:'flex',alignItems:'center',gap:5}}>
+          <span className="site-dot bop"/>{t('chartLegendBOP')}
+        </div>
+        <div style={{display:'flex',alignItems:'center',gap:5}}>
+          <span className="site-dot sup"/>{t('chartLegendSUP')}
+        </div>
+        <div style={{display:'flex',alignItems:'center',gap:5}}>
+          <span className="site-dot plaque"/>{t('chartLegendPlaque')}
+        </div>
+        <div style={{color:'#475569',fontSize:'.68rem',marginInlineStart:'auto',fontFamily:'Inter,sans-serif'}}>
+          {t('chartHotkeys')}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ─── DIAGNOSIS TAB ──────────────────────────────────────────────────────────── */
 function DiagTab({dx,caseType,txStatus,icd,t}){
   const isPerio = caseType==='periodontitis';
@@ -1532,7 +1794,7 @@ function Navbar({t,lang,onToggle}){
 
 /* ─── TAB BAR ─────────────────────────────────────────────────────────────────── */
 function TabBar({active,setActive,t}){
-  const tabs=[['tabInput'],['tabDx'],['tabIDRA'],['tabOut'],['tabRefs']];
+  const tabs=[['tabInput'],['tabChart'],['tabDx'],['tabIDRA'],['tabOut'],['tabRefs']];
   const onKey = (e, i) => {
     if(e.key==='ArrowRight' || e.key==='ArrowDown'){ e.preventDefault(); setActive((i+1)%tabs.length); }
     else if(e.key==='ArrowLeft' || e.key==='ArrowUp'){ e.preventDefault(); setActive((i-1+tabs.length)%tabs.length); }
@@ -1578,6 +1840,8 @@ function App(){
   /* Case-type triage (Tonetti 2018) + Treatment status (Chapple 2018) */
   const [caseTypeOverride,setCaseTypeOverride]=useState('auto');
   const [txStatusOverride,setTxStatusOverride]=useState('auto');
+  /* 6-PPC periodontal chart (Phase 1: capture only — no derivation/integration yet) */
+  const [chart,setChart]=useState(()=>createBlankChart());
   const [smokingCigs,setSmokingCigs]=useState('');
   const [packYears,setPackYears]=useState('');
   const [hba1c,setHba1c]=useState('');
@@ -1611,7 +1875,7 @@ function App(){
 
   /* Toggle body class so CSS can hide the author signature on the Output tab. */
   React.useEffect(()=>{
-    const TAB_NAMES=['input','dx','idra','output','refs'];
+    const TAB_NAMES=['input','chart','dx','idra','output','refs'];
     document.body.className = `tab-${TAB_NAMES[activeTab]||'input'}`;
   },[activeTab]);
 
@@ -1708,11 +1972,12 @@ function App(){
     <div style={{minHeight:'100vh',background:'#060D14'}}>
       <Navbar t={t} lang={lang} onToggle={toggleLang}/>
       <TabBar active={activeTab} setActive={setActiveTab} t={t}/>
-      {activeTab===0&&<InputTab st={state} set={set} t={t} idValid={idValid} onCompute={()=>setActiveTab(1)}/>}
-      {activeTab===1&&<DiagTab dx={dx} caseType={caseType} txStatus={txStatus} icd={icd} t={t}/>}
-      {activeTab===2&&<IDRATab scores={idraScores} risk={idraRisk} periDx={periDx} t={t}/>}
-      {activeTab===3&&<OutputTab dx={dx} risk={idraRisk} periDx={periDx} caseType={caseType} txStatus={txStatus} icd={icd} st={state} lang={lang} age={age} t={t}/>}
-      {activeTab===4&&<RefsTab lang={lang} t={t}/>}
+      {activeTab===0&&<InputTab st={state} set={set} t={t} idValid={idValid} onCompute={()=>setActiveTab(2)}/>}
+      {activeTab===1&&<PerioChartTab chart={chart} setChart={setChart} t={t}/>}
+      {activeTab===2&&<DiagTab dx={dx} caseType={caseType} txStatus={txStatus} icd={icd} t={t}/>}
+      {activeTab===3&&<IDRATab scores={idraScores} risk={idraRisk} periDx={periDx} t={t}/>}
+      {activeTab===4&&<OutputTab dx={dx} risk={idraRisk} periDx={periDx} caseType={caseType} txStatus={txStatus} icd={icd} st={state} lang={lang} age={age} t={t}/>}
+      {activeTab===5&&<RefsTab lang={lang} t={t}/>}
 
       <div className="author-signature no-print" aria-hidden="true">
         <span className="sig-prefix">created&nbsp;by</span>
