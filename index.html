@@ -617,8 +617,91 @@ function createBlankChart(){
   for(const fdi of [...FDI_MAXILLA, ...FDI_MANDIBLE]) c[fdi]=blankTooth();
   return c;
 }
-/* Phase 1: chart data captured but not yet derived. Phase 2 will pipe these
-   into computeDiagnosis. Phase 3 will add SVG overlays + keyboard nav. */
+
+/* Demo chart for the "Load Demo Case" button — generalized severe periodontitis,
+   matches Yossi Cohen's narrative. Posterior teeth deeper, anterior shallower. */
+function loadDemoChart(){
+  const c=createBlankChart();
+  /* 4 first molars missing (common in advanced perio) */
+  for(const f of ['16','26','36','46']) c[f].missing=true;
+  /* Tooth-level findings */
+  c['17'].furcation=3;  c['27'].furcation=2;  c['47'].furcation=2;
+  c['37'].mobility=2;   c['11'].mobility=1;
+  c['12'].implant=true; /* anterior implant — explains "Active implant" demo line */
+  /* Site templates (PD, GM, BOP, SUP, plaque) for posterior vs anterior */
+  const post=[
+    {pd:6,gm:1,bop:true,sup:false,plaque:true},
+    {pd:5,gm:1,bop:true,sup:false,plaque:false},
+    {pd:7,gm:1,bop:true,sup:true, plaque:true},
+    {pd:4,gm:0,bop:true,sup:false,plaque:true},
+    {pd:5,gm:1,bop:false,sup:false,plaque:false},
+    {pd:6,gm:0,bop:true,sup:false,plaque:true},
+  ];
+  const ant=[
+    {pd:4,gm:0,bop:true,sup:false,plaque:false},
+    {pd:3,gm:0,bop:false,sup:false,plaque:true},
+    {pd:5,gm:1,bop:true,sup:false,plaque:true},
+    {pd:3,gm:0,bop:true,sup:false,plaque:false},
+    {pd:4,gm:0,bop:false,sup:false,plaque:true},
+    {pd:4,gm:1,bop:true,sup:false,plaque:false},
+  ];
+  const isPosterior = (fdi) => ['7','6','5','4'].includes(fdi[1]);
+  for(const fdi of [...FDI_MAXILLA,...FDI_MANDIBLE]){
+    if(c[fdi].missing) continue;
+    const tmpl = isPosterior(fdi) ? post : ant;
+    for(let i=0;i<SITE_KEYS.length;i++) c[fdi].sites[SITE_KEYS[i]]={...tmpl[i]};
+  }
+  /* Worst-site outliers — drives maxPD=8, worstCAL=7 */
+  c['17'].sites.mb={pd:8,gm:1,bop:true,sup:true,plaque:true};
+  c['27'].sites.db={pd:7,gm:0,bop:true,sup:true,plaque:false};
+  return c;
+}
+/* Aggregate the chart into the summary stats the staging engine + IDRA need.
+   - calWorst:     max(pd + gm) across measured sites; CAL is derived per-site (never stored)
+   - maxPD:        max pd across measured sites
+   - bopPercent:   100 × bop_sites / measured_sites  (alias: fmbs)
+   - fmps:         100 × plaque_sites / measured_sites
+   - teethAffected:100 × (teeth with any CAL ≥1mm site) / present_teeth
+   - pdSitesScore: IDRA vector — 1 if 0 sites ≥5mm, 2 if 1–4, 3 if ≥5
+   - presentTeeth: count of non-missing teeth (used to decide if chart is "filled enough") */
+function computeChartDerived(chart){
+  let measured=0, bopCount=0, plaqueCount=0, sites5plus=0;
+  let maxPD=0, worstCAL=0, furcMax=0, mobMax=0;
+  let presentTeeth=0, affectedTeeth=0;
+  for(const fdi of Object.keys(chart)){
+    const tooth=chart[fdi];
+    if(tooth.missing) continue;
+    presentTeeth++;
+    if(tooth.furcation>furcMax) furcMax=tooth.furcation;
+    if(tooth.mobility>mobMax)   mobMax=tooth.mobility;
+    let toothAffected=false;
+    for(const k of SITE_KEYS){
+      const s=tooth.sites[k];
+      if(s.pd!=null){
+        measured++;
+        if(s.pd>maxPD) maxPD=s.pd;
+        if(s.pd>=5)    sites5plus++;
+        const cal=(s.pd??0)+(s.gm??0);
+        if(cal>worstCAL) worstCAL=cal;
+        if(cal>=1) toothAffected=true;
+      }
+      if(s.bop)    bopCount++;
+      if(s.plaque) plaqueCount++;
+    }
+    if(toothAffected) affectedTeeth++;
+  }
+  const pct=(n)=>measured?Math.round((n/measured)*100):0;
+  return {
+    measured, presentTeeth,
+    fmbs:pct(bopCount), fmps:pct(plaqueCount),
+    bopPercent:pct(bopCount),
+    maxPD, calWorst:worstCAL,
+    teethAffected:presentTeeth?Math.round((affectedTeeth/presentTeeth)*100):0,
+    furcationMax:furcMax, mobilityMax:mobMax,
+    pdSitesScore: sites5plus===0?1:sites5plus<=4?2:3,
+    sites5plus,
+  };
+}
 
 /* Peri-Implant case definitions (Berglundh et al. 2018, J Clin Periodontol — PMID 29926948).
    Health: no BOP/SUP, no progressive bone loss.
@@ -724,7 +807,8 @@ function dataPts(scores){ return pts(scores.map(s=>ZONE_R[s]||ZONE_R[1])); }
 /* ─── REFERRAL LETTER ────────────────────────────────────────────────────── */
 function makeLetter({ lang,name,age,patientID,mrn,stage,grade,extent,caseType,txStatus,icd,
   cal,rbl,pd,bop,cigs,packYears,hba1c,idraRisk,periDx,
-  residentName,licenseNo,attendingName,attendingLicense }){
+  residentName,licenseNo,attendingName,attendingLicense,
+  chartFilled,chartDerived }){
   const today=new Date().toLocaleDateString(lang==='he'?'he-IL':'en-GB',{year:'numeric',month:'long',day:'numeric'});
   const extHe=extent==='localized'?'מוקדי':extent==='generalized'?'מוכלל':'—';
   const extEn=extent==='localized'?'Localized':extent==='generalized'?'Generalized':'—';
@@ -778,7 +862,7 @@ ICD-10: ${icd||'—'}${isPerio?'':''}
 • CAL גרוע ביותר: ${cal||'—'} מ"מ
 • אובדן עצם רדיוגרפי (RBL): ${rbl||'—'}%
 • עומק בדיקה מרבי (PD): ${pd||'—'} מ"מ
-• BOP: ${bop||'—'}%${cigsN>=10?`\n• עישון: ${cigsN} סיגריות/יום (Grade C)`:''}${!isNaN(pyN)&&pyN>0?`\n• מינון מצטבר: ${pyN} pack-years`:''}${!isNaN(hval)&&hval>=7.0?`\n• סוכרת: HbA1c ${hval}% — לא מאוזן (Grade C)`:''}
+• BOP: ${bop||'—'}%${cigsN>=10?`\n• עישון: ${cigsN} סיגריות/יום (Grade C)`:''}${!isNaN(pyN)&&pyN>0?`\n• מינון מצטבר: ${pyN} pack-years`:''}${!isNaN(hval)&&hval>=7.0?`\n• סוכרת: HbA1c ${hval}% — לא מאוזן (Grade C)`:''}${chartFilled?`\n• FMBS (אחוז דימום מלא): ${chartDerived.fmbs}%\n• FMPS (אחוז רובד מלא): ${chartDerived.fmps}%\n• אתרים עם PD ≥5 מ"מ: ${chartDerived.sites5plus} (מתוך ${chartDerived.measured} אתרים נמדדים, ${chartDerived.presentTeeth} שיניים)`:''}
 
 הערכת סיכון לשתלים (IDRA): ${idraHe}${idraRisk==='HIGH'?'\n⚠ נדרש ייצוב פריודונטלי מלא לפני שיקול שתלים':''}${periDx?`\nאבחנה פריו-אימפלנט (Berglundh 2018): ${piHe[periDx]}`:''}
 
@@ -835,7 +919,7 @@ Key Findings:
 • Worst-site CAL: ${cal||'—'} mm
 • Radiographic Bone Loss (RBL): ${rbl||'—'}%
 • Max Probing Depth (PD): ${pd||'—'} mm
-• BOP: ${bop||'—'}%${cigsN>=10?`\n• Smoking: ${cigsN} cig/day (Grade C modifier)`:''}${!isNaN(pyN)&&pyN>0?`\n• Cumulative dose: ${pyN} pack-years`:''}${!isNaN(hval)&&hval>=7.0?`\n• Diabetes: HbA1c ${hval}% — uncontrolled (Grade C modifier)`:''}
+• BOP: ${bop||'—'}%${cigsN>=10?`\n• Smoking: ${cigsN} cig/day (Grade C modifier)`:''}${!isNaN(pyN)&&pyN>0?`\n• Cumulative dose: ${pyN} pack-years`:''}${!isNaN(hval)&&hval>=7.0?`\n• Diabetes: HbA1c ${hval}% — uncontrolled (Grade C modifier)`:''}${chartFilled?`\n• FMBS (Full-Mouth Bleeding Score): ${chartDerived.fmbs}%\n• FMPS (Full-Mouth Plaque Score): ${chartDerived.fmps}%\n• Sites with PD ≥5 mm: ${chartDerived.sites5plus} (of ${chartDerived.measured} measured sites across ${chartDerived.presentTeeth} teeth)`:''}
 
 Implant Disease Risk Assessment (IDRA): ${idraEn}${idraRisk==='HIGH'?'\n⚠ Full periodontal stabilization required before implant consideration':''}${periDx?`\nPeri-Implant Diagnosis (Berglundh 2018): ${piEn[periDx]}`:''}
 
@@ -1051,7 +1135,7 @@ function ReasoningPanel({steps,t}){
 }
 
 /* ─── CLINICAL INPUT TAB ────────────────────────────────────────────────────── */
-function InputTab({st,set,t,idValid,onCompute}){
+function InputTab({st,set,t,idValid,chartFilled,chartDerived,setChart,onCompute}){
   const furcOpts=[{v:'0',l:t('f0')},{v:'1',l:t('f1')},{v:'2',l:t('f2')},{v:'3',l:t('f3')}];
   const ctOpts=[{v:'auto',l:t('ctAuto')},{v:'health',l:t('ctHealth')},{v:'gingivitis',l:t('ctGingivitis')},{v:'periodontitis',l:t('ctPerio')},{v:'npd',l:t('ctNPD')},{v:'endoPerio',l:t('ctEndoPerio')}];
   const txOpts=[{v:'auto',l:t('ctAuto')},{v:'untreated',l:t('txUntreated')},{v:'therapy',l:t('txTherapy')},{v:'stable',l:t('txStable')},{v:'remission',l:t('txRemission')},{v:'unstable',l:t('txUnstable')}];
@@ -1105,6 +1189,9 @@ function InputTab({st,set,t,idValid,onCompute}){
     set('piBL','4');
     set('piPDC','3');
     set('piHasBaseline',true);
+    /* Phase 2: also fill the periodontal chart so derivation matches the manual values
+       (chart is now the source of truth when filled — manual fields become fallback). */
+    if(setChart) setChart(loadDemoChart());
   };
   const loadDemo = () => {
     if(formHasData){
@@ -1430,7 +1517,7 @@ function PerioChartTab({chart, setChart, t}){
 }
 
 /* ─── DIAGNOSIS TAB ──────────────────────────────────────────────────────────── */
-function DiagTab({dx,caseType,txStatus,icd,t}){
+function DiagTab({dx,caseType,txStatus,icd,chartFilled,chartDerived,t}){
   const isPerio = caseType==='periodontitis';
   if(!isPerio){
     const ctMap={health:t('ctHealth'),gingivitis:t('ctGingivitis'),npd:t('ctNPD'),endoPerio:t('ctEndoPerio')};
@@ -1486,6 +1573,25 @@ function DiagTab({dx,caseType,txStatus,icd,t}){
           (Grade Score: {dx.gradeScore.toFixed(3)})
         </span>}
       </div>
+
+      {/* Chart-derived stats (only when the 6-PPC chart has data) */}
+      {chartFilled && (
+        <div style={{display:'flex',gap:8,marginBottom:20,flexWrap:'wrap',justifyContent:'center'}}>
+          {(() => {
+            const fmbs = chartDerived.fmbs;
+            const fmbsColor = fmbs <= 10 ? '#22C55E' : fmbs <= 30 ? '#F59E0B' : '#EF4444';
+            return (
+              <span className="chart-pill" style={{borderColor:fmbsColor+'66'}}>
+                <span className="label">{t('chartFMBS')}</span>
+                <span className="val" style={{color:fmbsColor}}>{fmbs}%</span>
+              </span>
+            );
+          })()}
+          <span className="chart-pill"><span className="label">{t('chartFMPS')}</span><span className="val">{chartDerived.fmps}%</span></span>
+          <span className="chart-pill"><span className="label">PD ≥5mm</span><span className="val">{chartDerived.sites5plus}</span></span>
+          <span style={{fontSize:'.68rem',color:'#475569',alignSelf:'center'}}>· {chartDerived.measured} sites · {chartDerived.presentTeeth} teeth</span>
+        </div>
+      )}
 
       <Card title={t('reasonTitle')}>
         <ReasoningPanel steps={dx.steps} t={t}/>
@@ -1588,7 +1694,7 @@ function IDRATab({scores,risk,periDx,t}){
 }
 
 /* ─── OUTPUT TAB ─────────────────────────────────────────────────────────────── */
-function OutputTab({dx,risk,periDx,caseType,txStatus,icd,st,lang,age,t}){
+function OutputTab({dx,risk,periDx,caseType,txStatus,icd,chartFilled,chartDerived,st,lang,age,t}){
   const [copied,setCopied]=useState(false);
 
   const letter=useMemo(()=>{
@@ -1597,13 +1703,19 @@ function OutputTab({dx,risk,periDx,caseType,txStatus,icd,st,lang,age,t}){
       patientID:st.patientID, mrn:st.mrn,
       stage:dx?dx.stage:null, grade:dx?dx.grade:null, extent:dx?dx.extent:null,
       caseType, txStatus, icd,
-      cal:st.calWorst, rbl:st.rblPercent, pd:st.maxPD,
-      bop:st.bopPercent, cigs:st.smokingCigs, packYears:st.packYears,
+      /* When the chart is filled, prefer derived values for the letter findings
+         line (matches what the staging engine actually used). */
+      cal: chartFilled ? String(chartDerived.calWorst) : st.calWorst,
+      rbl: st.rblPercent,
+      pd:  chartFilled ? String(chartDerived.maxPD)    : st.maxPD,
+      bop: chartFilled ? String(chartDerived.bopPercent) : st.bopPercent,
+      cigs:st.smokingCigs, packYears:st.packYears,
       hba1c:st.hba1c, idraRisk:risk, periDx,
       residentName:st.residentName, licenseNo:st.licenseNo,
-      attendingName:st.attendingName, attendingLicense:st.attendingLicense
+      attendingName:st.attendingName, attendingLicense:st.attendingLicense,
+      chartFilled, chartDerived
     });
-  },[dx,risk,periDx,caseType,txStatus,icd,st,lang,age]);
+  },[dx,risk,periDx,caseType,txStatus,icd,chartFilled,chartDerived,st,lang,age]);
 
   const isPerio = caseType==='periodontitis';
   if(isPerio && !dx) return <div style={{padding:48,textAlign:'center',color:'#64748B'}}>{t('noData')}</div>;
@@ -1895,10 +2007,22 @@ function App(){
     return a>0?a:null;
   },[patientDOB]);
 
+  /* Chart-derived stats. When the chart has any measured sites (chartFilled=true),
+     these replace the manual worst-site fields piped into the engine. */
+  const chartDerived=useMemo(()=>computeChartDerived(chart),[chart]);
+  const chartFilled=chartDerived.measured>0;
+
   const dx=useMemo(()=>computeDiagnosis({
-    calWorst,rblPercent,maxPD,vbl,furcation,mobility,
-    teethLost,teethAffected,mastDys,smokingCigs,hba1c,age
-  }),[calWorst,rblPercent,maxPD,vbl,furcation,mobility,
+    calWorst:    chartFilled ? String(chartDerived.calWorst)     : calWorst,
+    rblPercent,
+    maxPD:       chartFilled ? String(chartDerived.maxPD)        : maxPD,
+    vbl,
+    furcation:   chartFilled ? String(chartDerived.furcationMax) : furcation,
+    mobility:    chartFilled ? String(chartDerived.mobilityMax)  : mobility,
+    teethLost,
+    teethAffected: chartFilled ? String(chartDerived.teethAffected) : teethAffected,
+    mastDys, smokingCigs, hba1c, age
+  }),[chartFilled,chartDerived,calWorst,rblPercent,maxPD,vbl,furcation,mobility,
     teethLost,teethAffected,mastDys,smokingCigs,hba1c,age]);
 
   const blAgeComp=useMemo(()=>{
@@ -1910,16 +2034,21 @@ function App(){
   const blAgeScore=blAgeComp===null?1:blAgeComp<=0.5?1:blAgeComp<=1.0?2:3;
 
   const bopScore=useMemo(()=>{
-    const b=parseFloat(bopPercent);
+    const b = chartFilled ? chartDerived.bopPercent : parseFloat(bopPercent);
     if(isNaN(b)) return 1;
     return b<=10?1:b<=30?2:3;
-  },[bopPercent]);
+  },[chartFilled,chartDerived.bopPercent,bopPercent]);
+
+  const pdSitesScore=useMemo(()=>{
+    if(chartFilled) return chartDerived.pdSitesScore;
+    return parseInt(pdSites)||1;
+  },[chartFilled,chartDerived.pdSitesScore,pdSites]);
 
   const idraScores=useMemo(()=>[
-    parseInt(histPerio),bopScore,parseInt(pdSites),
+    parseInt(histPerio),bopScore,pdSitesScore,
     blAgeScore,parseInt(suspClass),parseInt(sptComp),
     parseInt(restMargin),parseInt(cleanability),
-  ],[histPerio,bopScore,pdSites,blAgeScore,suspClass,sptComp,restMargin,cleanability]);
+  ],[histPerio,bopScore,pdSitesScore,blAgeScore,suspClass,sptComp,restMargin,cleanability]);
 
   const idraRisk=useMemo(()=>computeIDRARisk(idraScores),[idraScores]);
 
@@ -1972,11 +2101,11 @@ function App(){
     <div style={{minHeight:'100vh',background:'#060D14'}}>
       <Navbar t={t} lang={lang} onToggle={toggleLang}/>
       <TabBar active={activeTab} setActive={setActiveTab} t={t}/>
-      {activeTab===0&&<InputTab st={state} set={set} t={t} idValid={idValid} onCompute={()=>setActiveTab(2)}/>}
+      {activeTab===0&&<InputTab st={state} set={set} t={t} idValid={idValid} chartFilled={chartFilled} chartDerived={chartDerived} setChart={setChart} onCompute={()=>setActiveTab(2)}/>}
       {activeTab===1&&<PerioChartTab chart={chart} setChart={setChart} t={t}/>}
-      {activeTab===2&&<DiagTab dx={dx} caseType={caseType} txStatus={txStatus} icd={icd} t={t}/>}
+      {activeTab===2&&<DiagTab dx={dx} caseType={caseType} txStatus={txStatus} icd={icd} chartFilled={chartFilled} chartDerived={chartDerived} t={t}/>}
       {activeTab===3&&<IDRATab scores={idraScores} risk={idraRisk} periDx={periDx} t={t}/>}
-      {activeTab===4&&<OutputTab dx={dx} risk={idraRisk} periDx={periDx} caseType={caseType} txStatus={txStatus} icd={icd} st={state} lang={lang} age={age} t={t}/>}
+      {activeTab===4&&<OutputTab dx={dx} risk={idraRisk} periDx={periDx} caseType={caseType} txStatus={txStatus} icd={icd} chartFilled={chartFilled} chartDerived={chartDerived} st={state} lang={lang} age={age} t={t}/>}
       {activeTab===5&&<RefsTab lang={lang} t={t}/>}
 
       <div className="author-signature no-print" aria-hidden="true">
