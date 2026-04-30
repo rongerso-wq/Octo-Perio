@@ -378,7 +378,7 @@ const S = {
     txStable:'יציב (Stable)', txRemission:'בהפוגה (Remission)', txUnstable:'לא יציב (Unstable)',
     icdLabel:'קוד ICD-10',
     secSys:'גורמי סיכון מערכתיים', smoking:'עישון (סיגריות / יום)',
-    hba1c:'HbA1c (%)', smokeNote:'≥10 → Grade C', hba1cNote:'≥7.0% → Grade C',
+    hba1c:'HbA1c (%)', smokeNote:'≥10 → Grade C', hba1cNote:'7.0–7.9% → B · ≥8.0% → C',
     packYears:'Pack-Years (חבילות-שנה)', packYearsNote:'מינון מצטבר — סיכון לפריו-אימפלנטיטיס',
     secPerio:'פרמטרים פריודונטליים',
     calWorst:'CAL גרוע ביותר (מ"מ)', rbl:'RBL רדיוגרפי (%)',
@@ -439,6 +439,17 @@ const S = {
     piMucositisD:'דלקת רקמה רכה ללא אובדן עצם — נדרשת התערבות לא-ניתוחית',
     piPeriImplD:'דלקת + אובדן עצם — נדרשת התערבות ניתוחית/לא-ניתוחית מבוססת ראיות',
     piNotApplicable:'אין שתלים — לא רלוונטי',
+    piPDL:'עומק בדיקה בשתל (מ"מ)', piPDNote:'≥6מ"מ — קריטריון EFP 2023 לפריו-אימפלנטיטיס',
+    kmWidth:'רוחב מוקוזה קרטינית (מ"מ)', kmWidthNote:'<2מ"מ — סיכון מוגבר (Roccuzzo 2016)',
+    cementRet:'צורת חיבור הפרוטזה',
+    cementRetScrew:'ברגית (screw-retained)', cementRetCement:'ציפוי (cement-retained)', cementRetNA:'לא רלוונטי',
+    stageIVSubtitle:'תת-סיווג Stage IV (Herrera 2022)',
+    stageIVA:'Stage IV-A — תפקוד לעיסה לקוי', stageIVB:'Stage IV-B — טראומה חסימתית משנית', stageIVC:'Stage IV-C — קריסת מיתרת',
+    txPlanTitle:'תוכנית טיפול (EFP S3)',
+    praTitle:'PRA — מרווח SPT (Lang & Tonetti 2003)',
+    praFactors:'גורמי PRA', praRecall:'מרווח SPT מומלץ (PRA)',
+    patSummaryTitle:'סיכום למטופל (שפה פשוטה)', patSummaryBtn:'הצג סיכום למטופל',
+    progL:'פרוגנוזה', progGood:'טוב', progFair:'סביר', progQuest:'ספק', progPoor:'גרוע', progHop:'אבוד',
   },
   en: {
     appSub:'Perio-Implant Clinical Decision Support',
@@ -482,7 +493,7 @@ const S = {
     txStable:'Stable', txRemission:'In Remission', txUnstable:'Unstable',
     icdLabel:'ICD-10 Code',
     secSys:'Systemic Risk Factors', smoking:'Smoking (cigarettes/day)',
-    hba1c:'HbA1c (%)', smokeNote:'≥10 → Grade C', hba1cNote:'≥7.0% → Grade C',
+    hba1c:'HbA1c (%)', smokeNote:'≥10 → Grade C', hba1cNote:'7.0–7.9% → B · ≥8.0% → C',
     packYears:'Pack-Years', packYearsNote:'Cumulative dose — peri-implantitis risk',
     secPerio:'Periodontal Parameters',
     calWorst:'Worst-site CAL (mm)', rbl:'Radiographic Bone Loss — RBL (%)',
@@ -502,6 +513,17 @@ const S = {
     spt1:'Regular', spt2:'Irregular', spt3:'None',
     rm1:'Supragingival', rm2:'At margin', rm3:'Subgingival',
     cl1:'Easily cleanable', cl2:'Difficult to clean', cl3:'Not cleanable',
+    piPDL:'Implant Probing Depth (mm)', piPDNote:'≥6mm — EFP 2023 peri-implantitis criterion',
+    kmWidth:'Keratinized Mucosa Width (mm)', kmWidthNote:'<2mm — elevated risk (Roccuzzo 2016)',
+    cementRet:'Prosthesis Retention Type',
+    cementRetScrew:'Screw-retained', cementRetCement:'Cement-retained', cementRetNA:'Not applicable',
+    stageIVSubtitle:'Stage IV Subtype (Herrera 2022)',
+    stageIVA:'Stage IV-A — Masticatory dysfunction', stageIVB:'Stage IV-B — Secondary occlusal trauma', stageIVC:'Stage IV-C — Bite collapse',
+    txPlanTitle:'Treatment Plan (EFP S3)',
+    praTitle:'PRA — SPT Recall (Lang & Tonetti 2003)',
+    praFactors:'PRA Factors', praRecall:'Recommended SPT Recall (PRA)',
+    patSummaryTitle:'Patient Summary (Plain Language)', patSummaryBtn:'Show patient summary',
+    progL:'Prognosis', progGood:'Good', progFair:'Fair', progQuest:'Questionable', progPoor:'Poor', progHop:'Hopeless',
     btnCompute:'Compute Diagnosis', btnComputeDisabled:'Enter CAL or %RBL to continue',
     btnLoadDemo:'Load Demo Case', demoBannerTitle:'Showcase example',
     demoBannerDesc:'Yossi Cohen · M 58 · 18 cig/day · HbA1c 8.4% · 52% bone loss · Active implant',
@@ -638,6 +660,89 @@ const REFERENCES = [
     url:'https://icd.who.int/browse10/2019/en#/K05'
   },
   {
+    id:'leite2018',
+    authors:'Leite FRM, Nascimento GG, Shiga O, et al.',
+    year:2018,
+    title:'Effect of Smoking on Periodontitis: A Systematic Review and Meta-Regression',
+    journal:'Am J Prev Med 54(6):831–841',
+    pmid:'29728276',
+    doi:'10.1016/j.amepre.2018.02.014',
+    usedHe:'קריטריון Pack-years לשדרוג Grade (≥10 py → B, ≥20 py → C)',
+    usedEn:'Pack-years criterion for Grade upgrade (≥10 py → B, ≥20 py → C)',
+    url:'https://pubmed.ncbi.nlm.nih.gov/29728276/'
+  },
+  {
+    id:'graziani2018',
+    authors:'Graziani F, Gennai S, Solini A, Petrini M',
+    year:2018,
+    title:'Efficacy of periodontal treatment in diabetic patients — a meta-analysis of randomized controlled trials',
+    journal:'J Clin Periodontol 45 Suppl 20:S76–S90',
+    pmid:'29280184',
+    doi:'10.1111/jcpe.12811',
+    usedHe:'HbA1c stratified grading: 7.0–7.9% → Grade B; ≥8.0% → Grade C',
+    usedEn:'HbA1c stratified grading: 7.0–7.9% → Grade B floor; ≥8.0% → Grade C',
+    url:'https://pubmed.ncbi.nlm.nih.gov/29280184/'
+  },
+  {
+    id:'herrera2023',
+    authors:'Herrera D, Berglundh T, Schwarz F, et al.',
+    year:2023,
+    title:'Prevention and treatment of peri-implant diseases — The EFP S3 level clinical practice guideline',
+    journal:'J Clin Periodontol 50 Suppl 26:4–76',
+    pmid:'37305797',
+    doi:'10.1111/jcpe.13823',
+    usedHe:'CPG EFP 2023 פריו-אימפלנטיטיס: PD ≥6מ"מ + BOP/SUP + BL ≥3מ"מ',
+    usedEn:'EFP 2023 peri-implantitis CPG: PD ≥6mm + BOP/SUP + BL ≥3mm',
+    url:'https://pubmed.ncbi.nlm.nih.gov/37305797/'
+  },
+  {
+    id:'kwok2007',
+    authors:'Kwok V, Caton JG',
+    year:2007,
+    title:'Commentary: prognosis revisited — a system for assigning periodontal prognosis',
+    journal:'J Periodontol 78(11):2063–2071',
+    pmid:'17970677',
+    doi:'10.1902/jop.2007.070210',
+    usedHe:'פרוגנוזה לשן: טוב / סביר / ספק / גרוע / אבוד (מערכת Kwok-Caton)',
+    usedEn:'Per-tooth prognosis: Good / Fair / Questionable / Poor / Hopeless (Kwok-Caton)',
+    url:'https://pubmed.ncbi.nlm.nih.gov/17970677/'
+  },
+  {
+    id:'lang2003',
+    authors:'Lang NP, Tonetti MS',
+    year:2003,
+    title:'Periodontal risk assessment (PRA) for patients in supportive periodontal therapy (SPT)',
+    journal:'Oral Health Prev Dent 1(1):7–16',
+    pmid:'15643744',
+    usedHe:'PRA spider — 6 גורמים → מרווח SPT (3/6/12 חודשים)',
+    usedEn:'PRA spider — 6 risk factors → SPT recall interval (3/6/12 months)',
+    url:'https://pubmed.ncbi.nlm.nih.gov/15643744/'
+  },
+  {
+    id:'roccuzzo2016',
+    authors:'Roccuzzo M, Grasso G, Dalmasso P',
+    year:2016,
+    title:'Keratinized mucosa around implants in humans: 10-year follow-up of a prospective cohort study',
+    journal:'Clin Oral Implants Res 27(4):491–496',
+    pmid:'25851300',
+    doi:'10.1111/clr.12563',
+    usedHe:'מוקוזה קרטינית <2מ"מ — גורם סיכון לדלקת פריו-אימפלנטית',
+    usedEn:'Keratinized mucosa <2mm — independent risk factor for peri-implant disease',
+    url:'https://pubmed.ncbi.nlm.nih.gov/25851300/'
+  },
+  {
+    id:'wittneben2014',
+    authors:'Wittneben J-G, Millen C, Brägger U',
+    year:2014,
+    title:'Clinical performance of screw- versus cement-retained fixed implant-supported reconstructions',
+    journal:'Int J Oral Maxillofac Implants 29 Suppl:84–98',
+    pmid:'24660198',
+    doi:'10.11607/jomi.2013.g3',
+    usedHe:'שמירת ציפוי vs. ברגית — שארית ציפוי → סיכון לפריו-אימפלנטיטיס',
+    usedEn:'Cement vs screw retention — residual cement is associated with peri-implantitis',
+    url:'https://pubmed.ncbi.nlm.nih.gov/24660198/'
+  },
+  {
     id:'mohil2012',
     authors:'משרד הבריאות — מדינת ישראל',
     year:2012,
@@ -660,7 +765,7 @@ const AXES = [
 function toRoman(n){ return ['','I','II','III','IV'][n]||'?'; }
 
 function computeDiagnosis({ calWorst,rblPercent,maxPD,vbl,furcation,mobility,
-    teethLost,teethAffected,mastDys,smokingCigs,hba1c,age }){
+    teethLost,teethAffected,mastDys,smokingCigs,packYears,hba1c,age }){
   const cal = parseFloat(calWorst), rbl = parseFloat(rblPercent);
   if(isNaN(cal)||isNaN(rbl)) return null;
   const pd = parseFloat(maxPD), vblV = parseFloat(vbl);
@@ -692,6 +797,14 @@ function computeDiagnosis({ calWorst,rblPercent,maxPD,vbl,furcation,mobility,
   if(cx.length) steps.push({ key:'rComplex', val:cx.join(' | ') });
   steps.push({ key:'rFinalStage', val:`Stage ${toRoman(stage)}`, hl:true });
 
+  // Stage IV subclassification (Herrera et al. 2022, J Clin Periodontol — PMID 35569036)
+  let stageIVSubtype=null;
+  if(stage===4){
+    if(mastDys) stageIVSubtype='IVC';
+    else if(parseInt(mobility)>=2) stageIVSubtype='IVB';
+    else stageIVSubtype='IVA';
+  }
+
   // Grade
   let grade='B', gradeScore=null;
   if(age&&age>0){
@@ -704,9 +817,16 @@ function computeDiagnosis({ calWorst,rblPercent,maxPD,vbl,furcation,mobility,
 
   const mods=[];
   const cigs=parseInt(smokingCigs)||0;
+  const py=parseFloat(packYears)||0;
   const hval=parseFloat(hba1c);
+  // Pack-years (Leite 2018, PMID 29728276): ≥20 py → C; ≥10 py → B floor
+  if(py>=20&&grade!=='C'){ grade='C'; mods.push(`Pack-years ${py} ≥20 → C`); }
+  else if(py>=10&&py<20&&grade==='A'){ grade='B'; mods.push(`Pack-years ${py} ≥10 → B`); }
+  // Cig/day (Tonetti 2018): ≥10 → C
   if(cigs>=10&&grade!=='C'){ grade='C'; mods.push(`Smoking ${cigs} cig/day ≥10 → C`); }
-  if(!isNaN(hval)&&hval>=7.0&&grade!=='C'){ grade='C'; mods.push(`HbA1c ${hval}% ≥7.0% → C`); }
+  // HbA1c stratified (Graziani 2018, PMID 29280184): 7.0–7.9% → B floor; ≥8.0% → C
+  if(!isNaN(hval)&&hval>=8.0&&grade!=='C'){ grade='C'; mods.push(`HbA1c ${hval}% ≥8.0% → C`); }
+  else if(!isNaN(hval)&&hval>=7.0&&hval<8.0&&grade==='A'){ grade='B'; mods.push(`HbA1c ${hval}% 7.0–7.9% → B`); }
   if(mods.length) steps.push({ key:'rGMod', val:mods.join(' | ') });
   steps.push({ key:'rFinalGrade', val:`Grade ${grade}`, hl:true });
 
@@ -714,7 +834,7 @@ function computeDiagnosis({ calWorst,rblPercent,maxPD,vbl,furcation,mobility,
   const extent=isNaN(pct)?'undef':pct<30?'localized':'generalized';
   steps.push({ key:'rExtent', val:extent });
 
-  return { stage:toRoman(stage), stageN:stage, grade, extent, gradeScore, steps };
+  return { stage:toRoman(stage), stageN:stage, grade, extent, gradeScore, steps, stageIVSubtype };
 }
 
 function computeIDRARisk(scores){
@@ -733,7 +853,7 @@ const LINGUAL_KEYS = ['ml','l','dl'];
 
 function blankSite(){ return {pd:null, gm:null, bop:false, sup:false, plaque:false}; }
 function blankTooth(){
-  return {missing:false, implant:false, mobility:0, furcation:0,
+  return {missing:false, implant:false, mobility:0, furcation:0, prognosis:'',
     sites:{mb:blankSite(),b:blankSite(),db:blankSite(),ml:blankSite(),l:blankSite(),dl:blankSite()}};
 }
 function createBlankChart(){
@@ -827,22 +947,48 @@ function computeChartDerived(chart){
   };
 }
 
-/* Peri-Implant case definitions (Berglundh et al. 2018, J Clin Periodontol — PMID 29926948).
-   Health: no BOP/SUP, no progressive bone loss.
-   Mucositis: BOP/SUP present, no bone loss beyond physiologic remodeling.
-   Peri-implantitis: BOP/SUP + radiographic BL ≥3 mm (no baseline) OR ≥2 mm vs baseline 1-yr post-loading film. */
-function computePeriImplantDx({hasImplants, bopSup, bl, hasBaseline}){
+/* Peri-implant case definitions updated to EFP 2023 S3 CPG (Herrera et al. — PMID 37305797).
+   Peri-implantitis: BOP/SUP + (BL ≥3mm [no baseline] OR BL ≥2mm [baseline] OR PD ≥6mm).
+   Berglundh 2018 (PMID 29926948) defines the health/mucositis boundary. */
+function computePeriImplantDx({hasImplants, bopSup, bl, hasBaseline, piPD}){
   if(!hasImplants) return null;
   if(!bopSup) return 'health';
   const blN = parseFloat(bl);
+  const pdN = parseFloat(piPD);
   if(isNaN(blN) || blN <= 0) return 'mucositis';
   const thresh = hasBaseline ? 2 : 3;
-  return blN >= thresh ? 'periimplantitis' : 'mucositis';
+  const blMet = blN >= thresh;
+  const pdMet = !isNaN(pdN) && pdN >= 6;
+  return (blMet || pdMet) ? 'periimplantitis' : 'mucositis';
 }
 
 /* SPT interval titrated to IDRA risk (Heitz-Mayfield et al. 2020, Periodontol 2000 — PMID 32780477). */
 function sptIntervalKey(risk){
   return risk==='HIGH' ? 'sptHigh' : risk==='LOW' ? 'sptLow' : 'sptMod';
+}
+
+/* Periodontal Risk Assessment — SPT recall (Lang & Tonetti 2003, PMID 15643744).
+   6 vectors, each scored 1 (low) / 2 (mod) / 3 (high). Recall: 0–1 high → 12mo; 2 high → 6mo; ≥3 high → 3mo. */
+function praRecall({bopPct, sites5plus, teethLost, blAge, smokingCigs, packYears, hba1c}){
+  const cigs=parseInt(smokingCigs)||0;
+  const py=parseFloat(packYears)||0;
+  const hval=parseFloat(hba1c);
+  const tl=parseInt(teethLost)||0;
+  const bop=parseFloat(bopPct);
+  const bopS = isNaN(bop)?1 : bop<=10?1 : bop<=30?2 : 3;
+  const s5=parseInt(sites5plus)||0;
+  const s5S  = s5<=3?1 : s5<=7?2 : 3;
+  const tlS  = tl<=4?1 : tl<=8?2 : 3;
+  const ba=parseFloat(blAge);
+  const baS  = isNaN(ba)?1 : ba<=0.5?1 : ba<=1.0?2 : 3;
+  const sysS = (!isNaN(hval)&&hval>=8.0)?3 : (!isNaN(hval)&&hval>=7.0)?2 : 1;
+  const smkS = (py>=20||cigs>=20)?3 : (py>=10||cigs>=10)?2 : 1;
+  const scores=[bopS,s5S,tlS,baS,sysS,smkS];
+  const highN=scores.filter(s=>s===3).length;
+  const recallEn=highN>=3?'every 3 months':highN>=2?'every 6 months':'every 12 months';
+  const recallHe=highN>=3?'כל 3 חודשים':highN>=2?'כל 6 חודשים':'כל 12 חודשים';
+  const FACTORS=['BOP %','Sites ≥5mm','Teeth lost','BL/Age','Systemic','Smoking'];
+  return {scores,highN,recallEn,recallHe,FACTORS};
 }
 
 /* Israeli National ID — 9 digits, mod-10 checksum (Luhn-like, alternating ×1/×2, sum digits if >9). */
@@ -930,7 +1076,7 @@ function dataPts(scores){ return pts(scores.map(s=>ZONE_R[s]||ZONE_R[1])); }
 
 /* ─── REFERRAL LETTER ────────────────────────────────────────────────────── */
 function makeLetter({ lang,name,age,patientID,mrn,stage,grade,extent,caseType,txStatus,icd,
-  cal,rbl,pd,bop,cigs,packYears,hba1c,idraRisk,periDx,
+  cal,rbl,pd,bop,cigs,packYears,hba1c,idraRisk,periDx,stageIVSubtype,kmWidth,cementRetained,
   residentName,licenseNo,attendingName,attendingLicense,
   chartFilled,chartDerived }){
   const today=new Date().toLocaleDateString(lang==='he'?'he-IL':'en-GB',{year:'numeric',month:'long',day:'numeric'});
@@ -986,7 +1132,7 @@ ICD-10: ${icd||'—'}${isPerio?'':''}
 • CAL גרוע ביותר: ${cal||'—'} מ"מ
 • אובדן עצם רדיוגרפי (RBL): ${rbl||'—'}%
 • עומק בדיקה מרבי (PD): ${pd||'—'} מ"מ
-• BOP: ${bop||'—'}%${cigsN>=10?`\n• עישון: ${cigsN} סיגריות/יום (Grade C)`:''}${!isNaN(pyN)&&pyN>0?`\n• מינון מצטבר: ${pyN} pack-years`:''}${!isNaN(hval)&&hval>=7.0?`\n• סוכרת: HbA1c ${hval}% — לא מאוזן (Grade C)`:''}${chartFilled?`\n• FMBS (אחוז דימום מלא): ${chartDerived.fmbs}%\n• FMPS (אחוז רובד מלא): ${chartDerived.fmps}%\n• אתרים עם PD ≥5 מ"מ: ${chartDerived.sites5plus} (מתוך ${chartDerived.measured} אתרים נמדדים, ${chartDerived.presentTeeth} שיניים)`:''}
+• BOP: ${bop||'—'}%${cigsN>=10?`\n• עישון: ${cigsN} סיגריות/יום (Grade C)`:''}${!isNaN(pyN)&&pyN>0?`\n• מינון מצטבר: ${pyN} pack-years`:''}${!isNaN(hval)&&hval>=8.0?`\n• סוכרת: HbA1c ${hval}% ≥8.0% — לא מאוזן (Grade C)`:!isNaN(hval)&&hval>=7.0?`\n• סוכרת: HbA1c ${hval}% 7.0–7.9% — מאוזן חלקית (Grade B floor)`:''}${stageIVSubtype?`\n• תת-סיווג: Stage IV-${stageIVSubtype.slice(2)} (Herrera 2022)`:''}${kmWidth?`\n• רוחב מוקוזה קרטינית: ${kmWidth} מ"מ${parseFloat(kmWidth)<2?' — ⚠ <2מ"מ סיכון מוגבר (Roccuzzo 2016)':''}`:''}${cementRetained==='cement'?'\n• צורת חיבור פרוטזה: ציפוי (cement) — שמירה על ניקיון חיונית (Wittneben 2014)':cementRetained==='screw'?'\n• צורת חיבור פרוטזה: ברגית (screw)':''}${chartFilled?`\n• FMBS (אחוז דימום מלא): ${chartDerived.fmbs}%\n• FMPS (אחוז רובד מלא): ${chartDerived.fmps}%\n• אתרים עם PD ≥5 מ"מ: ${chartDerived.sites5plus} (מתוך ${chartDerived.measured} אתרים נמדדים, ${chartDerived.presentTeeth} שיניים)`:''}
 
 הערכת סיכון לשתלים (IDRA): ${idraHe}${idraRisk==='HIGH'?'\n⚠ נדרש ייצוב פריודונטלי מלא לפני שיקול שתלים':''}${periDx?`\nאבחנה פריו-אימפלנט (Berglundh 2018): ${piHe[periDx]}`:''}
 
@@ -1043,7 +1189,7 @@ Key Findings:
 • Worst-site CAL: ${cal||'—'} mm
 • Radiographic Bone Loss (RBL): ${rbl||'—'}%
 • Max Probing Depth (PD): ${pd||'—'} mm
-• BOP: ${bop||'—'}%${cigsN>=10?`\n• Smoking: ${cigsN} cig/day (Grade C modifier)`:''}${!isNaN(pyN)&&pyN>0?`\n• Cumulative dose: ${pyN} pack-years`:''}${!isNaN(hval)&&hval>=7.0?`\n• Diabetes: HbA1c ${hval}% — uncontrolled (Grade C modifier)`:''}${chartFilled?`\n• FMBS (Full-Mouth Bleeding Score): ${chartDerived.fmbs}%\n• FMPS (Full-Mouth Plaque Score): ${chartDerived.fmps}%\n• Sites with PD ≥5 mm: ${chartDerived.sites5plus} (of ${chartDerived.measured} measured sites across ${chartDerived.presentTeeth} teeth)`:''}
+• BOP: ${bop||'—'}%${cigsN>=10?`\n• Smoking: ${cigsN} cig/day (Grade C modifier)`:''}${!isNaN(pyN)&&pyN>0?`\n• Cumulative dose: ${pyN} pack-years`:''}${!isNaN(hval)&&hval>=8.0?`\n• Diabetes: HbA1c ${hval}% ≥8.0% — uncontrolled (Grade C modifier)`:!isNaN(hval)&&hval>=7.0?`\n• Diabetes: HbA1c ${hval}% 7.0–7.9% — partially controlled (Grade B floor)`:''}${stageIVSubtype?`\n• Subtype: Stage IV-${stageIVSubtype.slice(2)} (Herrera 2022)`:''}${kmWidth?`\n• Keratinized mucosa width: ${kmWidth} mm${parseFloat(kmWidth)<2?' — ⚠ <2mm elevated risk (Roccuzzo 2016)':''}`:''}${cementRetained==='cement'?'\n• Prosthesis retention: cement — meticulous hygiene essential (Wittneben 2014)':cementRetained==='screw'?'\n• Prosthesis retention: screw-retained':''}${chartFilled?`\n• FMBS (Full-Mouth Bleeding Score): ${chartDerived.fmbs}%\n• FMPS (Full-Mouth Plaque Score): ${chartDerived.fmps}%\n• Sites with PD ≥5 mm: ${chartDerived.sites5plus} (of ${chartDerived.measured} measured sites across ${chartDerived.presentTeeth} teeth)`:''}
 
 Implant Disease Risk Assessment (IDRA): ${idraEn}${idraRisk==='HIGH'?'\n⚠ Full periodontal stabilization required before implant consideration':''}${periDx?`\nPeri-Implant Diagnosis (Berglundh 2018): ${piEn[periDx]}`:''}
 
@@ -1436,7 +1582,12 @@ function InputTab({st,set,t,idValid,chartFilled,chartDerived,setChart,onCompute}
             <div style={{paddingTop:6}}><FCheck label={t('piBOPSup')} checked={st.piBOPSup} onChange={v=>set('piBOPSup',v)}/></div>
             <FInput label={t('piBL')} type="number" min="0" max="20" step=".5" value={st.piBL} onChange={v=>set('piBL',v)} placeholder="mm"/>
             <FInput label={t('piPDC')} type="number" min="0" max="20" step=".5" value={st.piPDC} onChange={v=>set('piPDC',v)} placeholder="mm"/>
+            <FInput label={t('piPDL')} note={t('piPDNote')} type="number" min="0" max="20" step=".5" value={st.piPD} onChange={v=>set('piPD',v)} placeholder="mm"/>
             <div style={{paddingTop:6}}><FCheck label={t('piHasBaseline')} checked={st.piHasBaseline} onChange={v=>set('piHasBaseline',v)}/></div>
+            <FInput label={t('kmWidth')} note={t('kmWidthNote')} type="number" min="0" max="20" step=".5" value={st.kmWidth} onChange={v=>set('kmWidth',v)} placeholder="mm"/>
+            <FSelect label={t('cementRet')} value={st.cementRetained} onChange={v=>set('cementRetained',v)} opts={[
+              {v:'',l:'—'},{v:'screw',l:t('cementRetScrew')},{v:'cement',l:t('cementRetCement')},{v:'na',l:t('cementRetNA')}
+            ]}/>
           </div>
         )}
       </Card>
@@ -1531,11 +1682,20 @@ function FurcationGlyph({furc}){
   );
 }
 
+/* Per-tooth prognosis (Kwok & Caton 2007, PMID 17970677) — G/F/Q/P/H. */
+const PROG_SEQ=['','G','F','Q','P','H'];
+const PROG_COLOR={G:'#4ADE80',F:'#FCD34D',Q:'#F59E0B',P:'#FCA5A5',H:'#EF4444'};
+
 function ToothCrown({fdi, tooth, onUpdateTooth}){
   const cycleMob   = () => onUpdateTooth({...tooth, mobility: (tooth.mobility+1)%4});
   const cycleFurc  = () => onUpdateTooth({...tooth, furcation:(tooth.furcation+1)%4});
   const toggleMissing = () => onUpdateTooth({...tooth, missing:!tooth.missing});
   const toggleImplant = () => onUpdateTooth({...tooth, implant:!tooth.implant});
+  const cycleProg  = () => {
+    const i=PROG_SEQ.indexOf(tooth.prognosis||'');
+    onUpdateTooth({...tooth, prognosis:PROG_SEQ[(i+1)%PROG_SEQ.length]});
+  };
+  const prog = tooth.prognosis||'';
   return (
     <div className="tooth-crown-strip">
       <MobilityMarker mobility={tooth.mobility}/>
@@ -1544,12 +1704,14 @@ function ToothCrown({fdi, tooth, onUpdateTooth}){
         <div className="tooth-flags">
           <FurcationGlyph furc={tooth.furcation}/>
           {tooth.implant && <span style={{color:'#5EEAD4',fontSize:'.55rem'}}>imp</span>}
+          {prog && <span style={{color:PROG_COLOR[prog],fontSize:'.6rem',fontWeight:800,fontFamily:'Inter'}} title="Prognosis (Kwok-Caton)">{prog}</span>}
         </div>
         <div className="tooth-actions">
           <button onClick={cycleMob}    className={tooth.mobility>0?'active':''}    title="cycle mobility (m)">m</button>
           <button onClick={cycleFurc}   className={tooth.furcation>0?'active':''}   title="cycle furcation (f)">f</button>
           <button onClick={toggleImplant} className={tooth.implant?'active':''}     title="toggle implant (i)">i</button>
           <button onClick={toggleMissing} className={tooth.missing?'active':''}     title="toggle missing (x)">x</button>
+          <button onClick={cycleProg}   className={prog?'active':''}               title="cycle prognosis (px)">{prog||'px'}</button>
         </div>
       </div>
     </div>
@@ -1894,7 +2056,7 @@ function PerioChartTab({chart, setChart, t}){
 }
 
 /* ─── DIAGNOSIS TAB ──────────────────────────────────────────────────────────── */
-function DiagTab({dx,caseType,txStatus,icd,chartFilled,chartDerived,t}){
+function DiagTab({dx,caseType,txStatus,icd,chartFilled,chartDerived,risk,st,age,blAgeComp,lang,t}){
   const isPerio = caseType==='periodontitis';
   if(!isPerio){
     const ctMap={health:t('ctHealth'),gingivitis:t('ctGingivitis'),npd:t('ctNPD'),endoPerio:t('ctEndoPerio')};
@@ -1973,6 +2135,96 @@ function DiagTab({dx,caseType,txStatus,icd,chartFilled,chartDerived,t}){
       <Card title={t('reasonTitle')}>
         <ReasoningPanel steps={dx.steps} t={t}/>
       </Card>
+
+      {/* Stage IV subtype badge */}
+      {dx.stageIVSubtype && (
+        <Card style={{marginTop:14}}>
+          <div style={{fontSize:'.68rem',fontWeight:700,letterSpacing:'.08em',color:'#F59E0B',textTransform:'uppercase',marginBottom:8}}>
+            {t('stageIVSubtitle')}
+          </div>
+          <div style={{fontSize:'.96rem',fontWeight:700,color:'#FCD34D',fontFamily:'Inter,sans-serif',direction:'ltr'}}>
+            {t(dx.stageIVSubtype==='IVA'?'stageIVA':dx.stageIVSubtype==='IVB'?'stageIVB':'stageIVC')}
+          </div>
+          <div style={{fontSize:'.72rem',color:'#64748B',marginTop:4,fontFamily:'Inter'}}>
+            Herrera et al. 2022, J Clin Periodontol — PMID 35569036
+          </div>
+        </Card>
+      )}
+
+      {/* EFP S3 Treatment Plan */}
+      {(() => {
+        const sptEn=risk==='HIGH'?'every 3 months':risk==='LOW'?'every 12 months':'every 6 months';
+        const sptHe=risk==='HIGH'?'כל 3 חודשים':risk==='LOW'?'כל 12 חודשים':'כל 6 חודשים';
+        const adjAB=dx.grade==='C'&&dx.extent==='generalized';
+        const steps6=[
+          {n:1,he:'שינוי התנהגותי, OHI, הסרת רובד על-חניכי, ייעוץ הפסקת עישון',en:'Behavioural change, OHI, supragingival biofilm/calculus removal, smoking-cessation counselling',dur:'4–6 wk'},
+          {n:2,he:`אינסטרומנטציה תת-חניכית (SRP); הערכה מחדש לאחר 8–12 שבועות${adjAB?' — שיקול אנטיביוטיקה סיסטמית (Stage III-IV Generalized Grade C)':''}`,
+               en:`Subgingival instrumentation (SRP); re-evaluation at 8–12 weeks${adjAB?' — consider adjunctive systemic antibiotics (Stage III-IV Generalized, Grade C)':''}`,dur:'8–12 wk'},
+          ...(dx.stageN>=3?[{n:3,he:'ניתוח פריודונטלי לכיסים שיוריים ≥6 מ"מ (resective/regenerative)',en:'Periodontal surgery for residual pockets ≥6 mm (resective/regenerative)',dur:'4–8 wk'}]:[]),
+          ...(dx.stageN===4?[{n:'3b',he:'ניהול רב-תחומי — אורתודונטיה / פרוסטודונטיה / סד-לעיסה',en:'Multidisciplinary management — orthodontic / prosthodontic / occlusal splint',dur:'varies'}]:[]),
+          {n:4,he:`תחזוקה (SPT) ${sptHe}`,en:`Supportive Periodontal Therapy (SPT) ${sptEn}`,dur:'ongoing'},
+        ];
+        return (
+          <Card title={t('txPlanTitle')} style={{marginTop:14}}>
+            {steps6.map((s,i)=>(
+              <div key={i} style={{display:'flex',gap:12,alignItems:'flex-start',
+                padding:'10px 0',borderBottom:i<steps6.length-1?'1px solid #0F2035':'none'}}>
+                <div style={{width:26,height:26,borderRadius:'50%',background:'#1A3050',
+                  color:'#2DD4BF',display:'flex',alignItems:'center',justifyContent:'center',
+                  fontSize:'.7rem',fontWeight:800,fontFamily:'Inter',flexShrink:0,marginTop:1}}>
+                  {s.n}
+                </div>
+                <div style={{flex:1}}>
+                  <div style={{fontSize:'.86rem',color:'#E2E8F0'}}>{lang==='he'?s.he:s.en}</div>
+                  <div style={{fontSize:'.68rem',color:'#64748B',marginTop:3,fontFamily:'Inter',direction:'ltr'}}>{s.dur}</div>
+                </div>
+              </div>
+            ))}
+            <div style={{fontSize:'.66rem',color:'#475569',marginTop:10,fontFamily:'Inter',direction:'ltr'}}>
+              Sanz/Herrera EFP S3 — PMID 32383274 · Herrera Stage IV — PMID 35569036
+            </div>
+          </Card>
+        );
+      })()}
+
+      {/* PRA — Periodontal Risk Assessment recall */}
+      {(() => {
+        const bopPct = chartFilled ? chartDerived.bopPercent : parseFloat(st.bopPercent);
+        const sites5 = chartFilled ? chartDerived.sites5plus : 0;
+        const pra = praRecall({
+          bopPct, sites5plus:sites5,
+          teethLost:st.teethLost, blAge:blAgeComp,
+          smokingCigs:st.smokingCigs, packYears:st.packYears, hba1c:st.hba1c
+        });
+        const SC={1:'#22C55E',2:'#F59E0B',3:'#EF4444'};
+        return (
+          <Card title={t('praTitle')} style={{marginTop:14}}>
+            <div style={{display:'flex',gap:8,flexWrap:'wrap',marginBottom:14}}>
+              {pra.FACTORS.map((f,i)=>(
+                <div key={i} style={{display:'flex',flexDirection:'column',alignItems:'center',
+                  gap:4,background:'#0F2035',borderRadius:8,padding:'8px 12px',minWidth:80}}>
+                  <div style={{display:'flex',gap:3}}>
+                    {[1,2,3].map(d=>(
+                      <div key={d} style={{width:9,height:9,borderRadius:'50%',
+                        background:d<=pra.scores[i]?SC[pra.scores[i]]:'#1A3050'}}/>
+                    ))}
+                  </div>
+                  <div style={{fontSize:'.6rem',color:'#94A3B8',textAlign:'center',fontFamily:'Inter'}}>{f}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{display:'inline-flex',alignItems:'center',gap:8,
+              background:'#0C1A28',border:'1px solid #2DD4BF44',borderRadius:8,padding:'7px 14px'}}>
+              <span style={{fontSize:'.95rem',fontWeight:700,color:'#5EEAD4',fontFamily:'Inter',direction:'ltr'}}>
+                {lang==='he'?pra.recallHe:pra.recallEn}
+              </span>
+            </div>
+            <div style={{fontSize:'.66rem',color:'#475569',marginTop:8,fontFamily:'Inter',direction:'ltr'}}>
+              Lang & Tonetti 2003 — PMID 15643744 · {pra.highN} high-risk factor{pra.highN!==1?'s':''}
+            </div>
+          </Card>
+        );
+      })()}
     </div>
   );
 }
@@ -2070,9 +2322,34 @@ function IDRATab({scores,risk,periDx,t}){
   );
 }
 
+/* Patient summary in plain Hebrew/English (5th-grade reading level).
+   Kelly 2021 (PMID 34390501) + Israeli MoH Circular 7/2018 on patient communication. */
+function makePatientSummary(lang, dx, caseType, risk, st){
+  const he = lang==='he';
+  const name = st.patientName || (he?'מטופל/ת יקר/ה':'Dear patient');
+  if(caseType==='health'){
+    return he
+      ? `שלום ${name},\n\nבדיקת החניכיים שלך תקינה. החניכיים שלך בריאות ואין עדות למחלה פעילה.\n\nהמשך לצחצח פעמיים ביום, השתמש בחוט דנטלי, ובוא/י לביקורת תקופתית כל 6–12 חודשים.`
+      : `Dear ${name},\n\nYour gum check is normal. Your gums are healthy and there are no signs of active disease.\n\nKeep brushing twice a day, floss daily, and attend a routine check-up every 6–12 months.`;
+  }
+  if(caseType==='gingivitis'){
+    return he
+      ? `שלום ${name},\n\nנמצאה אצלך דלקת חניכיים. החניכיים שלך דלוקות, אבל אין פגיעה בעצם.\n\nהטיפול: ניקוי שיניים מקצועי + שיפור בצחצוח ובשימוש בחוט דנטלי. המחלה הפיכה לחלוטין.\n\nחזור/י לביקורת בעוד 4–6 שבועות.`
+      : `Dear ${name},\n\nYou have gingivitis — inflamed gums, but no bone damage. This is reversible.\n\nTreatment: professional cleaning + improved brushing and flossing daily.\n\nReturn for a review in 4–6 weeks.`;
+  }
+  if(!dx) return he?'אין נתונים מספיקים לסיכום.':'Not enough data for a summary.';
+  const stageDesc=he?{I:'קלה',II:'בינונית',III:'מתקדמת',IV:'מתקדמת מאוד'}[dx.stage]||'':
+                     {I:'mild',II:'moderate',III:'advanced',IV:'very advanced'}[dx.stage]||'';
+  const recallPhr=risk==='HIGH'?(he?'כל 3 חודשים':'every 3 months'):risk==='LOW'?(he?'אחת לשנה':'once a year'):(he?'כל 6 חודשים':'every 6 months');
+  return he
+    ? `שלום ${name},\n\nהבדיקה שלך הראתה מחלת חניכיים ${stageDesc} (פריודונטיטיס Stage ${dx.stage} Grade ${dx.grade}).\n\nמה זה אומר? — החניכיים והעצם שמחזיקים את שיניך נפגעו. זה לא מצב שמרגישים בו כאב בהתחלה, אבל ללא טיפול השיניים עלולות להתרופף ולהיאבד.\n\nמה עושים עכשיו?\n• ניקוי מתחת לחניכיים (SRP)\n• שיפור בצחצוח ושימוש יומי בחוט דנטלי\n• ${dx.stageN>=3?'ייתכן שיידרש ניתוח חניכיים לאחר ההערכה מחדש\n• ':''} המשך תחזוקה ${recallPhr}\n\nשאלות? דבר/י עם הצוות שלנו. אנחנו כאן לעזור.`
+    : `Dear ${name},\n\nYour examination showed ${stageDesc} gum disease (Periodontitis Stage ${dx.stage} Grade ${dx.grade}).\n\nWhat does this mean? — The gums and bone holding your teeth in place have been damaged. It often doesn't hurt at first, but without treatment teeth can loosen and be lost.\n\nWhat happens next?\n• Deep cleaning under the gums (SRP)\n• Better brushing and daily flossing\n• ${dx.stageN>=3?'Surgery may be needed after re-evaluation\n• ':''} Ongoing maintenance ${recallPhr}\n\nQuestions? Talk to our team — we are here to help.`;
+}
+
 /* ─── OUTPUT TAB ─────────────────────────────────────────────────────────────── */
 function OutputTab({dx,risk,periDx,caseType,txStatus,icd,chartFilled,chartDerived,st,lang,age,t}){
   const [copied,setCopied]=useState(false);
+  const [showPatSummary,setShowPatSummary]=useState(false);
 
   const letter=useMemo(()=>{
     return makeLetter({
@@ -2088,6 +2365,8 @@ function OutputTab({dx,risk,periDx,caseType,txStatus,icd,chartFilled,chartDerive
       bop: chartFilled ? String(chartDerived.bopPercent) : st.bopPercent,
       cigs:st.smokingCigs, packYears:st.packYears,
       hba1c:st.hba1c, idraRisk:risk, periDx,
+      stageIVSubtype:dx?dx.stageIVSubtype:null,
+      kmWidth:st.kmWidth, cementRetained:st.cementRetained,
       residentName:st.residentName, licenseNo:st.licenseNo,
       attendingName:st.attendingName, attendingLicense:st.attendingLicense,
       chartFilled, chartDerived
@@ -2178,6 +2457,21 @@ function OutputTab({dx,risk,periDx,caseType,txStatus,icd,chartFilled,chartDerive
           </button>
         </div>
         {copied && <div role="status" aria-live="polite" style={{marginTop:8,fontSize:'.7rem',color:'#94A3B8'}}>{t('clipboardNote')}</div>}
+      </Card>
+
+      {/* Patient summary — plain language */}
+      <Card title={t('patSummaryTitle')} style={{marginTop:16}}>
+        <button onClick={()=>setShowPatSummary(s=>!s)} style={{
+          background:'#0F2035',color:'#94A3B8',border:'1px solid #1A3050',
+          borderRadius:8,padding:'8px 16px',cursor:'pointer',fontSize:'.82rem',
+          fontFamily:'Heebo,Arial,sans-serif',fontWeight:600,marginBottom:showPatSummary?12:0
+        }}>{showPatSummary?'▲ ':' ▼ '}{t('patSummaryBtn')}</button>
+        {showPatSummary && (
+          <textarea className="field-input" readOnly
+            value={makePatientSummary(lang,dx,caseType,risk,st)}
+            lang={lang}
+            style={{direction:lang==='he'?'rtl':'ltr',textAlign:lang==='he'?'right':'left',minHeight:220}}/>
+        )}
       </Card>
     </div>
   );
@@ -2326,17 +2620,20 @@ function App(){
   /* Case-type triage (Tonetti 2018) + Treatment status (Chapple 2018) */
   const [caseTypeOverride,setCaseTypeOverride]=useState('auto');
   const [txStatusOverride,setTxStatusOverride]=useState('auto');
-  /* 6-PPC periodontal chart (Phase 1: capture only — no derivation/integration yet) */
+  /* 6-PPC periodontal chart */
   const [chart,setChart]=useState(()=>createBlankChart());
   const [smokingCigs,setSmokingCigs]=useState('');
   const [packYears,setPackYears]=useState('');
   const [hba1c,setHba1c]=useState('');
-  /* Peri-Implant (Berglundh 2018) */
+  /* Peri-Implant (Berglundh 2018 / EFP 2023) */
   const [hasImplants,setHasImplants]=useState(false);
   const [piBOPSup,setPiBOPSup]=useState(false);
   const [piBL,setPiBL]=useState('');
   const [piPDC,setPiPDC]=useState('');
   const [piHasBaseline,setPiHasBaseline]=useState(false);
+  const [piPD,setPiPD]=useState('');
+  const [kmWidth,setKmWidth]=useState('');
+  const [cementRetained,setCementRetained]=useState('');
   /* Perio */
   const [calWorst,setCalWorst]=useState('');
   const [rblPercent,setRblPercent]=useState('');
@@ -2395,9 +2692,9 @@ function App(){
     mobility:    chartFilled ? String(chartDerived.mobilityMax)  : mobility,
     teethLost,
     teethAffected: chartFilled ? String(chartDerived.teethAffected) : teethAffected,
-    mastDys, smokingCigs, hba1c, age
+    mastDys, smokingCigs, packYears, hba1c, age
   }),[chartFilled,chartDerived,calWorst,rblPercent,maxPD,vbl,furcation,mobility,
-    teethLost,teethAffected,mastDys,smokingCigs,hba1c,age]);
+    teethLost,teethAffected,mastDys,smokingCigs,packYears,hba1c,age]);
 
   const blAgeComp=useMemo(()=>{
     if(blAgeRatio!=='') return parseFloat(blAgeRatio);
@@ -2427,8 +2724,8 @@ function App(){
   const idraRisk=useMemo(()=>computeIDRARisk(idraScores),[idraScores]);
 
   const periDx=useMemo(()=>computePeriImplantDx({
-    hasImplants, bopSup:piBOPSup, bl:piBL, hasBaseline:piHasBaseline
-  }),[hasImplants,piBOPSup,piBL,piHasBaseline]);
+    hasImplants, bopSup:piBOPSup, bl:piBL, hasBaseline:piHasBaseline, piPD
+  }),[hasImplants,piBOPSup,piBL,piHasBaseline,piPD]);
 
   const caseType=useMemo(()=>caseTypeOverride==='auto'
     ? autoCaseType({calWorst,bopPercent})
@@ -2451,7 +2748,7 @@ function App(){
     calWorst,rblPercent,maxPD,vbl,furcation,mobility,bopPercent,
     teethLost,teethAffected,mastDys,
     histPerio,pdSites,blAgeRatio,suspClass,sptComp,restMargin,cleanability,
-    hasImplants,piBOPSup,piBL,piPDC,piHasBaseline
+    hasImplants,piBOPSup,piBL,piPDC,piHasBaseline,piPD,kmWidth,cementRetained
   };
 
   const SETTERS={
@@ -2467,7 +2764,8 @@ function App(){
     histPerio:setHistPerio,pdSites:setPdSites,blAgeRatio:setBlAgeRatio,
     suspClass:setSuspClass,sptComp:setSptComp,restMargin:setRestMargin,cleanability:setCleanability,
     hasImplants:setHasImplants,piBOPSup:setPiBOPSup,piBL:setPiBL,
-    piPDC:setPiPDC,piHasBaseline:setPiHasBaseline
+    piPDC:setPiPDC,piHasBaseline:setPiHasBaseline,
+    piPD:setPiPD,kmWidth:setKmWidth,cementRetained:setCementRetained
   };
   const set=(k,v)=>SETTERS[k]&&SETTERS[k](v);
 
@@ -2478,7 +2776,7 @@ function App(){
       <main id="main-content">
         {activeTab===0&&<InputTab st={state} set={set} t={t} idValid={idValid} chartFilled={chartFilled} chartDerived={chartDerived} setChart={setChart} onCompute={()=>setActiveTab(2)}/>}
         {activeTab===1&&<PerioChartTab chart={chart} setChart={setChart} t={t}/>}
-        {activeTab===2&&<DiagTab dx={dx} caseType={caseType} txStatus={txStatus} icd={icd} chartFilled={chartFilled} chartDerived={chartDerived} t={t}/>}
+        {activeTab===2&&<DiagTab dx={dx} caseType={caseType} txStatus={txStatus} icd={icd} chartFilled={chartFilled} chartDerived={chartDerived} risk={idraRisk} st={state} age={age} blAgeComp={blAgeComp} lang={lang} t={t}/>}
         {activeTab===3&&<IDRATab scores={idraScores} risk={idraRisk} periDx={periDx} t={t}/>}
         {activeTab===4&&<OutputTab dx={dx} risk={idraRisk} periDx={periDx} caseType={caseType} txStatus={txStatus} icd={icd} chartFilled={chartFilled} chartDerived={chartDerived} st={state} lang={lang} age={age} t={t}/>}
         {activeTab===5&&<RefsTab lang={lang} t={t}/>}
