@@ -110,7 +110,7 @@
     textarea.field-input{resize:vertical;min-height:340px;line-height:1.75;font-size:.82rem;}
 
     /* ─── Periodontal chart ─── */
-    .perio-chart{display:flex;flex-direction:column;gap:18px;direction:ltr;min-width:1100px;margin:0 auto;}
+    .perio-chart{display:flex;flex-direction:column;gap:18px;direction:ltr;width:max-content;margin:0 auto;}
     .arch-row{display:flex;gap:3px;justify-content:center;}
     .arch-divider{height:1px;background:#1A3050;margin:4px 0;}
     .tooth-col{display:flex;flex-direction:column;gap:2px;align-items:center;width:68px;}
@@ -147,8 +147,75 @@
     .site-dot.plaque{background:#94A3B8;}
     .chart-pill{display:inline-flex;align-items:center;gap:6px;background:#0F2035;border:1px solid #1A3050;
       border-radius:8px;padding:6px 12px;font-family:'Inter',sans-serif;font-size:.78rem;}
-    .chart-pill .label{color:#64748B;font-size:.65rem;letter-spacing:.06em;text-transform:uppercase;font-weight:700;}
+    .chart-pill .label{color:#94A3B8;font-size:.65rem;letter-spacing:.06em;text-transform:uppercase;font-weight:700;}
     .chart-pill .val{color:#5EEAD4;font-weight:700;font-variant-numeric:tabular-nums;}
+
+    /* Phase 3 — strip layout, SVG overlay, markers, toast */
+    .arch-band{display:flex;flex-direction:column;align-items:center;}
+    .arch-strip{display:flex;justify-content:center;width:100%;}
+    .arch-strip-content{display:flex;gap:3px;position:relative;}
+    .tooth-sites{display:flex;gap:1px;width:68px;flex:0 0 68px;align-items:flex-start;}
+    .tooth-sites.missing{height:47px;background:repeating-linear-gradient(45deg,#0F203522 0,#0F203522 4px,transparent 4px,transparent 8px);
+      border:1px dashed #1A3050;border-radius:4px;opacity:.4;}
+    .tooth-sites-spacer{width:68px;flex:0 0 68px;height:47px;}
+    .site-cell{position:relative;z-index:1;}
+    .row-overlay{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;overflow:visible;}
+    .row-overlay .pd-line{fill:none;stroke:#3B82F6;stroke-width:1.5;stroke-linejoin:round;stroke-linecap:round;opacity:.85;}
+    .row-overlay .gm-line{fill:none;stroke:#EF4444;stroke-width:1.5;stroke-linejoin:round;stroke-linecap:round;opacity:.85;
+      stroke-dasharray:3 2;}
+    .row-overlay .pd-dot{fill:#3B82F6;}
+    .row-overlay .gm-dot{fill:#EF4444;}
+    .tooth-crown-strip{width:68px;flex:0 0 68px;}
+    .mobility-marker{display:flex;gap:3px;justify-content:center;height:6px;align-items:center;margin-bottom:1px;}
+    .mobility-marker .dot{width:4px;height:4px;border-radius:50%;background:#1A3050;}
+    .mobility-marker .dot.on{background:#FCD34D;box-shadow:0 0 3px #FCD34D88;}
+    .furc-glyph{width:10px;height:10px;display:inline-block;vertical-align:middle;}
+    .furc-glyph polygon{stroke:#FCA5A5;stroke-width:1;}
+    .furc-glyph.f1 polygon{fill:none;}
+    .furc-glyph.f2 polygon{fill:url(#furc-half);}
+    .furc-glyph.f3 polygon{fill:#FCA5A5;}
+    .last-action-toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);
+      background:#0F2035;border:1px solid #2DD4BF;color:#5EEAD4;
+      padding:8px 16px;border-radius:8px;font-family:'Inter',sans-serif;font-size:.8rem;
+      box-shadow:0 4px 14px rgba(45,212,191,.18);z-index:200;pointer-events:none;
+      animation:toastFade 1.5s ease-out forwards;}
+    @keyframes toastFade{
+      0%{opacity:0;transform:translate(-50%,8px);}
+      15%,75%{opacity:1;transform:translate(-50%,0);}
+      100%{opacity:0;transform:translate(-50%,-4px);}
+    }
+    @media (prefers-reduced-motion:reduce){
+      .last-action-toast{animation:none;opacity:1;}
+    }
+    .site-cell.cell-focused{outline:2px solid #2DD4BF;outline-offset:0;}
+
+    /* Phase 4 — view toggle pills + responsive defaults + landscape print */
+    .chart-view-toggle{display:flex;gap:4px;flex-wrap:wrap;align-items:center;
+      margin-bottom:10px;padding:6px 8px;background:#0F2035;border:1px solid #1A3050;
+      border-radius:8px;}
+    .chart-view-toggle .label{font-size:.62rem;letter-spacing:.08em;color:#94A3B8;
+      text-transform:uppercase;font-weight:700;font-family:'Inter',sans-serif;
+      padding:0 6px;}
+    .chart-view-toggle button{background:transparent;color:#94A3B8;
+      border:1px solid #1A3050;border-radius:6px;padding:4px 10px;
+      font-size:.72rem;cursor:pointer;font-family:'Inter',sans-serif;
+      letter-spacing:.04em;transition:color .12s,background .12s,border-color .12s;}
+    .chart-view-toggle button:hover{color:#5EEAD4;border-color:#1A3050;}
+    .chart-view-toggle button.active{background:#0C1A28;color:#5EEAD4;
+      border-color:#2DD4BF66;font-weight:700;}
+    .chart-view-toggle .sep{width:1px;height:18px;background:#1A3050;margin:0 4px;}
+
+    @page chart-landscape{ size:A4 landscape; margin:1cm; }
+    @media print{
+      body.tab-chart .chart-view-toggle,
+      body.tab-chart .last-action-toast{ display:none!important; }
+      body.tab-chart .perio-chart{ page:chart-landscape; min-width:0; }
+      body.tab-chart .perio-chart-wrap{ overflow:visible!important; background:#fff!important;
+        border:none!important; }
+      body.tab-chart{ background:#fff!important; color:#000!important; }
+      body.tab-chart .row-overlay .pd-line{ stroke:#1E40AF; opacity:1; }
+      body.tab-chart .row-overlay .gm-line{ stroke:#991B1B; opacity:1; }
+    }
 
     .print-only{display:none;}
 
@@ -230,7 +297,7 @@
 <body>
 <div id="root"></div>
 <script type="text/babel">
-const { useState, useMemo, useCallback } = React;
+const { useState, useMemo, useCallback, useEffect, useRef } = React;
 
 /* ─── BILINGUAL STRINGS ───────────────────────────────────────────────── */
 const S = {
@@ -247,8 +314,19 @@ const S = {
     chartReset:'איפוס תרשים', chartResetConfirm:'לאפס את כל התרשים?',
     chartLegend:'מקרא', chartLegendBOP:'דימום (BOP)', chartLegendSUP:'מוגלה', chartLegendPlaque:'רובד',
     chartCellPD:'PD (מ"מ)', chartCellGM:'GM (מ"מ — חיובי = נסיגה)',
-    chartHotkeys:'מקשי קיצור: b דימום · s מוגלה · p רובד · m ניידות · f פיפורקציה · x חסר · i שתל',
+    chartHotkeys:'מקשי קיצור: 0-9 PD · g לעבור ל-GM · b דימום · s מוגלה · p רובד · m ניידות · f פיפורקציה · x חסר · i שתל · ←→ אתר · ↑↓ PD/GM · Esc יציאה',
     chartNotMeasured:'—',
+    toastBopOn:'דימום נוסף', toastBopOff:'דימום הוסר',
+    toastSupOn:'מוגלה נוספה', toastSupOff:'מוגלה הוסרה',
+    toastPlaqueOn:'רובד נוסף', toastPlaqueOff:'רובד הוסר',
+    toastMissingOn:'שן סומנה כחסרה', toastMissingOff:'שן סומנה כקיימת',
+    toastImplantOn:'סומן שתל', toastImplantOff:'הוסר סימון שתל',
+    toastFurc:'פיפורקציה: ', toastMob:'ניידות: ',
+    toastTooth:'שן ',
+    chartViewLabel:'תצוגה',
+    chartViewFull:'מלאה', chartViewMaxilla:'לסת עליונה', chartViewMandible:'לסת תחתונה',
+    chartViewQ1:'Q1 (UR)', chartViewQ2:'Q2 (UL)', chartViewQ3:'Q3 (LL)', chartViewQ4:'Q4 (LR)',
+    chartGridLabel:'תרשים פריודונטלי, רשת קלינית',
     secPt:'פרטי מטופל', ptName:'שם מלא', ptDOB:'תאריך לידה', ptGender:'מגדר',
     gM:'זכר', gF:'נקבה', gO:'אחר',
     patientID:'תעודת זהות', idInvalid:'ת"ז לא תקפה (כשל ספרת ביקורת)',
@@ -340,8 +418,19 @@ const S = {
     chartReset:'Reset chart', chartResetConfirm:'Reset the entire chart?',
     chartLegend:'Legend', chartLegendBOP:'Bleeding on Probing', chartLegendSUP:'Suppuration', chartLegendPlaque:'Plaque',
     chartCellPD:'PD (mm)', chartCellGM:'GM (mm — positive = recession)',
-    chartHotkeys:'Hotkeys: b bleed · s sup · p plaque · m mobility · f furcation · x missing · i implant',
+    chartHotkeys:'Hotkeys: 0-9 PD · g switch to GM · b bleed · s sup · p plaque · m mobility · f furc · x missing · i implant · ←→ site · ↑↓ PD/GM · Esc exit',
     chartNotMeasured:'—',
+    toastBopOn:'BOP added', toastBopOff:'BOP cleared',
+    toastSupOn:'Suppuration added', toastSupOff:'Suppuration cleared',
+    toastPlaqueOn:'Plaque added', toastPlaqueOff:'Plaque cleared',
+    toastMissingOn:'Tooth marked missing', toastMissingOff:'Tooth restored',
+    toastImplantOn:'Implant flag set', toastImplantOff:'Implant flag cleared',
+    toastFurc:'Furcation: ', toastMob:'Mobility: ',
+    toastTooth:'Tooth ',
+    chartViewLabel:'View',
+    chartViewFull:'Full', chartViewMaxilla:'Maxilla', chartViewMandible:'Mandible',
+    chartViewQ1:'Q1 (UR)', chartViewQ2:'Q2 (UL)', chartViewQ3:'Q3 (LL)', chartViewQ4:'Q4 (LR)',
+    chartGridLabel:'Periodontal chart, clinical grid',
     secPt:'Patient Details', ptName:'Full Name', ptDOB:'Date of Birth', ptGender:'Gender',
     gM:'Male', gF:'Female', gO:'Other',
     patientID:'National ID', idInvalid:'Invalid ID (checksum failed)',
@@ -1339,25 +1428,38 @@ function InputTab({st,set,t,idValid,chartFilled,chartDerived,setChart,onCompute}
   );
 }
 
-/* ─── PERIO CHART TAB (Phase 1: data capture, no derivation/overlays yet) ───── */
-function SiteCell({site, onUpdate}){
+/* ─── PERIO CHART TAB (Phase 3: SVG overlays + keyboard + toast) ──────────────
+   Cells expose stable IDs `perio-${fdi}-${siteKey}-${field}` so the keyboard
+   navigator (in PerioChartTab) can refocus across teeth without ref plumbing. */
+const cellId = (fdi, siteKey, field) => `perio-${fdi}-${siteKey}-${field}`;
+
+function SiteCell({fdi, siteKey, site, onUpdate, onKey}){
   const pd = site.pd, gm = site.gm;
   const pdHigh = pd != null && pd >= 6;
   const pdMid  = pd != null && pd >= 5 && pd < 6;
   const pdClass = pdHigh ? 'pd-high' : pdMid ? 'pd-mid' : '';
+  const [focused, setFocused] = useState(false);
   const setNum = (key, v) => {
     const num = v === '' ? null : parseFloat(v);
     onUpdate({...site, [key]: isNaN(num) ? null : num});
   };
+  const handleKey = (field) => (e) => onKey && onKey(e, fdi, siteKey, field);
   return (
-    <div className={`site-cell ${pdClass}`}>
-      <input type="number" min="0" max="15" step="1" inputMode="numeric"
+    <div className={`site-cell ${pdClass}${focused?' cell-focused':''}`}>
+      <input id={cellId(fdi,siteKey,'pd')} type="number" min="0" max="15" step="1" inputMode="numeric"
         value={pd ?? ''} onChange={e => setNum('pd', e.target.value)}
+        onFocus={()=>setFocused(true)} onBlur={()=>setFocused(false)}
+        onKeyDown={handleKey('pd')}
         className={pdClass}
-        title="PD (mm)" aria-label="Probing depth"/>
-      <input type="number" min="-5" max="15" step="1" inputMode="numeric"
+        data-fdi={fdi} data-site={siteKey} data-field="pd"
+        title="PD (mm)" aria-label={`Probing depth, tooth ${fdi}, site ${siteKey}`}/>
+      <input id={cellId(fdi,siteKey,'gm')} type="number" min="-5" max="15" step="1" inputMode="numeric"
         value={gm ?? ''} onChange={e => setNum('gm', e.target.value)}
-        className="gm" title="GM (mm, + = recession)" aria-label="Gingival margin"/>
+        onFocus={()=>setFocused(true)} onBlur={()=>setFocused(false)}
+        onKeyDown={handleKey('gm')}
+        className="gm"
+        data-fdi={fdi} data-site={siteKey} data-field="gm"
+        title="GM (mm, + = recession)" aria-label={`Gingival margin, tooth ${fdi}, site ${siteKey}`}/>
       <div className="site-dots">
         <span className={`site-dot${site.bop?' bop':''}`} title="BOP" role="checkbox" aria-checked={site.bop}
           tabIndex={0} onClick={()=>onUpdate({...site, bop:!site.bop})}
@@ -1373,48 +1475,141 @@ function SiteCell({site, onUpdate}){
   );
 }
 
-function ToothColumn({fdi, tooth, isUpperArch, onUpdateTooth, onUpdateSite}){
-  /* Maxilla: buccal sites above the crown, lingual below.
-     Mandible: lingual above the crown, buccal below — standard 6-PPC convention
-     so buccal sites are always on the OUTER aspect of each arch. */
-  const topKeys    = isUpperArch ? BUCCAL_KEYS  : LINGUAL_KEYS;
-  const bottomKeys = isUpperArch ? LINGUAL_KEYS : BUCCAL_KEYS;
+function MobilityMarker({mobility}){
+  return (
+    <div className="mobility-marker" aria-hidden="true">
+      {[1,2,3].map(i => <span key={i} className={`dot${i<=mobility?' on':''}`}/>)}
+    </div>
+  );
+}
+
+function FurcationGlyph({furc}){
+  if(furc===0) return null;
+  const roman = ['','I','II','III'][furc];
+  return (
+    <span className={`furc-glyph f${furc}`} title={`Furcation ${roman}`}>
+      <svg viewBox="0 0 10 10" width="10" height="10" role="img" aria-label={`Furcation ${roman}`}>
+        <polygon points="5,1 9,9 1,9" fill={furc===3?'#FCA5A5':'none'} stroke="#FCA5A5" strokeWidth="1"/>
+        {furc===2 && <polygon points="5,1 9,9 5,9" fill="#FCA5A5" stroke="none"/>}
+      </svg>
+    </span>
+  );
+}
+
+function ToothCrown({fdi, tooth, onUpdateTooth}){
   const cycleMob   = () => onUpdateTooth({...tooth, mobility: (tooth.mobility+1)%4});
   const cycleFurc  = () => onUpdateTooth({...tooth, furcation:(tooth.furcation+1)%4});
   const toggleMissing = () => onUpdateTooth({...tooth, missing:!tooth.missing});
   const toggleImplant = () => onUpdateTooth({...tooth, implant:!tooth.implant});
-  const romanFurc = ['','I','II','III'][tooth.furcation];
-
   return (
-    <div className={`tooth-col${tooth.missing?' missing':''}`}>
-      {!tooth.missing && (
-        <div className="site-row">
-          {topKeys.map(k =>
-            <SiteCell key={k} site={tooth.sites[k]} onUpdate={u => onUpdateSite(k, u)}/>
-          )}
-        </div>
-      )}
-      <div className="tooth-crown">
+    <div className="tooth-crown-strip">
+      <MobilityMarker mobility={tooth.mobility}/>
+      <div className={`tooth-crown${tooth.missing?' missing':''}`} style={tooth.missing?{opacity:.3,borderStyle:'dashed'}:null}>
         <div className="tooth-num">{fdi}</div>
         <div className="tooth-flags">
-          {tooth.mobility>0 && <span style={{color:'#FCD34D'}}>M{tooth.mobility}</span>}
-          {tooth.furcation>0 && <span style={{color:'#FCA5A5'}}>F{romanFurc}</span>}
-          {tooth.implant && <span style={{color:'#5EEAD4'}}>imp</span>}
+          <FurcationGlyph furc={tooth.furcation}/>
+          {tooth.implant && <span style={{color:'#5EEAD4',fontSize:'.55rem'}}>imp</span>}
         </div>
         <div className="tooth-actions">
-          <button onClick={cycleMob}    className={tooth.mobility>0?'active':''}    title="cycle mobility">m</button>
-          <button onClick={cycleFurc}   className={tooth.furcation>0?'active':''}   title="cycle furcation">f</button>
-          <button onClick={toggleImplant} className={tooth.implant?'active':''}     title="toggle implant">i</button>
-          <button onClick={toggleMissing} className={tooth.missing?'active':''}     title="toggle missing">x</button>
+          <button onClick={cycleMob}    className={tooth.mobility>0?'active':''}    title="cycle mobility (m)">m</button>
+          <button onClick={cycleFurc}   className={tooth.furcation>0?'active':''}   title="cycle furcation (f)">f</button>
+          <button onClick={toggleImplant} className={tooth.implant?'active':''}     title="toggle implant (i)">i</button>
+          <button onClick={toggleMissing} className={tooth.missing?'active':''}     title="toggle missing (x)">x</button>
         </div>
       </div>
-      {!tooth.missing && (
-        <div className="site-row">
-          {bottomKeys.map(k =>
-            <SiteCell key={k} site={tooth.sites[k]} onUpdate={u => onUpdateSite(k, u)}/>
+    </div>
+  );
+}
+
+function ToothSites({fdi, tooth, keys, onUpdateSite, onKey}){
+  if(tooth.missing) return <div className="tooth-sites missing" role="gridcell"
+    aria-label={`Tooth ${fdi} missing`}/>;
+  return (
+    <div className="tooth-sites" role="gridcell" aria-label={`Tooth ${fdi} sites`}>
+      {keys.map(k =>
+        <SiteCell key={k} fdi={fdi} siteKey={k}
+          site={tooth.sites[k]}
+          onUpdate={u => onUpdateSite(k, u)}
+          onKey={onKey}/>
+      )}
+    </div>
+  );
+}
+
+/* RowOverlay — SVG line through PD/GM points across the full arch row.
+   Positions are analytical from CSS constants (tooth pitch 71, cell pitch 23,
+   first-cell offset 11). PD line solid blue, GM line dashed red. Skips null
+   sites (line breaks rather than dropping to zero — clinically faithful). */
+function RowOverlay({teeth, chart, keys}){
+  const TOOTH_PITCH = 71, CELL_PITCH = 23, CELL_OFFSET_X = 11;
+  const PD_Y = 9, GM_Y = 28, H = 47;
+  const W = teeth.length * TOOTH_PITCH - 3;
+  const pdPts = [], gmPts = [];
+  teeth.forEach((fdi, i) => {
+    const tooth = chart[fdi];
+    keys.forEach((k, j) => {
+      const x = i * TOOTH_PITCH + CELL_OFFSET_X + j * CELL_PITCH;
+      const s = tooth.missing ? null : tooth.sites[k];
+      pdPts.push({x, y: PD_Y, val: s ? s.pd : null});
+      gmPts.push({x, y: GM_Y, val: s ? s.gm : null});
+    });
+  });
+  const buildPath = (pts) => {
+    let d = '', moving = true;
+    for(const p of pts){
+      if(p.val == null){ moving = true; continue; }
+      d += (moving ? `M${p.x} ${p.y}` : ` L${p.x} ${p.y}`);
+      moving = false;
+    }
+    return d;
+  };
+  return (
+    <svg className="row-overlay" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" aria-hidden="true">
+      <path className="pd-line" d={buildPath(pdPts)}/>
+      <path className="gm-line" d={buildPath(gmPts)}/>
+      {pdPts.filter(p => p.val != null).map((p,i) =>
+        <circle key={'p'+i} className="pd-dot" cx={p.x} cy={p.y} r="1.6"/>
+      )}
+      {gmPts.filter(p => p.val != null).map((p,i) =>
+        <circle key={'g'+i} className="gm-dot" cx={p.x} cy={p.y} r="1.6"/>
+      )}
+    </svg>
+  );
+}
+
+function PerioArch({teeth, chart, isUpperArch, onUpdateTooth, onUpdateSite, onKey, ariaLabel}){
+  const topKeys    = isUpperArch ? BUCCAL_KEYS  : LINGUAL_KEYS;
+  const bottomKeys = isUpperArch ? LINGUAL_KEYS : BUCCAL_KEYS;
+  const topRowLabel    = isUpperArch ? 'Buccal sites' : 'Lingual sites';
+  const bottomRowLabel = isUpperArch ? 'Lingual sites' : 'Buccal sites';
+  return (
+    <div className="arch-band" role="rowgroup" aria-label={ariaLabel}>
+      <div className="arch-strip">
+        <div className="arch-strip-content" role="row" aria-label={topRowLabel}>
+          {teeth.map(fdi =>
+            <ToothSites key={fdi} fdi={fdi} tooth={chart[fdi]} keys={topKeys}
+              onUpdateSite={(k,u)=>onUpdateSite(fdi,k,u)} onKey={onKey}/>
+          )}
+          <RowOverlay teeth={teeth} chart={chart} keys={topKeys}/>
+        </div>
+      </div>
+      <div className="arch-strip" role="presentation">
+        <div className="arch-strip-content" role="presentation">
+          {teeth.map(fdi =>
+            <ToothCrown key={fdi} fdi={fdi} tooth={chart[fdi]}
+              onUpdateTooth={(p)=>onUpdateTooth(fdi,p)}/>
           )}
         </div>
-      )}
+      </div>
+      <div className="arch-strip">
+        <div className="arch-strip-content" role="row" aria-label={bottomRowLabel}>
+          {teeth.map(fdi =>
+            <ToothSites key={fdi} fdi={fdi} tooth={chart[fdi]} keys={bottomKeys}
+              onUpdateSite={(k,u)=>onUpdateSite(fdi,k,u)} onKey={onKey}/>
+          )}
+          <RowOverlay teeth={teeth} chart={chart} keys={bottomKeys}/>
+        </div>
+      </div>
     </div>
   );
 }
@@ -1447,20 +1642,141 @@ function PerioChartTab({chart, setChart, t}){
   const updateSite = (fdi, k, updated) =>
     setChart(prev => ({...prev, [fdi]: {...prev[fdi], sites: {...prev[fdi].sites, [k]: updated}}}));
 
-  const renderArch = (teeth, isUpperArch) => (
-    <div className="arch-row">
-      {teeth.map(fdi => (
-        <ToothColumn key={fdi} fdi={fdi} tooth={chart[fdi]}
-          isUpperArch={isUpperArch}
-          onUpdateTooth={(partial) => updateTooth(fdi, partial)}
-          onUpdateSite={(k, u) => updateSite(fdi, k, u)}/>
-      ))}
-    </div>
-  );
+  /* Last-action toast — also voiced via aria-live for screen readers. */
+  const [toast, setToast] = useState('');
+  const toastTimer = useRef(null);
+  const announce = (msg) => {
+    setToast(msg);
+    if(toastTimer.current) clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setToast(''), 1500);
+  };
+  useEffect(() => () => { if(toastTimer.current) clearTimeout(toastTimer.current); }, []);
+
+  /* Keyboard navigation — ←→ jumps sites within the same row+arch (skipping
+     missing teeth), ↑↓ swaps PD↔GM within the same site. Tooth-level hotkeys
+     (b/s/p/f/m/x/i) read the focused cell's data-attrs to know which tooth/site
+     to act on. Modifier keys (ctrl/alt/meta) are ignored so browser/OS combos
+     still work. */
+  const focusCell = (fdi, siteKey, field) => {
+    const el = document.getElementById(cellId(fdi, siteKey, field));
+    if(el){ el.focus(); el.select && el.select(); }
+  };
+  const navigateRow = (fdi, siteKey, field, dx) => {
+    const inMaxilla = FDI_MAXILLA.includes(fdi);
+    const arch = inMaxilla ? FDI_MAXILLA : FDI_MANDIBLE;
+    const isBuccal = BUCCAL_KEYS.includes(siteKey);
+    const rowKeys = isBuccal ? BUCCAL_KEYS : LINGUAL_KEYS;
+    const seq = [];
+    for(const f of arch) for(const k of rowKeys) seq.push({fdi:f, siteKey:k});
+    let idx = seq.findIndex(s => s.fdi===fdi && s.siteKey===siteKey);
+    if(idx < 0) return;
+    idx += dx;
+    while(idx>=0 && idx<seq.length && chart[seq[idx].fdi].missing) idx += dx;
+    if(idx<0 || idx>=seq.length) return;
+    focusCell(seq[idx].fdi, seq[idx].siteKey, field);
+  };
+
+  const handleKey = (e, fdi, siteKey, field) => {
+    if(e.ctrlKey || e.metaKey || e.altKey) return;
+    const k = e.key;
+    const lower = k.toLowerCase();
+    const tooth = chart[fdi];
+    const site = tooth.sites[siteKey];
+    const toothLabel = `${t('toastTooth')}${fdi}`;
+    if(k === 'ArrowRight'){ e.preventDefault(); navigateRow(fdi, siteKey, field, 1); return; }
+    if(k === 'ArrowLeft'){  e.preventDefault(); navigateRow(fdi, siteKey, field, -1); return; }
+    if(k === 'ArrowUp' || k === 'ArrowDown'){
+      e.preventDefault();
+      focusCell(fdi, siteKey, field==='pd'?'gm':'pd'); return;
+    }
+    if(k === 'Enter'){
+      e.preventDefault();
+      if(field==='pd') focusCell(fdi, siteKey, 'gm');
+      else navigateRow(fdi, siteKey, 'pd', 1);
+      return;
+    }
+    if(k === 'Escape'){ e.preventDefault(); e.target.blur(); return; }
+    if(lower === 'b'){ e.preventDefault();
+      updateSite(fdi, siteKey, {...site, bop:!site.bop});
+      announce(site.bop ? t('toastBopOff') : t('toastBopOn')); return; }
+    if(lower === 's'){ e.preventDefault();
+      updateSite(fdi, siteKey, {...site, sup:!site.sup});
+      announce(site.sup ? t('toastSupOff') : t('toastSupOn')); return; }
+    if(lower === 'p'){ e.preventDefault();
+      updateSite(fdi, siteKey, {...site, plaque:!site.plaque});
+      announce(site.plaque ? t('toastPlaqueOff') : t('toastPlaqueOn')); return; }
+    if(lower === 'g'){ e.preventDefault();
+      focusCell(fdi, siteKey, field==='pd'?'gm':'pd'); return; }
+    if(lower === 'f'){ e.preventDefault();
+      const next = (tooth.furcation+1)%4;
+      updateTooth(fdi, {furcation: next});
+      announce(`${toothLabel} · ${t('toastFurc')}${['0','I','II','III'][next]}`); return; }
+    if(lower === 'm'){ e.preventDefault();
+      const next = (tooth.mobility+1)%4;
+      updateTooth(fdi, {mobility: next});
+      announce(`${toothLabel} · ${t('toastMob')}${next}`); return; }
+    if(lower === 'x'){ e.preventDefault();
+      updateTooth(fdi, {missing:!tooth.missing});
+      announce(`${toothLabel} · ${tooth.missing ? t('toastMissingOff') : t('toastMissingOn')}`); return; }
+    if(lower === 'i'){ e.preventDefault();
+      updateTooth(fdi, {implant:!tooth.implant});
+      announce(`${toothLabel} · ${tooth.implant ? t('toastImplantOff') : t('toastImplantOn')}`); return; }
+  };
 
   const handleReset = () => {
     if(window.confirm(t('chartResetConfirm'))) setChart(createBlankChart());
   };
+
+  /* View mode (Phase 4) — full / single arch / single quadrant. Default picked
+     from initial viewport width; user can override at any time and the choice
+     persists for the session. Quadrant numbering follows clinical convention
+     (Q1 = upper-right ... Q4 = lower-right, FDI quadrants 1..4). */
+  const [chartView, setChartView] = useState(() => {
+    if (typeof window === 'undefined') return 'full';
+    const w = window.innerWidth;
+    if (w >= 1024) return 'full';
+    if (w >= 768)  return 'maxilla';
+    return 'q1';
+  });
+  const userTouchedView = useRef(false);
+  const setView = (v) => { userTouchedView.current = true; setChartView(v); };
+  /* Auto-shift defaults when the viewport crosses a breakpoint, but only while
+     the user hasn't manually picked a view — once they touch the toggle their
+     choice sticks regardless of resize / orientation change. */
+  useEffect(() => {
+    const onResize = () => {
+      if (userTouchedView.current) return;
+      const w = window.innerWidth;
+      const next = w >= 1024 ? 'full' : w >= 768 ? 'maxilla' : 'q1';
+      setChartView(next);
+    };
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+  const QUADRANTS = {
+    q1: { teeth: FDI_MAXILLA.slice(0,8),  upper:true,  archLabel:'Quadrant 1, upper right' },
+    q2: { teeth: FDI_MAXILLA.slice(8),    upper:true,  archLabel:'Quadrant 2, upper left' },
+    q3: { teeth: FDI_MANDIBLE.slice(8),   upper:false, archLabel:'Quadrant 3, lower left' },
+    q4: { teeth: FDI_MANDIBLE.slice(0,8), upper:false, archLabel:'Quadrant 4, lower right' },
+  };
+  const renderArches = () => {
+    const archProps = { chart, onUpdateTooth:updateTooth, onUpdateSite:updateSite, onKey:handleKey };
+    if(chartView === 'full') return (<>
+      <PerioArch teeth={FDI_MAXILLA}  isUpperArch={true}  ariaLabel="Maxilla"  {...archProps}/>
+      <div className="arch-divider"/>
+      <PerioArch teeth={FDI_MANDIBLE} isUpperArch={false} ariaLabel="Mandible" {...archProps}/>
+    </>);
+    if(chartView === 'maxilla')  return <PerioArch teeth={FDI_MAXILLA}  isUpperArch={true}  ariaLabel="Maxilla"  {...archProps}/>;
+    if(chartView === 'mandible') return <PerioArch teeth={FDI_MANDIBLE} isUpperArch={false} ariaLabel="Mandible" {...archProps}/>;
+    const q = QUADRANTS[chartView];
+    return <PerioArch teeth={q.teeth} isUpperArch={q.upper} ariaLabel={q.archLabel} {...archProps}/>;
+  };
+  const viewBtn = (key, label) => (
+    <button onClick={()=>setView(key)} className={chartView===key?'active':''}
+      aria-pressed={chartView===key}>{label}</button>
+  );
+  const showArchLabel = chartView === 'full' || chartView === 'maxilla' || /^q[12]$/.test(chartView);
+  const showMandLabel = chartView === 'full' || chartView === 'mandible' || /^q[34]$/.test(chartView);
 
   return (
     <div className="fade-in tab-content" style={{padding:'20px 12px',maxWidth:1400,margin:'0 auto'}}>
@@ -1484,21 +1800,43 @@ function PerioChartTab({chart, setChart, t}){
         }}>{t('chartReset')}</button>
       </div>
 
+      {/* View toggle — Full / Maxilla / Mandible / Q1-Q4 */}
+      <div className="chart-view-toggle" role="group" aria-label={t('chartViewLabel')}>
+        <span className="label">{t('chartViewLabel')}</span>
+        {viewBtn('full',     t('chartViewFull'))}
+        <span className="sep" aria-hidden="true"/>
+        {viewBtn('maxilla',  t('chartViewMaxilla'))}
+        {viewBtn('mandible', t('chartViewMandible'))}
+        <span className="sep" aria-hidden="true"/>
+        {viewBtn('q1', t('chartViewQ1'))}
+        {viewBtn('q2', t('chartViewQ2'))}
+        {viewBtn('q3', t('chartViewQ3'))}
+        {viewBtn('q4', t('chartViewQ4'))}
+      </div>
+
       {/* Chart — horizontally scrollable on narrow screens */}
-      <div style={{overflowX:'auto',padding:'10px 0',background:'#080F18',borderRadius:10,border:'1px solid #0F2035'}}>
-        <div className="perio-chart">
-          <div style={{fontSize:'.62rem',color:'#475569',letterSpacing:'.1em',textTransform:'uppercase',
-            textAlign:'center',marginBottom:2,fontFamily:'Inter,sans-serif'}}>{t('chartMaxilla')}</div>
-          {renderArch(FDI_MAXILLA, true)}
-          <div className="arch-divider"/>
-          {renderArch(FDI_MANDIBLE, false)}
-          <div style={{fontSize:'.62rem',color:'#475569',letterSpacing:'.1em',textTransform:'uppercase',
-            textAlign:'center',marginTop:2,fontFamily:'Inter,sans-serif'}}>{t('chartMandible')}</div>
+      <div className="perio-chart-wrap" style={{overflowX:'auto',padding:'10px 0',background:'#080F18',borderRadius:10,border:'1px solid #0F2035'}}>
+        <div className="perio-chart" role="grid" aria-label={t('chartGridLabel')}>
+          {showArchLabel && (
+            <div style={{fontSize:'.62rem',color:'#475569',letterSpacing:'.1em',textTransform:'uppercase',
+              textAlign:'center',marginBottom:2,fontFamily:'Inter,sans-serif'}}>{t('chartMaxilla')}</div>
+          )}
+          {renderArches()}
+          {showMandLabel && (
+            <div style={{fontSize:'.62rem',color:'#475569',letterSpacing:'.1em',textTransform:'uppercase',
+              textAlign:'center',marginTop:2,fontFamily:'Inter,sans-serif'}}>{t('chartMandible')}</div>
+          )}
         </div>
       </div>
 
       {/* Legend */}
       <div style={{display:'flex',gap:14,marginTop:14,flexWrap:'wrap',fontSize:'.74rem',color:'#94A3B8',alignItems:'center'}}>
+        <div style={{display:'flex',alignItems:'center',gap:5}}>
+          <span style={{width:18,height:2,background:'#3B82F6',display:'inline-block'}}/>PD
+        </div>
+        <div style={{display:'flex',alignItems:'center',gap:5}}>
+          <span style={{width:18,height:0,borderTop:'2px dashed #EF4444',display:'inline-block'}}/>GM
+        </div>
         <div style={{display:'flex',alignItems:'center',gap:5}}>
           <span className="site-dot bop"/>{t('chartLegendBOP')}
         </div>
@@ -1512,6 +1850,10 @@ function PerioChartTab({chart, setChart, t}){
           {t('chartHotkeys')}
         </div>
       </div>
+
+      {/* Last-action toast — also a polite live region for screen readers */}
+      <div role="status" aria-live="polite" aria-atomic="true" style={{position:'absolute',width:1,height:1,overflow:'hidden',clip:'rect(0 0 0 0)'}}>{toast}</div>
+      {toast && <div className="last-action-toast" key={toast + Date.now()}>{toast}</div>}
     </div>
   );
 }
@@ -1921,7 +2263,6 @@ function TabBar({active,setActive,t}){
       {tabs.map(([k],i)=>(
         <button key={k} role="tab"
           aria-selected={active===i}
-          aria-controls={`panel-${k}`}
           id={`tab-${k}`}
           tabIndex={active===i?0:-1}
           onKeyDown={e=>onKey(e,i)}
@@ -2101,12 +2442,14 @@ function App(){
     <div style={{minHeight:'100vh',background:'#060D14'}}>
       <Navbar t={t} lang={lang} onToggle={toggleLang}/>
       <TabBar active={activeTab} setActive={setActiveTab} t={t}/>
-      {activeTab===0&&<InputTab st={state} set={set} t={t} idValid={idValid} chartFilled={chartFilled} chartDerived={chartDerived} setChart={setChart} onCompute={()=>setActiveTab(2)}/>}
-      {activeTab===1&&<PerioChartTab chart={chart} setChart={setChart} t={t}/>}
-      {activeTab===2&&<DiagTab dx={dx} caseType={caseType} txStatus={txStatus} icd={icd} chartFilled={chartFilled} chartDerived={chartDerived} t={t}/>}
-      {activeTab===3&&<IDRATab scores={idraScores} risk={idraRisk} periDx={periDx} t={t}/>}
-      {activeTab===4&&<OutputTab dx={dx} risk={idraRisk} periDx={periDx} caseType={caseType} txStatus={txStatus} icd={icd} chartFilled={chartFilled} chartDerived={chartDerived} st={state} lang={lang} age={age} t={t}/>}
-      {activeTab===5&&<RefsTab lang={lang} t={t}/>}
+      <main id="main-content">
+        {activeTab===0&&<InputTab st={state} set={set} t={t} idValid={idValid} chartFilled={chartFilled} chartDerived={chartDerived} setChart={setChart} onCompute={()=>setActiveTab(2)}/>}
+        {activeTab===1&&<PerioChartTab chart={chart} setChart={setChart} t={t}/>}
+        {activeTab===2&&<DiagTab dx={dx} caseType={caseType} txStatus={txStatus} icd={icd} chartFilled={chartFilled} chartDerived={chartDerived} t={t}/>}
+        {activeTab===3&&<IDRATab scores={idraScores} risk={idraRisk} periDx={periDx} t={t}/>}
+        {activeTab===4&&<OutputTab dx={dx} risk={idraRisk} periDx={periDx} caseType={caseType} txStatus={txStatus} icd={icd} chartFilled={chartFilled} chartDerived={chartDerived} st={state} lang={lang} age={age} t={t}/>}
+        {activeTab===5&&<RefsTab lang={lang} t={t}/>}
+      </main>
 
       <div className="author-signature no-print" aria-hidden="true">
         <span className="sig-prefix">created&nbsp;by</span>
