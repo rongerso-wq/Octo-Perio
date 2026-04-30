@@ -31,7 +31,7 @@ The References tab (`RefsTab`) reads from a `REFERENCES = [...]` constant — ev
 1. **`STRINGS = { he: {...}, en: {...} }`** — every user-facing string is keyed; `t(key)` is the lookup. Medical terms (Stage, Grade, IDRA, BOP, CAL, RBL, PD, SPT, ICD-10) intentionally stay in English in both languages. When adding a new UI string, add it to **both** `he` and `en`.
 2. **`REFERENCES`** — citation list backing the References tab.
 3. **`AXES`** — the 8 IDRA vectors as `\n`-split labels for SVG wrapping.
-4. **Core algorithms** — `computeDiagnosis`, `computeIDRARisk`, `computePeriImplantDx`, `autoCaseType`, `autoTxStatus`, `icd10For`, `s3Steps`, `validIsraeliID`, `sptIntervalKey`, `computeChartDerived`. **Each is annotated with the source paper PMID/DOI.** When changing a threshold, update the citation comment AND the matching `REFERENCES` entry.
+4. **Core algorithms** — `computeDiagnosis`, `computeIDRARisk`, `computePeriImplantDx`, `praRecall`, `autoCaseType`, `autoTxStatus`, `icd10For`, `s3Steps`, `validIsraeliID`, `sptIntervalKey`, `computeChartDerived`. **Each is annotated with the source paper PMID/DOI.** When changing a threshold, update the citation comment AND the matching `REFERENCES` entry.
 5. **Periodontal chart constants & helpers** — `FDI_MAXILLA`/`FDI_MANDIBLE` (16-tooth arrays), `SITE_KEYS`/`BUCCAL_KEYS`/`LINGUAL_KEYS`, `blankSite`/`blankTooth`/`createBlankChart`/`loadDemoChart`. See "Periodontal chart" section below.
 6. **Octagon SVG helpers** — `CX/CY/ZONE_R/LABEL_R` constants + `axPt/pts/zonePts/dataPts`. Polar coordinates, axis 0 points up, 45° clockwise per axis. Coordinate space is always LTR even in Hebrew.
 7. **`makeLetter({...})`** — bilingual referral-letter generator. Two large branches (`if (lang === 'he')` / `else`). When changing letter content, change both branches. Accepts `chartFilled` + `chartDerived` so the findings block can append FMBS/FMPS/sites-≥5mm lines when the chart has data.
@@ -45,7 +45,8 @@ The References tab (`RefsTab`) reads from a `REFERENCES = [...]` constant — ev
 2. %RBL → initial stage (<15=I, 15-33=II, >33=III)
 3. Base stage = `max(stageCAL, stageRBL)` — never lower
 4. Complexity upgrades (PD≥6, VBL≥3, Furc II/III, Mob≥2, MastDys, teeth-lost) only raise the stage
-5. Grade Score = %RBL / age → A/B/C; smoking ≥10/day or HbA1c ≥7.0% auto-upgrade to C
+5. Grade Score = %RBL / age → A/B/C; modifiers: pack-years ≥20→C / ≥10→B (Leite 2018, PMID 29728276); HbA1c ≥8.0%→C / 7.0–7.9%→B floor (Graziani 2018, PMID 29280184); cig/day ≥10→C (Tonetti 2018)
+5b. Stage IV subclassification: `stageIVSubtype` = 'IVA' (default) / 'IVB' (mobility≥2) / 'IVC' (mastDys) — returned by `computeDiagnosis`, displayed in DiagTab and letter
 6. Extent: <30% teeth affected = localized, ≥30% = generalized
 
 ### IDRA octagon — risk classification
@@ -56,7 +57,7 @@ The References tab (`RefsTab`) reads from a `REFERENCES = [...]` constant — ev
 
 The chart is the canonical clinical-data layer; manual worst-site fields on InputTab are fallback-only.
 
-**Data shape** — `chart` state is FDI-keyed (`'18'..'48'`). Each tooth: `{missing, implant, mobility:0..3, furcation:0..3, sites:{mb,b,db,ml,l,dl}}`. Each site: `{pd:null|number, gm:null|number, bop, sup, plaque}`. CAL is **derived** per-site (`pd + gm`, signed `gm`: positive = recession, negative = overgrowth) — never stored. `null` distinguishes "not measured" from "0mm".
+**Data shape** — `chart` state is FDI-keyed (`'18'..'48'`). Each tooth: `{missing, implant, mobility:0..3, furcation:0..3, prognosis:''|'G'|'F'|'Q'|'P'|'H', sites:{mb,b,db,ml,l,dl}}`. Prognosis cycles via the `px` button in `ToothCrown` (Kwok-Caton 2007, PMID 17970677); colors in `PROG_COLOR` constant. Each site: `{pd:null|number, gm:null|number, bop, sup, plaque}`. CAL is **derived** per-site (`pd + gm`, signed `gm`: positive = recession, negative = overgrowth) — never stored. `null` distinguishes "not measured" from "0mm".
 
 **Derivation rule** — `computeChartDerived(chart)` aggregates the 192-site grid into the summary stats the engine consumes. App computes `chartFilled = chartDerived.measured > 0`. When `chartFilled`, `dx`/`idraScores`/`makeLetter` all consume derived values (`calWorst`, `maxPD`, `bopPercent`, `teethAffected`, `furcationMax`, `mobilityMax`, `pdSitesScore`); when not filled, manual InputTab fields flow through unchanged. **Don't bypass this.** New chart-driven stats should be added to `computeChartDerived` and threaded through the same `chartFilled` gate.
 
@@ -66,7 +67,7 @@ The chart is the canonical clinical-data layer; manual worst-site fields on Inpu
 
 **Chart-tab placement caveat** — the new tab landed at index 1 (between InputTab and DiagTab). When wiring new tabs, remember the `setActiveTab(2)` call on the InputTab Compute button retargets to Diagnosis; if you reorder tabs again, update that hop.
 
-**Phase status** — All four phases shipped: Phase 1 (UI + capture), Phase 2 (derivation + integration), Phase 3 (SVG PD/GM line overlays + keyboard hotkeys + last-action toast + aria-live), Phase 4 (view toggle Full/Maxilla/Mandible/Q1–Q4 with viewport-aware default + auto-resize-until-touched, landscape print page via `@page chart-landscape` + `body.tab-chart` print rules, full ARIA grid roles). The plan file at `C:\Users\litbe\.claude\plans\act-as-a-senior-sunny-puddle.md` has the full spec.
+**Phase status** — Phases 1–6 shipped. Phase 5: chart heatmap, color split, touch targets, headers. Phase 6 (triad consensus): pack-years + stratified HbA1c grading, Stage IV subtypes, EFP 2023 peri-implantitis CPG (PD≥6mm criterion), per-tooth prognosis, keratinized mucosa + cement/screw fields, EFP S3 treatment plan card, PRA recall spider (Lang & Tonetti 2003), patient plain-language summary. Plan file: `C:\Users\litbe\.claude\plans\act-as-a-senior-sunny-puddle.md`.
 
 **Phase 4 view-toggle behavior** — `chartView` initial value picks `full` (≥1024px) / `maxilla` (768–1023) / `q1` (<768) from `window.innerWidth`. A `userTouchedView` ref tracks whether the user clicked a toggle button; while it's false, a resize listener follows the viewport across breakpoints, and once it flips true the user's choice sticks across all subsequent resizes/rotations. Don't add a "reset view" button without also clearing this ref.
 
@@ -100,9 +101,30 @@ Two-element pattern: the screen shows `<textarea>` editable-feel; print swaps to
 
 `.author-signature` is a fixed-position element rendered once at the end of `App` (after the active tab content). It uses Caveat (handwriting font, vendored woff2) for the name and Inter for the "CREATED BY" prefix. It is positioned via `inset-inline-end` so it tracks the active language direction automatically, has `pointer-events:none`, and carries `.no-print`. Don't move it into individual tabs — it lives at the App root precisely so it appears on every tab without duplication.
 
+## DiagTab props (Phase 6+)
+
+`DiagTab` now requires: `dx, caseType, txStatus, icd, chartFilled, chartDerived, risk, st, age, blAgeComp, lang, t`. The `lang` prop is **required** for language branching inside JSX — do not use `t('btnLang')==='EN'` as a language check (that returns the button label, not the language code).
+
+## makeLetter signature (Phase 6+)
+
+Now accepts `stageIVSubtype`, `kmWidth`, `cementRetained` in addition to the Phase 1–5 params. Update both `he` and `en` branches when adding new findings lines.
+
+## Peri-implant (Phase 6+)
+
+`computePeriImplantDx` now accepts `piPD` (implant probing depth). EFP 2023 criterion: peri-implantitis = BOP/SUP + (BL≥3mm or BL≥2mm with baseline, **OR** PD≥6mm). New InputTab fields: `piPD`, `kmWidth`, `cementRetained` — all in App state and SETTERS map.
+
+## PRA recall (Phase 6+)
+
+`praRecall({bopPct, sites5plus, teethLost, blAge, smokingCigs, packYears, hba1c})` returns `{scores, highN, recallEn, recallHe, FACTORS}`. Called in DiagTab — needs `blAgeComp` passed from App, not recomputed inside the tab.
+
+## Session recovery tip
+
+If a session was compacted mid-implementation, triad-debate and subagent outputs live in `.claude/projects/<session-id>/subagents/*.jsonl`. Grep for `"text":` to recover consensus proposals without re-running the debate.
+
 ## Conventions
 
 - All thresholds are anchored to a citation comment (PMID or DOI). Match this style for any new clinical logic.
 - Adding a new UI feature: thread props through App → child tab → component. Don't add new top-level state outside `App`.
 - Adding a new bilingual string: add to both `STRINGS.he` and `STRINGS.en`. Never hardcode Hebrew or English in JSX — use `t('key')`.
 - Vendoring more libraries: drop the file into `vendor/`, reference with relative path, never use `unpkg`/`cdn` URLs.
+- **Language detection in JSX**: use the `lang` prop directly (e.g., `lang==='he'`), not `t('btnLang')`. Pass `lang` explicitly to any tab component that needs to branch on language inside JSX.
