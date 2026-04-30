@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'none'"/>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'none'; object-src 'none'; worker-src 'none'; manifest-src 'none'; media-src 'none'"/>
   <meta name="referrer" content="no-referrer"/>
   <title>OctoPerio — כלי תמיכה קלינית פריו-אימפלנט | רמב"ם</title>
   <link href="vendor/fonts/google-fonts.css" rel="stylesheet"/>
@@ -127,8 +127,12 @@
     .site-row{display:flex;gap:1px;}
     .site-cell{display:flex;flex-direction:column;width:22px;border:1px solid #1A3050;border-radius:3px;
       background:#0C1A28;overflow:hidden;}
-    .site-cell.pd-mid{background:#2D1B0033;}
-    .site-cell.pd-high{background:#2D0D0D44;}
+    /* Phase 5 — heatmap wash punched up so the chart reads as a clinical
+       at-a-glance map. pd-mid (≥5mm) amber; pd-high (≥6mm) red with a 2px
+       inset accent on the inline-start edge. */
+    .site-cell.pd-mid{background:#7A4A0066;}
+    .site-cell.pd-high{background:#5A1A1A99;box-shadow:inset 2px 0 0 #DC2626;}
+    [dir="rtl"] .site-cell.pd-high{box-shadow:inset -2px 0 0 #DC2626;}
     .site-cell input{width:100%;height:18px;text-align:center;background:transparent;color:#E2E8F0;
       border:none;border-bottom:1px solid #1A3050;font-size:.7rem;font-weight:600;font-family:'Inter',sans-serif;
       padding:0;outline:none;}
@@ -159,12 +163,17 @@
       border:1px dashed #1A3050;border-radius:4px;opacity:.4;}
     .tooth-sites-spacer{width:68px;flex:0 0 68px;height:47px;}
     .site-cell{position:relative;z-index:1;}
-    .row-overlay{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;overflow:visible;}
-    .row-overlay .pd-line{fill:none;stroke:#3B82F6;stroke-width:1.5;stroke-linejoin:round;stroke-linecap:round;opacity:.85;}
-    .row-overlay .gm-line{fill:none;stroke:#EF4444;stroke-width:1.5;stroke-linejoin:round;stroke-linecap:round;opacity:.85;
-      stroke-dasharray:3 2;}
+    .row-overlay{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;overflow:visible;
+      filter:drop-shadow(0 0 1px #060D14) drop-shadow(0 0 1px #060D14);}
+    /* Phase 5 — GM line moved off red (#EF4444) which collided with the BOP
+       dot semantically. Now amber/orange #FB923C so PD-blue, GM-orange, and
+       BOP-red are three distinct clinical channels. Polylines bumped to 2px,
+       dash pattern loosened, opacity 1, halo via drop-shadow on the parent. */
+    .row-overlay .pd-line{fill:none;stroke:#3B82F6;stroke-width:2;stroke-linejoin:round;stroke-linecap:round;}
+    .row-overlay .gm-line{fill:none;stroke:#FB923C;stroke-width:2;stroke-linejoin:round;stroke-linecap:round;
+      stroke-dasharray:5 3;}
     .row-overlay .pd-dot{fill:#3B82F6;}
-    .row-overlay .gm-dot{fill:#EF4444;}
+    .row-overlay .gm-dot{fill:#FB923C;}
     .tooth-crown-strip{width:68px;flex:0 0 68px;}
     .mobility-marker{display:flex;gap:3px;justify-content:center;height:6px;align-items:center;margin-bottom:1px;}
     .mobility-marker .dot{width:4px;height:4px;border-radius:50%;background:#1A3050;}
@@ -214,8 +223,35 @@
         border:none!important; }
       body.tab-chart{ background:#fff!important; color:#000!important; }
       body.tab-chart .row-overlay .pd-line{ stroke:#1E40AF; opacity:1; }
-      body.tab-chart .row-overlay .gm-line{ stroke:#991B1B; opacity:1; }
+      body.tab-chart .row-overlay .gm-line{ stroke:#9A3412; opacity:1; }
+      /* Phase 5 — keep PD severity heatmap on paper. The global print rule
+         strips backgrounds; these overrides restore the clinical wash so a
+         printed chart still reads as a map. */
+      body.tab-chart .site-cell.pd-mid{ background:#FEF3C7!important; }
+      body.tab-chart .site-cell.pd-high{ background:#FECACA!important;
+        box-shadow:inset 2px 0 0 #B91C1C!important; }
     }
+
+    /* Phase 5 — touch-friendly site cells / dots / tooth-action buttons.
+       Pointer-coarse covers iPad and phones; cells widen to 30px, inputs
+       grow to 26px, and the BOP/SUP/Plaque dots get a 14px hit ring while
+       the visual dot stays small. */
+    @media (pointer:coarse){
+      .site-cell{width:30px;}
+      .site-cell input{height:26px;font-size:.78rem;}
+      .site-dot{width:8px;height:8px;position:relative;}
+      .site-dot::after{content:'';position:absolute;inset:-6px;border-radius:50%;}
+      .tooth-actions button{padding:6px 10px;font-size:.72rem;}
+      .tooth-crown{padding:5px 4px;}
+      .row-overlay{display:none;}
+    }
+    .tooth-actions button:focus-visible{outline:2px solid #2DD4BF;outline-offset:1px;}
+
+    /* Phase 5 — bidi isolate utility for elements that mix Hebrew prose with
+       LTR clinical tokens (PD, GM, BOP, ←→). `unicode-bidi:plaintext` lets
+       each run pick its own direction so punctuation stops drifting around
+       the strongest token in the line. */
+    .bidi-isolate{unicode-bidi:plaintext;}
 
     .print-only{display:none;}
 
@@ -246,7 +282,6 @@
       textarea.field-input{min-height:240px;font-size:.86rem;line-height:1.65;}
       .reasoning-row{padding:8px 0;}
       .nav-subtitle{display:none!important;}
-      .nav-rambam{font-size:.6rem!important;padding:2px 8px!important;}
       .records-grid{grid-template-columns:1fr!important;}
       /* Stage / Grade / Status badges shrink on phones */
       .badge-sg{font-size:1.55rem!important;padding:10px 18px!important;min-width:78px!important;}
@@ -302,7 +337,7 @@ const { useState, useMemo, useCallback, useEffect, useRef } = React;
 /* ─── BILINGUAL STRINGS ───────────────────────────────────────────────── */
 const S = {
   he: {
-    appSub:'כלי תמיכה קלינית פריו-אימפלנט', rambam:'רמב"ם | פריודונטולוגיה',
+    appSub:'כלי תמיכה קלינית פריו-אימפלנט',
     tabInput:'טופס קליני', tabChart:'תרשים פריו', tabDx:'אבחנה', tabIDRA:'IDRA', tabOut:'פלט מקצועי',
     chartTitle:'תרשים פריודונטלי (6-PPC)',
     chartSubtitle:'תרשים מלא — 32 שיניים, 6 אתרים לכל שן. לחץ על תא לעריכה. נקודות: דימום / מוגלה / רובד.',
@@ -406,7 +441,7 @@ const S = {
     piNotApplicable:'אין שתלים — לא רלוונטי',
   },
   en: {
-    appSub:'Perio-Implant Clinical Decision Support', rambam:'Rambam | Periodontology',
+    appSub:'Perio-Implant Clinical Decision Support',
     tabInput:'Clinical Input', tabChart:'Periodontal Chart', tabDx:'Diagnosis', tabIDRA:'IDRA', tabOut:'Output',
     chartTitle:'Periodontal Chart (6-PPC)',
     chartSubtitle:'Full-mouth chart — 32 teeth, 6 sites per tooth. Click a cell to edit. Dots: bleeding / suppuration / plaque.',
@@ -1784,7 +1819,7 @@ function PerioChartTab({chart, setChart, t}){
         <div style={{fontSize:'.72rem',fontWeight:700,letterSpacing:'.08em',color:'#2DD4BF',
           textTransform:'uppercase'}}>{t('chartTitle')}</div>
       </div>
-      <div style={{fontSize:'.78rem',color:'#94A3B8',marginBottom:14,lineHeight:1.55}}>{t('chartSubtitle')}</div>
+      <div className="bidi-isolate" style={{fontSize:'.78rem',color:'#94A3B8',marginBottom:14,lineHeight:1.55}}>{t('chartSubtitle')}</div>
 
       {/* Live header pills */}
       <div style={{display:'flex',gap:8,marginBottom:14,flexWrap:'wrap',alignItems:'center'}}>
@@ -1846,7 +1881,7 @@ function PerioChartTab({chart, setChart, t}){
         <div style={{display:'flex',alignItems:'center',gap:5}}>
           <span className="site-dot plaque"/>{t('chartLegendPlaque')}
         </div>
-        <div style={{color:'#475569',fontSize:'.68rem',marginInlineStart:'auto',fontFamily:'Inter,sans-serif'}}>
+        <div className="bidi-isolate" style={{color:'#475569',fontSize:'.68rem',marginInlineStart:'auto',fontFamily:'Inter,sans-serif'}}>
           {t('chartHotkeys')}
         </div>
       </div>
@@ -2068,13 +2103,15 @@ function OutputTab({dx,risk,periDx,caseType,txStatus,icd,chartFilled,chartDerive
     ? `Periodontitis Stage ${dx.stage} Grade ${dx.grade} — ${extLabel} | ICD: ${icd} | IDRA: ${risk}`
     : `${ctKey?t(ctKey):(caseType||'—')} | ICD: ${icd}`;
 
-  /* PHI hygiene: clear clipboard after 60s so the patient's letter doesn't sit
-     in the OS paste buffer indefinitely. Best-effort — silently no-ops if the
-     user has copied something else in the meantime (we don't read clipboard). */
+  /* PHI hygiene: clear clipboard after 15s so the patient's letter doesn't sit
+     in the OS paste buffer. Window shortened from 60s in Phase 5 — a 60s
+     delay was likely to nuke an unrelated copy the user made between paste
+     and timeout. 15s is long enough to paste into the chart system, short
+     enough that other copies aren't usually mid-flight. */
   const handleCopy=()=>{
     navigator.clipboard.writeText(letter).then(()=>{
       setCopied(true); setTimeout(()=>setCopied(false),2500);
-      setTimeout(()=>{ try{ navigator.clipboard.writeText(''); }catch(e){} }, 60000);
+      setTimeout(()=>{ try{ navigator.clipboard.writeText(''); }catch(e){} }, 15000);
     });
   };
 
@@ -2225,10 +2262,6 @@ function Navbar({t,lang,onToggle}){
         <span className="nav-subtitle" style={{fontSize:'.7rem',color:'#94A3B8'}}>{t('appSub')}</span>
       </div>
       <div style={{marginInlineStart:'auto',display:'flex',alignItems:'center',gap:9}}>
-        <span className="nav-rambam" style={{fontSize:'.66rem',fontWeight:700,letterSpacing:'.06em',
-          background:'#0F2035',color:'#2DD4BF',borderRadius:6,padding:'3px 10px',border:'1px solid #1A8A7B44'}}>
-          {t('rambam')}
-        </span>
         <button onClick={onToggle} style={{
           display:'flex',alignItems:'center',gap:5,
           background:'#0F2035',color:'#94A3B8',border:'1px solid #1A3050',
