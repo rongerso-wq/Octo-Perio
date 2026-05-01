@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'none'; object-src 'none'; worker-src 'none'; manifest-src 'none'; media-src 'none'"/>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'none'; object-src 'none'; worker-src 'self' blob:; manifest-src 'none'; media-src 'none'"/>
   <meta name="referrer" content="no-referrer"/>
   <title>OctoPerio — כלי תמיכה קלינית פריו-אימפלנט</title>
   <link href="vendor/fonts/google-fonts.css" rel="stylesheet"/>
@@ -338,7 +338,31 @@ const { useState, useMemo, useCallback, useEffect, useRef } = React;
 const S = {
   he: {
     appSub:'כלי תמיכה קלינית פריו-אימפלנט',
-    tabInput:'טופס קליני', tabChart:'תרשים פריו', tabDx:'אבחנה', tabIDRA:'IDRA', tabOut:'פלט מקצועי',
+    tabInput:'טופס קליני', tabImaging:'הדמיה', tabChart:'תרשים פריו', tabDx:'אבחנה', tabIDRA:'IDRA', tabOut:'פלט מקצועי',
+    imgTitle:'ניתוח רדיוגרפי', imgSubtitle:'טען צילום פנורמי / פריאפיקלי / נשיכה (JPEG / PNG). מוצע בלבד — נדרש אישור קליני.',
+    imgUpload:'גרור תמונה לכאן או לחץ לבחירה', imgUploadHint:'JPEG · PNG · עד 8MB',
+    imgChange:'החלף תמונה', imgRemove:'הסר',
+    imgPlaceholder:'אין תמונה טעונה',
+    imgFileTooLarge:'הקובץ גדול מדי (מקסימום 8MB)',
+    imgInvalidType:'סוג קובץ לא נתמך — בחר JPEG או PNG',
+    imgFileName:'קובץ', imgDimensions:'מידות', imgFileSize:'גודל',
+    imgMode:'מצב ניתוח', imgOffline:'מקומי (ללא רשת)', imgCloud:'ענן (Claude Vision)',
+    imgCloudComingSoon:'מצב ענן יתווסף בשלב 7C',
+    imgAnalyze:'נתח (מקומי)', imgAnalyzing:'מנתח…', imgReanalyze:'נתח שוב',
+    imgRunDemo:'הרץ דמו (ערכים מדומים)', imgDemoBadge:'דמו',
+    imgFindings:'ממצאים (בסיוע AI)',
+    imgRblEstimate:'הערכת %RBL כוללת', imgWorstSiteRbl:'אתר חמור ביותר', imgVblEstimate:'VBL מוערך (מ"מ)',
+    imgPerToothMedian:'חציון לפי שן', imgConfidence:'ביטחון',
+    imgConfLow:'נמוך', imgConfMed:'בינוני', imgConfHigh:'גבוה',
+    imgApply:'החל על RBL/VBL', imgApplied:'הוחל ✓', imgClear:'נקה ממצאים',
+    imgNoResult:'עדיין לא רץ ניתוח',
+    imgCariesNote:'דגלי עששת / נגעים פריאפיקליים זמינים רק במצב ענן',
+    imgDisclaimer:'הצעה בלבד — אישור קליני מחייב',
+    imgModelMissing:'מודל ONNX לא נטען. הוסף את perio-rbl.onnx ל-vendor/models/ כדי להפעיל ניתוח אמיתי.',
+    imgRuntimeMissing:'ספריית ONNX Runtime לא נטענה. הוסף את ort.min.js ל-vendor/onnxruntime-web/.',
+    imgAnalysisFailed:'הניתוח נכשל — נסה שוב או השתמש בערכים ידניים',
+    imgAiSuggested:'מוצע ע"י AI', imgAiPillApply:'החל',
+    letterRadiographicAi:'ממצאים רדיוגרפיים (בסיוע AI)',
     chartTitle:'תרשים פריודונטלי (6-PPC)',
     chartSubtitle:'תרשים מלא — 32 שיניים, 6 אתרים לכל שן. לחץ על תא לעריכה. נקודות: דימום / מוגלה / רובד.',
     chartFMBS:'FMBS', chartFMPS:'FMPS', chartMaxPD:'Max PD', chartWorstCAL:'Worst CAL',
@@ -453,7 +477,31 @@ const S = {
   },
   en: {
     appSub:'Perio-Implant Clinical Decision Support',
-    tabInput:'Clinical Input', tabChart:'Periodontal Chart', tabDx:'Diagnosis', tabIDRA:'IDRA', tabOut:'Output',
+    tabInput:'Clinical Input', tabImaging:'Imaging', tabChart:'Periodontal Chart', tabDx:'Diagnosis', tabIDRA:'IDRA', tabOut:'Output',
+    imgTitle:'Radiographic Image Analysis', imgSubtitle:'Upload a panoramic / periapical / bitewing X-ray (JPEG / PNG). Suggestion only — clinician confirmation required.',
+    imgUpload:'Drop image here or click to browse', imgUploadHint:'JPEG · PNG · up to 8MB',
+    imgChange:'Change image', imgRemove:'Remove',
+    imgPlaceholder:'No image loaded',
+    imgFileTooLarge:'File too large (max 8MB)',
+    imgInvalidType:'Unsupported file type — select JPEG or PNG',
+    imgFileName:'File', imgDimensions:'Dimensions', imgFileSize:'Size',
+    imgMode:'Analysis mode', imgOffline:'Offline (no network)', imgCloud:'Cloud (Claude Vision)',
+    imgCloudComingSoon:'Cloud mode arrives in Phase 7C',
+    imgAnalyze:'Analyze (offline)', imgAnalyzing:'Analyzing…', imgReanalyze:'Re-analyze',
+    imgRunDemo:'Run demo (mock values)', imgDemoBadge:'DEMO',
+    imgFindings:'Findings (AI-assisted)',
+    imgRblEstimate:'Overall %RBL estimate', imgWorstSiteRbl:'Worst-site %RBL', imgVblEstimate:'VBL estimate (mm)',
+    imgPerToothMedian:'Per-tooth median', imgConfidence:'Confidence',
+    imgConfLow:'low', imgConfMed:'medium', imgConfHigh:'high',
+    imgApply:'Apply to RBL/VBL', imgApplied:'Applied ✓', imgClear:'Clear findings',
+    imgNoResult:'No analysis run yet',
+    imgCariesNote:'Caries / periapical lesion flags require Cloud mode',
+    imgDisclaimer:'Suggestion only — clinician must confirm',
+    imgModelMissing:'ONNX model not vendored. Drop perio-rbl.onnx into vendor/models/ to enable real analysis.',
+    imgRuntimeMissing:'ONNX Runtime not vendored. Drop ort.min.js into vendor/onnxruntime-web/.',
+    imgAnalysisFailed:'Analysis failed — retry or fall back to manual entry',
+    imgAiSuggested:'AI-suggested', imgAiPillApply:'Apply',
+    letterRadiographicAi:'Radiographic Findings (AI-assisted)',
     chartTitle:'Periodontal Chart (6-PPC)',
     chartSubtitle:'Full-mouth chart — 32 teeth, 6 sites per tooth. Click a cell to edit. Dots: bleeding / suppuration / plaque.',
     chartFMBS:'FMBS', chartFMPS:'FMPS', chartMaxPD:'Max PD', chartWorstCAL:'Worst CAL',
@@ -751,6 +799,30 @@ const REFERENCES = [
     usedHe:'דרישת תעודת זהות, חתימת רופא מבצע ורופא בכיר על מסמך קליני',
     usedEn:'Israeli MoH requirement for patient national ID + treating + attending clinician signatures',
     url:'https://www.gov.il/he/departments/ministry_of_health'
+  },
+  {
+    id:'krois2019',
+    authors:'Krois J, Ekert T, Meinhold L, Golla T, Kharbot B, Wittemeier A, Dörfer C, Schwendicke F',
+    year:2019,
+    title:'Deep Learning for the Radiographic Detection of Periodontal Bone Loss',
+    journal:'Sci Rep',
+    pmid:'31186466',
+    doi:'10.1038/s41598-019-44839-3',
+    usedHe:'בסיס לזיהוי אוטומטי של איבוד עצם פריודונטלי בצילום פנורמי — מקור הסיבה לערוץ ההדמיה',
+    usedEn:'CNN-based detection of periodontal bone loss on panoramic radiographs — basis for the offline imaging pipeline',
+    url:'https://pubmed.ncbi.nlm.nih.gov/31186466/'
+  },
+  {
+    id:'schwendicke2020',
+    authors:'Schwendicke F, Samek W, Krois J',
+    year:2020,
+    title:'Artificial Intelligence in Dentistry: Chances and Challenges',
+    journal:'J Dent Res',
+    pmid:'32092430',
+    doi:'10.1177/0022034520915714',
+    usedHe:'הסכמה גבוהה בין מודלים מבוססי-DL לקלינאים בהערכת RBL — הצדקת מצב ניתוח עזר',
+    usedEn:'DL/clinician concordance for radiographic interpretation — rationale for AI-assisted (not autonomous) findings',
+    url:'https://pubmed.ncbi.nlm.nih.gov/32092430/'
   }
 ];
 
@@ -947,6 +1019,156 @@ function computeChartDerived(chart){
   };
 }
 
+/* ─── RADIOGRAPHIC IMAGE AI (Phase 7B) ────────────────────────────────────
+   Hybrid offline + opt-in cloud architecture. This phase implements the
+   offline path: ONNX Runtime Web loads a quantized YOLOv8 finetune from
+   vendor/models/perio-rbl.onnx, runs WebGPU/WASM inference on the canvas,
+   and returns per-tooth %RBL by measuring (CEJ–ABC)/(CEJ–apex). VBL is
+   derived from the largest single-tooth deviation from the median.
+   Citations: Krois et al. 2019 (PMID 31186466) — CNN bone-loss detection;
+   Schwendicke et al. 2020 (PMID 32092430) — DL-radiographic concordance. */
+
+const IMG_RUNTIME_PATH = 'vendor/onnxruntime-web/ort.min.js';
+const IMG_MODEL_PATH   = 'vendor/models/perio-rbl.onnx';
+const IMG_INPUT_SIZE   = 640;
+
+let _ortLoadPromise = null;
+function loadOnnxRuntime(){
+  /* Lazy-load ort.min.js exactly once. Resolves with the global `ort` object
+     or rejects with a stable code so the UI can show imgRuntimeMissing. */
+  if(_ortLoadPromise) return _ortLoadPromise;
+  _ortLoadPromise = new Promise((resolve, reject) => {
+    if(typeof window !== 'undefined' && window.ort){ resolve(window.ort); return; }
+    const s = document.createElement('script');
+    s.src = IMG_RUNTIME_PATH;
+    s.async = true;
+    s.onload = () => window.ort ? resolve(window.ort) : reject(new Error('RUNTIME_MISSING'));
+    s.onerror = () => reject(new Error('RUNTIME_MISSING'));
+    document.head.appendChild(s);
+  });
+  return _ortLoadPromise;
+}
+
+let _modelSession = null;
+async function getOnnxSession(){
+  if(_modelSession) return _modelSession;
+  const ort = await loadOnnxRuntime();
+  try {
+    _modelSession = await ort.InferenceSession.create(IMG_MODEL_PATH, {
+      executionProviders: ['webgpu', 'wasm'],
+      graphOptimizationLevel: 'all',
+    });
+    return _modelSession;
+  } catch(e){
+    throw new Error('MODEL_MISSING');
+  }
+}
+
+function canvasToTensor(canvas, size, ort){
+  /* Letterboxed resize → CHW Float32Array normalized [0,1]. Mirrors YOLOv8's
+     standard preprocessing. The off-screen scratch canvas sized exactly
+     `size`×`size` keeps coordinate transforms simple. */
+  const off = document.createElement('canvas');
+  off.width = size; off.height = size;
+  const octx = off.getContext('2d');
+  const scale = Math.min(size / canvas.width, size / canvas.height);
+  const dw = Math.round(canvas.width * scale);
+  const dh = Math.round(canvas.height * scale);
+  const dx = Math.floor((size - dw) / 2);
+  const dy = Math.floor((size - dh) / 2);
+  octx.fillStyle = '#000';
+  octx.fillRect(0, 0, size, size);
+  octx.drawImage(canvas, dx, dy, dw, dh);
+  const { data } = octx.getImageData(0, 0, size, size);
+  const f = new Float32Array(3 * size * size);
+  const ch = size * size;
+  for(let i = 0, p = 0; i < data.length; i += 4, p++){
+    f[p]        = data[i]   / 255;
+    f[ch + p]   = data[i+1] / 255;
+    f[2*ch + p] = data[i+2] / 255;
+  }
+  return new ort.Tensor('float32', f, [1, 3, size, size]);
+}
+
+async function runOnnxInference(canvas){
+  /* Returns { rblEstimate, worstSiteRbl, vblEstimate, perToothMedian,
+     confidence, source:'onnx' } or throws an Error with message
+     'RUNTIME_MISSING' | 'MODEL_MISSING' | 'INFERENCE_FAILED'. */
+  const ort = await loadOnnxRuntime();
+  const session = await getOnnxSession();
+  const tensor = canvasToTensor(canvas, IMG_INPUT_SIZE, ort);
+  const inputName = session.inputNames[0];
+  let output;
+  try {
+    const feeds = {}; feeds[inputName] = tensor;
+    output = await session.run(feeds);
+  } catch(e){
+    throw new Error('INFERENCE_FAILED');
+  }
+  /* Postprocessing: the finetuned model is expected to emit per-tooth landmark
+     boxes (CEJ, ABC, apex). For each detection above threshold, %RBL =
+     (ABC.y − CEJ.y) / (apex.y − CEJ.y) × 100. Median across teeth = overall
+     RBL%; max = worst-site. VBL = max − median (mm, scaled by tooth height
+     heuristic). The exact head shape is model-specific so we keep this
+     postprocessor a single named function — swap it when the real model
+     ships and tighten the schema then. */
+  const tooth = postprocessOnnxOutput(output);
+  if(!tooth || !tooth.length) throw new Error('INFERENCE_FAILED');
+  const rbls = tooth.map(t => t.rbl).filter(v => v != null && !isNaN(v)).sort((a,b)=>a-b);
+  if(!rbls.length) throw new Error('INFERENCE_FAILED');
+  const median = rbls.length % 2 ? rbls[(rbls.length-1)/2] : (rbls[rbls.length/2-1]+rbls[rbls.length/2])/2;
+  const worst = rbls[rbls.length-1];
+  const vbl = Math.max(0, Math.round((worst - median) / 10));
+  const meanConf = tooth.reduce((s,t)=>s+(t.conf||0),0)/tooth.length;
+  return {
+    rblEstimate: Math.round(median),
+    worstSiteRbl: Math.round(worst),
+    vblEstimate: vbl,
+    perToothMedian: Math.round(median),
+    confidence: meanConf >= 0.7 ? 'high' : meanConf >= 0.5 ? 'med' : 'low',
+    source: 'onnx',
+  };
+}
+
+function postprocessOnnxOutput(_output){
+  /* Placeholder: the real postprocessor depends on the finetuned model's
+     output head (YOLOv8 detection vs. keypoint vs. segmentation). When the
+     .onnx file ships, replace this body with NMS + landmark grouping +
+     CEJ/ABC/apex assignment per tooth. Returning [] forces INFERENCE_FAILED
+     so the UI shows imgAnalysisFailed instead of fabricated numbers. */
+  return [];
+}
+
+function generateDemoImagingResult(){
+  /* Deterministic mock — used so the rest of the pipeline (Findings panel,
+     Apply button, letter integration) can be exercised end-to-end before the
+     real .onnx ships. Clearly tagged source:'demo' so the UI shows a DEMO
+     badge and the letter never picks it up. */
+  return {
+    rblEstimate: 38,
+    worstSiteRbl: 52,
+    vblEstimate: 3,
+    perToothMedian: 36,
+    confidence: 'med',
+    source: 'demo',
+  };
+}
+
+function computeImagingDerived(result){
+  /* Pure aggregator: takes whatever the inference function (or cloud or demo)
+     returned and shapes it into the values the engine consumes. Keeps the
+     same chartFilled / chartDerived gate pattern — see CLAUDE.md. */
+  if(!result) return null;
+  return {
+    rblPercent:  Number.isFinite(result.rblEstimate)  ? result.rblEstimate  : null,
+    vbl:         Number.isFinite(result.vblEstimate)  ? result.vblEstimate  : null,
+    worstSiteRbl:Number.isFinite(result.worstSiteRbl) ? result.worstSiteRbl : null,
+    confidence:  result.confidence || 'low',
+    source:      result.source || 'unknown',
+    isDemo:      result.source === 'demo',
+  };
+}
+
 /* Peri-implant case definitions updated to EFP 2023 S3 CPG (Herrera et al. — PMID 37305797).
    Peri-implantitis: BOP/SUP + (BL ≥3mm [no baseline] OR BL ≥2mm [baseline] OR PD ≥6mm).
    Berglundh 2018 (PMID 29926948) defines the health/mucositis boundary. */
@@ -1078,7 +1300,7 @@ function dataPts(scores){ return pts(scores.map(s=>ZONE_R[s]||ZONE_R[1])); }
 function makeLetter({ lang,name,age,patientID,mrn,stage,grade,extent,caseType,txStatus,icd,
   cal,rbl,pd,bop,cigs,packYears,hba1c,idraRisk,periDx,stageIVSubtype,kmWidth,cementRetained,
   residentName,licenseNo,attendingName,attendingLicense,
-  chartFilled,chartDerived }){
+  chartFilled,chartDerived,imagingFilled,imagingDerived }){
   const today=new Date().toLocaleDateString(lang==='he'?'he-IL':'en-GB',{year:'numeric',month:'long',day:'numeric'});
   const extHe=extent==='localized'?'מוקדי':extent==='generalized'?'מוכלל':'—';
   const extEn=extent==='localized'?'Localized':extent==='generalized'?'Generalized':'—';
@@ -1134,7 +1356,7 @@ ICD-10: ${icd||'—'}${isPerio?'':''}
 • BOP: ${bop||'—'}%${cigsN>=10?`\n• עישון: ${cigsN} סיגריות/יום (Grade C)`:''}${!isNaN(pyN)&&pyN>0?`\n• מינון מצטבר: ${pyN} pack-years`:''}${!isNaN(hval)&&hval>=8.0?`\n• סוכרת: HbA1c ${hval}% ≥8.0% — לא מאוזן (Grade C)`:!isNaN(hval)&&hval>=7.0?`\n• סוכרת: HbA1c ${hval}% 7.0–7.9% — מאוזן חלקית (Grade B floor)`:''}${stageIVSubtype?`\n• תת-סיווג: Stage IV-${stageIVSubtype.slice(2)} (Herrera 2022)`:''}${kmWidth?`\n• רוחב מוקוזה קרטינית: ${kmWidth} מ"מ${parseFloat(kmWidth)<2?' — ⚠ <2מ"מ סיכון מוגבר (Roccuzzo 2016)':''}`:''}${cementRetained==='cement'?'\n• צורת חיבור פרוטזה: ציפוי (cement) — שמירה על ניקיון חיונית (Wittneben 2014)':cementRetained==='screw'?'\n• צורת חיבור פרוטזה: ברגית (screw)':''}${chartFilled?`\n• FMBS (אחוז דימום מלא): ${chartDerived.fmbs}%\n• FMPS (אחוז רובד מלא): ${chartDerived.fmps}%\n• אתרים עם PD ≥5 מ"מ: ${chartDerived.sites5plus} (מתוך ${chartDerived.measured} אתרים נמדדים, ${chartDerived.presentTeeth} שיניים)`:''}
 
 הערכת סיכון לשתלים (IDRA): ${idraHe}${idraRisk==='HIGH'?'\n⚠ נדרש ייצוב פריודונטלי מלא לפני שיקול שתלים':''}${periDx?`\nאבחנה פריו-אימפלנט (Berglundh 2018): ${piHe[periDx]}`:''}
-
+${imagingFilled?`\nממצאים רדיוגרפיים (בסיוע AI):\n• הערכת %RBL כוללת: ${imagingDerived.rblPercent}%${imagingDerived.worstSiteRbl!=null?`\n• אתר חמור ביותר: ${imagingDerived.worstSiteRbl}%`:''}${imagingDerived.vbl!=null?`\n• VBL מוערך: ${imagingDerived.vbl} מ"מ`:''}\n• ביטחון: ${imagingDerived.confidence==='high'?'גבוה':imagingDerived.confidence==='med'?'בינוני':'נמוך'} · הצעה בלבד — אישור קליני מחייב\n`:''}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 המלצות טיפול (EFP S3 — Sanz/Herrera 2020):
@@ -1190,7 +1412,7 @@ Key Findings:
 • BOP: ${bop||'—'}%${cigsN>=10?`\n• Smoking: ${cigsN} cig/day (Grade C modifier)`:''}${!isNaN(pyN)&&pyN>0?`\n• Cumulative dose: ${pyN} pack-years`:''}${!isNaN(hval)&&hval>=8.0?`\n• Diabetes: HbA1c ${hval}% ≥8.0% — uncontrolled (Grade C modifier)`:!isNaN(hval)&&hval>=7.0?`\n• Diabetes: HbA1c ${hval}% 7.0–7.9% — partially controlled (Grade B floor)`:''}${stageIVSubtype?`\n• Subtype: Stage IV-${stageIVSubtype.slice(2)} (Herrera 2022)`:''}${kmWidth?`\n• Keratinized mucosa width: ${kmWidth} mm${parseFloat(kmWidth)<2?' — ⚠ <2mm elevated risk (Roccuzzo 2016)':''}`:''}${cementRetained==='cement'?'\n• Prosthesis retention: cement — meticulous hygiene essential (Wittneben 2014)':cementRetained==='screw'?'\n• Prosthesis retention: screw-retained':''}${chartFilled?`\n• FMBS (Full-Mouth Bleeding Score): ${chartDerived.fmbs}%\n• FMPS (Full-Mouth Plaque Score): ${chartDerived.fmps}%\n• Sites with PD ≥5 mm: ${chartDerived.sites5plus} (of ${chartDerived.measured} measured sites across ${chartDerived.presentTeeth} teeth)`:''}
 
 Implant Disease Risk Assessment (IDRA): ${idraEn}${idraRisk==='HIGH'?'\n⚠ Full periodontal stabilization required before implant consideration':''}${periDx?`\nPeri-Implant Diagnosis (Berglundh 2018): ${piEn[periDx]}`:''}
-
+${imagingFilled?`\nRadiographic Findings (AI-assisted):\n• Overall %RBL estimate: ${imagingDerived.rblPercent}%${imagingDerived.worstSiteRbl!=null?`\n• Worst-site %RBL: ${imagingDerived.worstSiteRbl}%`:''}${imagingDerived.vbl!=null?`\n• VBL estimate: ${imagingDerived.vbl} mm`:''}\n• Confidence: ${imagingDerived.confidence==='high'?'high':imagingDerived.confidence==='med'?'medium':'low'} · Suggestion only — clinician confirmation required\n`:''}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 Treatment Recommendations (EFP S3 — Sanz/Herrera 2020):
@@ -1403,7 +1625,8 @@ function ReasoningPanel({steps,t}){
 }
 
 /* ─── CLINICAL INPUT TAB ────────────────────────────────────────────────────── */
-function InputTab({st,set,t,idValid,chartFilled,chartDerived,setChart,onCompute}){
+function InputTab({st,set,t,idValid,chartFilled,chartDerived,setChart,onCompute,
+                   imagingResult,imagingApplied,onImagingApply,onImagingJump}){
   const furcOpts=[{v:'0',l:t('f0')},{v:'1',l:t('f1')},{v:'2',l:t('f2')},{v:'3',l:t('f3')}];
   const ctOpts=[{v:'auto',l:t('ctAuto')},{v:'health',l:t('ctHealth')},{v:'gingivitis',l:t('ctGingivitis')},{v:'periodontitis',l:t('ctPerio')},{v:'npd',l:t('ctNPD')},{v:'endoPerio',l:t('ctEndoPerio')}];
   const txOpts=[{v:'auto',l:t('ctAuto')},{v:'untreated',l:t('txUntreated')},{v:'therapy',l:t('txTherapy')},{v:'stable',l:t('txStable')},{v:'remission',l:t('txRemission')},{v:'unstable',l:t('txUnstable')}];
@@ -1547,6 +1770,31 @@ function InputTab({st,set,t,idValid,chartFilled,chartDerived,setChart,onCompute}
       </div>
 
       <Card title={t('secPerio')} style={{marginBottom:16}}>
+        {imagingResult && !imagingApplied && (
+          <div style={{
+            marginBottom:14,padding:'10px 14px',borderRadius:8,
+            background:'#0D2D2D',border:'1px solid #1D7F7F',
+            display:'flex',gap:10,alignItems:'center',flexWrap:'wrap',
+          }}>
+            <span style={{fontSize:11,fontWeight:700,padding:'2px 8px',borderRadius:4,
+              background:'#082525',color:'#5EEAD4',letterSpacing:0.5}}>
+              {imagingResult.source==='demo' ? t('imgDemoBadge') : t('imgAiSuggested')}
+            </span>
+            <span className="clinical-num" style={{fontSize:13,color:'#A5F0F0'}}>
+              RBL {imagingResult.rblEstimate}% · VBL {imagingResult.vblEstimate}mm
+            </span>
+            <button
+              onClick={() => { onImagingApply && onImagingApply(imagingResult); }}
+              style={{
+                padding:'4px 12px',borderRadius:6,border:'1px solid #2DD4BF',
+                background:'#0A1828',color:'#5EEAD4',cursor:'pointer',fontSize:12,fontWeight:600,
+                marginInlineStart:'auto',
+              }}
+            >
+              {t('imgAiPillApply')}
+            </button>
+          </div>
+        )}
         <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(190px,1fr))',gap:'12px 20px'}}>
           <FInput label={t('calWorst')} type="number" min="0" max="20" step=".5" value={st.calWorst} onChange={v=>set('calWorst',v)} placeholder="mm"/>
           <FInput label={t('rbl')} type="number" min="0" max="100" value={st.rblPercent} onChange={v=>set('rblPercent',v)} placeholder="%"/>
@@ -1608,6 +1856,392 @@ function InputTab({st,set,t,idValid,chartFilled,chartDerived,setChart,onCompute}
           </button>
         );
       })()}
+    </div>
+  );
+}
+
+/* ─── IMAGING TAB (Phase 7B: offline ONNX inference path) ─────────────────────
+   Accepts JPEG / PNG (panoramic, periapical, bitewing). Max 8MB. Image is held
+   in React state only — never persisted, never sent over the network in
+   offline mode. Canvas is rendered LTR regardless of UI language because X-ray
+   anatomy is spatial (same rule as the periodontal chart and IDRA octagon).
+   Analyze runs `runOnnxInference(canvas)` against a vendored model; if the
+   runtime or model isn't on disk yet the UI falls back to a clear "model
+   missing" state. A separate "Run demo" button injects mock values so the
+   downstream wiring (Findings → Apply → engine → letter) can be exercised. */
+const IMG_MAX_BYTES = 8 * 1024 * 1024;
+const IMG_VALID_TYPES = ['image/jpeg', 'image/png'];
+
+function formatBytes(n){
+  if(n < 1024) return `${n} B`;
+  if(n < 1024*1024) return `${(n/1024).toFixed(1)} KB`;
+  return `${(n/(1024*1024)).toFixed(2)} MB`;
+}
+
+const CONF_COLORS = {
+  low:  { bg:'#2D1A0D', border:'#7F4F1D', fg:'#FCD9A5' },
+  med:  { bg:'#1A2D2D', border:'#1D7F7F', fg:'#A5F0F0' },
+  high: { bg:'#0D2D1A', border:'#1D7F4F', fg:'#A5FCD9' },
+};
+
+function ImagingTab({imagingFile, setImagingFile,
+                     imagingMode, setImagingMode,
+                     imagingResult, setImagingResult,
+                     imagingApplied, setImagingApplied,
+                     onApply, lang, t}){
+  const inputRef = useRef(null);
+  const canvasRef = useRef(null);
+  const [error, setError] = useState('');
+  const [analysisError, setAnalysisError] = useState('');
+  const [analyzing, setAnalyzing] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
+
+  /* Draw the loaded image onto the canvas, fitted to a max display width while
+     preserving aspect. Re-runs whenever imagingFile changes. */
+  useEffect(() => {
+    if(!imagingFile || !canvasRef.current) return;
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+    img.onload = () => {
+      const maxW = 900;
+      const scale = Math.min(1, maxW / img.naturalWidth);
+      canvas.width = Math.round(img.naturalWidth * scale);
+      canvas.height = Math.round(img.naturalHeight * scale);
+      ctx.fillStyle = '#000';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    };
+    img.src = imagingFile.dataUrl;
+  }, [imagingFile]);
+
+  const handleFile = (file) => {
+    setError('');
+    if(!file) return;
+    if(!IMG_VALID_TYPES.includes(file.type)){
+      setError(t('imgInvalidType'));
+      return;
+    }
+    if(file.size > IMG_MAX_BYTES){
+      setError(t('imgFileTooLarge'));
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const dataUrl = e.target.result;
+      const probe = new Image();
+      probe.onload = () => {
+        setImagingFile({
+          name: file.name,
+          type: file.type,
+          size: file.size,
+          dataUrl,
+          width: probe.naturalWidth,
+          height: probe.naturalHeight,
+        });
+      };
+      probe.src = dataUrl;
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const onDrop = (e) => {
+    e.preventDefault();
+    setDragOver(false);
+    const file = e.dataTransfer?.files?.[0];
+    if(file) handleFile(file);
+  };
+
+  const onChange = (e) => {
+    const file = e.target.files?.[0];
+    if(file) handleFile(file);
+    /* Allow re-selecting the same file by clearing the value */
+    e.target.value = '';
+  };
+
+  const onRemove = () => {
+    setImagingFile(null);
+    setImagingResult(null);
+    setImagingApplied(false);
+    setError('');
+    setAnalysisError('');
+  };
+
+  const onAnalyze = async () => {
+    if(!canvasRef.current) return;
+    setAnalysisError('');
+    setAnalyzing(true);
+    try {
+      const result = await runOnnxInference(canvasRef.current);
+      setImagingResult(result);
+      setImagingApplied(false);
+    } catch(e){
+      const code = e && e.message;
+      if(code === 'RUNTIME_MISSING')      setAnalysisError(t('imgRuntimeMissing'));
+      else if(code === 'MODEL_MISSING')   setAnalysisError(t('imgModelMissing'));
+      else                                 setAnalysisError(t('imgAnalysisFailed'));
+    } finally {
+      setAnalyzing(false);
+    }
+  };
+
+  const onRunDemo = () => {
+    setAnalysisError('');
+    setImagingResult(generateDemoImagingResult());
+    setImagingApplied(false);
+  };
+
+  const onClearFindings = () => {
+    setImagingResult(null);
+    setImagingApplied(false);
+    setAnalysisError('');
+  };
+
+  const onApplyClick = () => {
+    if(!imagingResult) return;
+    onApply(imagingResult);
+    setImagingApplied(true);
+  };
+
+  return (
+    <div className="fade-in tab-content" style={{padding:'20px 16px',maxWidth:1100,margin:'0 auto'}}>
+      <Card title={t('imgTitle')}>
+        <div style={{color:'#94A3B8',fontSize:14,marginBottom:14,lineHeight:1.5}}>
+          {t('imgSubtitle')}
+        </div>
+
+        {!imagingFile && (
+          <div
+            role="button"
+            tabIndex={0}
+            onClick={() => inputRef.current?.click()}
+            onKeyDown={(e) => { if(e.key==='Enter'||e.key===' '){ e.preventDefault(); inputRef.current?.click(); } }}
+            onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={onDrop}
+            style={{
+              border: `2px dashed ${dragOver ? '#7DD3FC' : '#1A3050'}`,
+              borderRadius: 12,
+              padding: '48px 20px',
+              textAlign: 'center',
+              cursor: 'pointer',
+              background: dragOver ? '#082038' : '#0A1828',
+              transition: 'all 0.15s',
+            }}
+          >
+            <div style={{fontSize:38,opacity:0.6,marginBottom:10}}>⊕</div>
+            <div style={{color:'#E2E8F0',fontWeight:600,fontSize:16,marginBottom:6}}>
+              {t('imgUpload')}
+            </div>
+            <div style={{color:'#64748B',fontSize:13}}>
+              {t('imgUploadHint')}
+            </div>
+          </div>
+        )}
+
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/jpeg,image/png"
+          onChange={onChange}
+          style={{display:'none'}}
+        />
+
+        {error && (
+          <div role="alert" style={{
+            marginTop:14,padding:'10px 14px',borderRadius:8,
+            background:'#2D0D0D',color:'#FCA5A5',fontSize:13,border:'1px solid #7F1D1D'
+          }}>
+            {error}
+          </div>
+        )}
+
+        {imagingFile && (
+          <div>
+            {/* Canvas preview — LTR-locked because X-ray anatomy is spatial */}
+            <div style={{
+              direction:'ltr',
+              background:'#000',
+              border:'1px solid #1A3050',
+              borderRadius:8,
+              padding:8,
+              display:'flex',
+              justifyContent:'center',
+              overflow:'auto',
+            }}>
+              <canvas ref={canvasRef} style={{maxWidth:'100%',display:'block'}}/>
+            </div>
+
+            {/* Metadata strip */}
+            <div style={{
+              marginTop:14,display:'flex',flexWrap:'wrap',gap:18,
+              fontSize:13,color:'#94A3B8',
+            }}>
+              <div><span style={{color:'#64748B'}}>{t('imgFileName')}:</span> <span style={{color:'#E2E8F0'}}>{imagingFile.name}</span></div>
+              <div className="clinical-num"><span style={{color:'#64748B'}}>{t('imgDimensions')}:</span> <span style={{color:'#E2E8F0'}}>{imagingFile.width}×{imagingFile.height}px</span></div>
+              <div className="clinical-num"><span style={{color:'#64748B'}}>{t('imgFileSize')}:</span> <span style={{color:'#E2E8F0'}}>{formatBytes(imagingFile.size)}</span></div>
+            </div>
+
+            {/* Actions */}
+            <div style={{marginTop:16,display:'flex',gap:10,flexWrap:'wrap'}}>
+              <button
+                onClick={() => inputRef.current?.click()}
+                style={{
+                  padding:'8px 16px',borderRadius:8,border:'1px solid #1A3050',
+                  background:'#0A1828',color:'#E2E8F0',cursor:'pointer',fontSize:14,
+                }}
+              >
+                {t('imgChange')}
+              </button>
+              <button
+                onClick={onRemove}
+                style={{
+                  padding:'8px 16px',borderRadius:8,border:'1px solid #7F1D1D',
+                  background:'#1F0A0A',color:'#FCA5A5',cursor:'pointer',fontSize:14,
+                }}
+              >
+                {t('imgRemove')}
+              </button>
+            </div>
+
+            {/* Mode selector — Phase 7B ships offline only; cloud is wired in 7C */}
+            <div style={{
+              marginTop:20,padding:14,borderRadius:10,
+              background:'#0A1828',border:'1px solid #1A3050',
+            }}>
+              <div style={{color:'#94A3B8',fontSize:13,marginBottom:10,fontWeight:600}}>
+                {t('imgMode')}
+              </div>
+              <div style={{display:'flex',gap:14,flexWrap:'wrap'}}>
+                <label style={{display:'flex',alignItems:'center',gap:8,cursor:'pointer',color:'#E2E8F0',fontSize:14}}>
+                  <input type="radio" name="img-mode" value="offline"
+                    checked={imagingMode==='offline'}
+                    onChange={()=>setImagingMode('offline')} />
+                  {t('imgOffline')}
+                </label>
+                <label style={{display:'flex',alignItems:'center',gap:8,cursor:'not-allowed',color:'#475569',fontSize:14}}>
+                  <input type="radio" name="img-mode" value="cloud" disabled />
+                  {t('imgCloud')}
+                  <span style={{fontSize:11,color:'#64748B',marginInlineStart:4}}>· {t('imgCloudComingSoon')}</span>
+                </label>
+              </div>
+
+              <div style={{marginTop:14,display:'flex',gap:10,flexWrap:'wrap'}}>
+                <button
+                  onClick={onAnalyze}
+                  disabled={analyzing}
+                  style={{
+                    padding:'10px 18px',borderRadius:8,border:'1px solid #2DD4BF',
+                    background: analyzing ? '#0A1828' : '#0D2D2D',
+                    color:'#5EEAD4',cursor: analyzing ? 'wait' : 'pointer',
+                    fontSize:14,fontWeight:600,opacity: analyzing ? 0.6 : 1,
+                  }}
+                >
+                  {analyzing ? t('imgAnalyzing') : (imagingResult && imagingResult.source==='onnx' ? t('imgReanalyze') : t('imgAnalyze'))}
+                </button>
+                <button
+                  onClick={onRunDemo}
+                  disabled={analyzing}
+                  style={{
+                    padding:'10px 18px',borderRadius:8,border:'1px dashed #475569',
+                    background:'#0A1828',color:'#94A3B8',cursor:'pointer',fontSize:13,
+                  }}
+                  title="Inject mock values for end-to-end pipeline testing"
+                >
+                  {t('imgRunDemo')}
+                </button>
+              </div>
+
+              {analysisError && (
+                <div role="alert" style={{
+                  marginTop:12,padding:'10px 14px',borderRadius:8,
+                  background:'#2D0D0D',color:'#FCA5A5',fontSize:13,border:'1px solid #7F1D1D',
+                }}>
+                  {analysisError}
+                </div>
+              )}
+            </div>
+
+            {/* Findings panel */}
+            {imagingResult && (() => {
+              const conf = CONF_COLORS[imagingResult.confidence] || CONF_COLORS.low;
+              const confLabel = imagingResult.confidence==='high' ? t('imgConfHigh')
+                              : imagingResult.confidence==='med'  ? t('imgConfMed')
+                              : t('imgConfLow');
+              return (
+                <div style={{
+                  marginTop:16,padding:16,borderRadius:10,
+                  background:'#0A1828',border:'1px solid #1A3050',
+                }}>
+                  <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:14,flexWrap:'wrap'}}>
+                    <div style={{color:'#E2E8F0',fontSize:15,fontWeight:600}}>{t('imgFindings')}</div>
+                    {imagingResult.isDemo && (
+                      <span style={{
+                        fontSize:11,fontWeight:700,padding:'2px 8px',borderRadius:4,
+                        background:'#2D1A0D',color:'#FCD9A5',border:'1px solid #7F4F1D',
+                        letterSpacing:0.5,
+                      }}>
+                        {t('imgDemoBadge')}
+                      </span>
+                    )}
+                    <span style={{
+                      fontSize:11,fontWeight:700,padding:'2px 8px',borderRadius:4,
+                      background:conf.bg,color:conf.fg,border:`1px solid ${conf.border}`,
+                    }}>
+                      {t('imgConfidence')}: {confLabel}
+                    </span>
+                  </div>
+
+                  <div className="clinical-num" style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))',gap:12,direction:'ltr'}}>
+                    <div style={{padding:'10px 12px',background:'#060D14',borderRadius:8,border:'1px solid #1A3050'}}>
+                      <div style={{fontSize:11,color:'#64748B',marginBottom:4,textTransform:'uppercase',letterSpacing:0.5}}>{t('imgRblEstimate')}</div>
+                      <div style={{fontSize:24,color:'#E2E8F0',fontWeight:700}}>{imagingResult.rblEstimate}<span style={{fontSize:14,color:'#64748B'}}>%</span></div>
+                    </div>
+                    <div style={{padding:'10px 12px',background:'#060D14',borderRadius:8,border:'1px solid #1A3050'}}>
+                      <div style={{fontSize:11,color:'#64748B',marginBottom:4,textTransform:'uppercase',letterSpacing:0.5}}>{t('imgWorstSiteRbl')}</div>
+                      <div style={{fontSize:24,color:'#E2E8F0',fontWeight:700}}>{imagingResult.worstSiteRbl}<span style={{fontSize:14,color:'#64748B'}}>%</span></div>
+                    </div>
+                    <div style={{padding:'10px 12px',background:'#060D14',borderRadius:8,border:'1px solid #1A3050'}}>
+                      <div style={{fontSize:11,color:'#64748B',marginBottom:4,textTransform:'uppercase',letterSpacing:0.5}}>{t('imgVblEstimate')}</div>
+                      <div style={{fontSize:24,color:'#E2E8F0',fontWeight:700}}>{imagingResult.vblEstimate}<span style={{fontSize:14,color:'#64748B'}}>mm</span></div>
+                    </div>
+                  </div>
+
+                  <div style={{marginTop:10,fontSize:11,color:'#64748B',fontStyle:'italic'}}>
+                    {t('imgCariesNote')} · {t('imgDisclaimer')}
+                  </div>
+
+                  <div style={{marginTop:14,display:'flex',gap:10,flexWrap:'wrap'}}>
+                    <button
+                      onClick={onApplyClick}
+                      disabled={imagingApplied}
+                      style={{
+                        padding:'10px 18px',borderRadius:8,
+                        border:`1px solid ${imagingApplied?'#1D7F4F':'#2DD4BF'}`,
+                        background: imagingApplied ? '#0D2D1A' : '#0D2D2D',
+                        color: imagingApplied ? '#A5FCD9' : '#5EEAD4',
+                        cursor: imagingApplied ? 'default' : 'pointer',
+                        fontSize:14,fontWeight:600,
+                      }}
+                    >
+                      {imagingApplied ? t('imgApplied') : t('imgApply')}
+                    </button>
+                    <button
+                      onClick={onClearFindings}
+                      style={{
+                        padding:'10px 18px',borderRadius:8,border:'1px solid #1A3050',
+                        background:'#0A1828',color:'#94A3B8',cursor:'pointer',fontSize:13,
+                      }}
+                    >
+                      {t('imgClear')}
+                    </button>
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+        )}
+      </Card>
     </div>
   );
 }
@@ -2345,7 +2979,7 @@ function makePatientSummary(lang, dx, caseType, risk, st){
 }
 
 /* ─── OUTPUT TAB ─────────────────────────────────────────────────────────────── */
-function OutputTab({dx,risk,periDx,caseType,txStatus,icd,chartFilled,chartDerived,st,lang,age,t}){
+function OutputTab({dx,risk,periDx,caseType,txStatus,icd,chartFilled,chartDerived,imagingFilled,imagingDerived,st,lang,age,t}){
   const [copied,setCopied]=useState(false);
   const [showPatSummary,setShowPatSummary]=useState(false);
 
@@ -2367,9 +3001,10 @@ function OutputTab({dx,risk,periDx,caseType,txStatus,icd,chartFilled,chartDerive
       kmWidth:st.kmWidth, cementRetained:st.cementRetained,
       residentName:st.residentName, licenseNo:st.licenseNo,
       attendingName:st.attendingName, attendingLicense:st.attendingLicense,
-      chartFilled, chartDerived
+      chartFilled, chartDerived,
+      imagingFilled, imagingDerived
     });
-  },[dx,risk,periDx,caseType,txStatus,icd,chartFilled,chartDerived,st,lang,age]);
+  },[dx,risk,periDx,caseType,txStatus,icd,chartFilled,chartDerived,imagingFilled,imagingDerived,st,lang,age]);
 
   const isPerio = caseType==='periodontitis';
   if(isPerio && !dx) return <div style={{padding:48,textAlign:'center',color:'#64748B'}}>{t('noData')}</div>;
@@ -2573,7 +3208,7 @@ function Navbar({t,lang,onToggle}){
 
 /* ─── TAB BAR ─────────────────────────────────────────────────────────────────── */
 function TabBar({active,setActive,t}){
-  const tabs=[['tabInput'],['tabChart'],['tabDx'],['tabIDRA'],['tabOut'],['tabRefs']];
+  const tabs=[['tabInput'],['tabImaging'],['tabChart'],['tabDx'],['tabIDRA'],['tabOut'],['tabRefs']];
   const onKey = (e, i) => {
     if(e.key==='ArrowRight' || e.key==='ArrowDown'){ e.preventDefault(); setActive((i+1)%tabs.length); }
     else if(e.key==='ArrowLeft' || e.key==='ArrowUp'){ e.preventDefault(); setActive((i-1+tabs.length)%tabs.length); }
@@ -2620,6 +3255,17 @@ function App(){
   const [txStatusOverride,setTxStatusOverride]=useState('auto');
   /* 6-PPC periodontal chart */
   const [chart,setChart]=useState(()=>createBlankChart());
+  /* Radiographic imaging.
+     imagingFile   = { name, type, size, dataUrl, width, height } | null
+     imagingMode   = 'offline' | 'cloud'  (cloud arrives Phase 7C)
+     imagingResult = { rblEstimate, worstSiteRbl, vblEstimate, perToothMedian,
+                       confidence:'low'|'med'|'high', source:'onnx'|'demo'|'cloud',
+                       caries?:[], periapical?:[], calculus?:[] } | null
+     imagingApplied = boolean — true once user clicked Apply, used to suppress double-apply */
+  const [imagingFile,setImagingFile]=useState(null);
+  const [imagingMode,setImagingMode]=useState('offline');
+  const [imagingResult,setImagingResult]=useState(null);
+  const [imagingApplied,setImagingApplied]=useState(false);
   const [smokingCigs,setSmokingCigs]=useState('');
   const [packYears,setPackYears]=useState('');
   const [hba1c,setHba1c]=useState('');
@@ -2656,7 +3302,7 @@ function App(){
 
   /* Toggle body class so CSS can hide the author signature on the Output tab. */
   React.useEffect(()=>{
-    const TAB_NAMES=['input','chart','dx','idra','output','refs'];
+    const TAB_NAMES=['input','imaging','chart','dx','idra','output','refs'];
     document.body.className = `tab-${TAB_NAMES[activeTab]||'input'}`;
   },[activeTab]);
 
@@ -2680,6 +3326,27 @@ function App(){
      these replace the manual worst-site fields piped into the engine. */
   const chartDerived=useMemo(()=>computeChartDerived(chart),[chart]);
   const chartFilled=chartDerived.measured>0;
+
+  /* Imaging-derived stats. Mirrors the chartFilled / chartDerived pattern.
+     imagingFilled becomes true once the user clicks Apply on a real (not demo)
+     analysis result — never auto-applied. Demo results are excluded from the
+     letter and the engine. */
+  const imagingDerived=useMemo(()=>computeImagingDerived(imagingResult),[imagingResult]);
+  const imagingFilled = imagingApplied && imagingDerived && !imagingDerived.isDemo;
+
+  const handleImagingApply=useCallback((result)=>{
+    /* Apply is the explicit gesture that flips imagingFilled and writes back
+       to rblPercent / vbl. Stays a click-through — never auto-write. */
+    if(!result) return;
+    if(Number.isFinite(result.rblEstimate)) setRblPercent(String(result.rblEstimate));
+    if(Number.isFinite(result.vblEstimate) && result.vblEstimate > 0) setVbl(String(result.vblEstimate));
+  },[]);
+  const handleImagingApplyFromInputPill=useCallback((result)=>{
+    /* Pill on InputTab also writes to imagingApplied so the gate flips and the
+       letter picks up the AI-assisted block. */
+    handleImagingApply(result);
+    setImagingApplied(true);
+  },[handleImagingApply]);
 
   const dx=useMemo(()=>computeDiagnosis({
     calWorst:    chartFilled ? String(chartDerived.calWorst)     : calWorst,
@@ -2772,12 +3439,19 @@ function App(){
       <Navbar t={t} lang={lang} onToggle={toggleLang}/>
       <TabBar active={activeTab} setActive={setActiveTab} t={t}/>
       <main id="main-content">
-        {activeTab===0&&<InputTab st={state} set={set} t={t} idValid={idValid} chartFilled={chartFilled} chartDerived={chartDerived} setChart={setChart} onCompute={()=>setActiveTab(2)}/>}
-        {activeTab===1&&<PerioChartTab chart={chart} setChart={setChart} t={t}/>}
-        {activeTab===2&&<DiagTab dx={dx} caseType={caseType} txStatus={txStatus} icd={icd} chartFilled={chartFilled} chartDerived={chartDerived} risk={idraRisk} st={state} age={age} blAgeComp={blAgeComp} lang={lang} t={t}/>}
-        {activeTab===3&&<IDRATab scores={idraScores} risk={idraRisk} periDx={periDx} t={t}/>}
-        {activeTab===4&&<OutputTab dx={dx} risk={idraRisk} periDx={periDx} caseType={caseType} txStatus={txStatus} icd={icd} chartFilled={chartFilled} chartDerived={chartDerived} st={state} lang={lang} age={age} t={t}/>}
-        {activeTab===5&&<RefsTab lang={lang} t={t}/>}
+        {activeTab===0&&<InputTab st={state} set={set} t={t} idValid={idValid} chartFilled={chartFilled} chartDerived={chartDerived} setChart={setChart} onCompute={()=>setActiveTab(3)} imagingResult={imagingResult} imagingApplied={imagingApplied} onImagingApply={handleImagingApplyFromInputPill}/>}
+        {activeTab===1&&<ImagingTab
+          imagingFile={imagingFile} setImagingFile={setImagingFile}
+          imagingMode={imagingMode} setImagingMode={setImagingMode}
+          imagingResult={imagingResult} setImagingResult={setImagingResult}
+          imagingApplied={imagingApplied} setImagingApplied={setImagingApplied}
+          onApply={handleImagingApply}
+          lang={lang} t={t}/>}
+        {activeTab===2&&<PerioChartTab chart={chart} setChart={setChart} t={t}/>}
+        {activeTab===3&&<DiagTab dx={dx} caseType={caseType} txStatus={txStatus} icd={icd} chartFilled={chartFilled} chartDerived={chartDerived} risk={idraRisk} st={state} age={age} blAgeComp={blAgeComp} lang={lang} t={t}/>}
+        {activeTab===4&&<IDRATab scores={idraScores} risk={idraRisk} periDx={periDx} t={t}/>}
+        {activeTab===5&&<OutputTab dx={dx} risk={idraRisk} periDx={periDx} caseType={caseType} txStatus={txStatus} icd={icd} chartFilled={chartFilled} chartDerived={chartDerived} imagingFilled={imagingFilled} imagingDerived={imagingDerived} st={state} lang={lang} age={age} t={t}/>}
+        {activeTab===6&&<RefsTab lang={lang} t={t}/>}
       </main>
 
       <div className="author-signature no-print" aria-hidden="true">

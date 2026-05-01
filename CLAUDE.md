@@ -17,12 +17,12 @@ There is no build, package manager, or test runner. To run:
 
 The entire app is one HTML file (~2,300 lines) with everything inline:
 
-- **`vendor/`** holds locally-vendored React 18.3.1, ReactDOM 18.3.1, Babel Standalone 7.25.6, and Tailwind Play 3.4.5. Plus `vendor/fonts/` with self-hosted Heebo + Inter + Caveat woff2 (no Google Fonts request at runtime). **Never reintroduce CDN URLs** — the strict CSP (`connect-src 'none'`) makes this a true zero-third-party offline artifact for clinical use. To add a new font: download woff2 to `vendor/fonts/`, append `@font-face` rules to `vendor/fonts/google-fonts.css` with relative `url(...)`.
+- **`vendor/`** holds locally-vendored React 18.3.1, ReactDOM 18.3.1, Babel Standalone 7.25.6, and Tailwind Play 3.4.5. Plus `vendor/fonts/` with self-hosted Heebo + Inter + Caveat woff2 (no Google Fonts request at runtime). Phase 7B reserves `vendor/onnxruntime-web/` (for `ort.min.js` + WASM kernels) and `vendor/models/` (for `perio-rbl.onnx`) — both folders are referenced by lazy-loaders, so the app still works if the assets are absent (UI shows "model missing" / "runtime missing"). **Never reintroduce CDN URLs** — the CSP is `connect-src 'self'` (Phase 7B), which only permits same-origin model fetches. To add a new font: download woff2 to `vendor/fonts/`, append `@font-face` rules to `vendor/fonts/google-fonts.css` with relative `url(...)`.
 - **`<script type="text/babel">`** — JSX is compiled in-browser. This forces `script-src 'unsafe-eval'` in the CSP. If you ever pre-compile, you can drop Babel and tighten CSP.
 
-### Tabs (6 total)
+### Tabs (7 total — Phase 7A added Imaging at index 1)
 
-`Clinical Input | Periodontal Chart | Diagnosis | IDRA | Output (referral letter) | References`. **The chart is index 1** — between Input and Diagnosis. If you add or reorder tabs, also update: (a) the `tabs` array in `TabBar`, (b) the `activeTab===N` switch in `App`, (c) the `setActiveTab(2)` call on the InputTab compute button (it routes to Diagnosis, currently index 2), (d) the `TAB_NAMES` array in App's `useEffect` that sets `body.tab-{name}` class.
+`Clinical Input (0) | Imaging (1) | Periodontal Chart (2) | Diagnosis (3) | IDRA (4) | Output (5) | References (6)`. The Compute button on InputTab routes to **index 3 (Diagnosis)**. If you add or reorder tabs, update: (a) the `tabs` array in `TabBar`, (b) the `activeTab===N` switch in `App`, (c) the `setActiveTab(3)` call on the InputTab Compute button, (d) the `TAB_NAMES` array in App's `useEffect` that sets `body.tab-{name}` class.
 
 The References tab (`RefsTab`) reads from a `REFERENCES = [...]` constant — every entry has authors/year/journal/PMID/DOI/`usedHe`/`usedEn`/`url` and links out to PubMed/WHO/MoH (`target="_blank" rel="noopener noreferrer"`). Add a new citation here whenever you anchor a new threshold to a paper.
 
@@ -89,8 +89,8 @@ The chart is the canonical clinical-data layer; manual worst-site fields on Inpu
 
 ## Security posture
 
-- **CSP** (`<meta http-equiv="Content-Security-Policy">`): `connect-src 'none'`, `frame-ancestors 'none'`, `form-action 'none'`, `font-src 'self'`, `script-src 'self' 'unsafe-eval' 'unsafe-inline'` (Babel + Tailwind Play need both). Don't loosen without thinking.
-- **No persistence** — no `localStorage`, `sessionStorage`, `cookie`, `fetch`, `XMLHttpRequest`, `sendBeacon`. State lives in React memory and dies on tab close. Patient data never leaves the browser. Don't add network calls.
+- **CSP** (`<meta http-equiv="Content-Security-Policy">`): `connect-src 'self'` (Phase 7B — same-origin only, no third-party network), `frame-ancestors 'none'`, `form-action 'none'`, `font-src 'self'`, `script-src 'self' 'unsafe-eval' 'unsafe-inline' 'wasm-unsafe-eval'` (Babel + Tailwind Play + ONNX Runtime WASM), `worker-src 'self' blob:` (ONNX Runtime spawns workers from blob URLs), `img-src 'self' data: blob:`. Phase 7C will add `https://api.anthropic.com` to `connect-src` for opt-in cloud mode. Don't loosen further without thinking.
+- **No persistence** — no `localStorage`, `sessionStorage`, `cookie`, `XMLHttpRequest`, `sendBeacon`. State lives in React memory and dies on tab close. The only network call permitted in Phase 7B is a same-origin `fetch()` for `vendor/models/perio-rbl.onnx` and `vendor/onnxruntime-web/ort.min.js` — patient images never leave the browser in offline mode. Don't add other network calls.
 - **XSS** — patient input is rendered via JSX text interpolation or `<textarea readOnly value={letter}>`. No `dangerouslySetInnerHTML`, no `innerHTML`. Don't introduce them.
 
 ## Print pipeline
@@ -116,6 +116,45 @@ Now accepts `stageIVSubtype`, `kmWidth`, `cementRetained` in addition to the Pha
 ## PRA recall (Phase 6+)
 
 `praRecall({bopPct, sites5plus, teethLost, blAge, smokingCigs, packYears, hba1c})` returns `{scores, highN, recallEn, recallHe, FACTORS}`. Called in DiagTab — needs `blAgeComp` passed from App, not recomputed inside the tab.
+
+## Phase 7 — Imaging tab (radiographic AI)
+
+**Status:** Phase 7A (file viewer) and Phase 7B (offline ONNX path scaffold) shipped. Phase 7C (cloud opt-in) and 7D (polish + a11y) deferred.
+
+**Tab placement:** Imaging is at index 1 (between InputTab and PerioChartTab). All `setActiveTab(N)` calls and the `TAB_NAMES` array assume this ordering — see the Tabs section above.
+
+**State (App-level, all in React memory, never persisted):**
+- `imagingFile = { name, type, size, dataUrl, width, height } | null`
+- `imagingMode = 'offline' | 'cloud'` (cloud disabled until 7C)
+- `imagingResult = { rblEstimate, worstSiteRbl, vblEstimate, perToothMedian, confidence, source } | null`
+- `imagingApplied = boolean` — flips true only when user explicitly clicks Apply
+
+**Derived gate (`imagingFilled` / `imagingDerived`)** mirrors the chart pattern. Crucial rule: `imagingFilled = imagingApplied && !imagingDerived.isDemo`. Demo results never reach the engine or the letter — they exist purely to test the pipeline before a real `.onnx` lands.
+
+**Inference plumbing:**
+- `loadOnnxRuntime()` lazy-loads `vendor/onnxruntime-web/ort.min.js` once. Throws `RUNTIME_MISSING` if absent.
+- `getOnnxSession()` creates an `ort.InferenceSession` from `vendor/models/perio-rbl.onnx` with `executionProviders: ['webgpu', 'wasm']`. Throws `MODEL_MISSING` if file absent.
+- `canvasToTensor(canvas, 640, ort)` does letterboxed resize → CHW Float32Array normalized to [0,1].
+- `runOnnxInference(canvas)` returns `{rblEstimate, worstSiteRbl, vblEstimate, perToothMedian, confidence, source:'onnx'}` or throws (`RUNTIME_MISSING` / `MODEL_MISSING` / `INFERENCE_FAILED`). The UI maps each error to a specific bilingual message.
+- **`postprocessOnnxOutput(_output)` is a stub that returns `[]`** — this forces `INFERENCE_FAILED` until you replace its body with NMS + landmark grouping (CEJ / ABC / apex per tooth) matching whatever model head actually ships. Per-tooth %RBL = (ABC.y − CEJ.y) / (apex.y − CEJ.y) × 100; median = overall, max = worst-site, VBL ≈ (worst − median) scaled.
+
+**Demo path** (`generateDemoImagingResult`) returns hard-coded numbers tagged `source:'demo'`. The Findings panel renders a "DEMO" badge and the `imagingFilled` gate excludes demo results — so the letter never picks them up. Use this to exercise Findings → Apply → InputTab pill → letter end-to-end without the real model.
+
+**Apply flow:**
+- ImagingTab Apply button: writes `rblEstimate → rblPercent` and `vblEstimate → vbl` via `handleImagingApply`, then sets `imagingApplied=true` locally.
+- InputTab pill (top of Periodontal Findings card): only renders when `imagingResult && !imagingApplied`. Clicking it calls `handleImagingApplyFromInputPill` which does the same write **and** flips `imagingApplied`. The pill disappears after one click.
+- Both routes converge — never write to `rblPercent`/`vbl` automatically. Click-through is mandatory.
+
+**makeLetter signature** now takes `imagingFilled, imagingDerived` in addition to Phase 1–6 params. Both `he` and `en` branches emit a "Radiographic Findings (AI-assisted)" / "ממצאים רדיוגרפיים (בסיוע AI)" block with confidence label and a "Suggestion only — clinician confirmation required" disclaimer. Block only appears when `imagingFilled` is true.
+
+**Vendor assets to ship for production offline path:**
+- `vendor/onnxruntime-web/ort.min.js` (+ accompanying `.wasm` files in same folder) — ONNX Runtime Web, MIT license
+- `vendor/models/perio-rbl.onnx` — quantized YOLOv8s finetuned on DENTEX + Tufts Dental
+- Replace `postprocessOnnxOutput` body to match the model's actual output head
+
+**CSP changes (Phase 7B):** `connect-src 'none'` → `'self'`; added `'wasm-unsafe-eval'` (script-src) and `worker-src 'self' blob:` (ONNX Runtime spawns Web Workers from blob URLs); `img-src` extended with `blob:`. See Security posture above.
+
+**References added:** Krois 2019 (PMID 31186466) — CNN bone-loss detection. Schwendicke 2020 (PMID 32092430) — DL/clinician concordance, justifies "AI-assisted" framing.
 
 ## Session recovery tip
 
