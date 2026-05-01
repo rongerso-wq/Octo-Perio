@@ -119,7 +119,7 @@ Now accepts `stageIVSubtype`, `kmWidth`, `cementRetained` in addition to the Pha
 
 ## Phase 7 — Imaging tab (radiographic AI)
 
-**Status:** Phase 7A (file viewer) and Phase 7B (offline ONNX path scaffold) shipped. Phase 7C (cloud opt-in) and 7D (polish + a11y) deferred.
+**Status:** Phase 7A (file viewer), 7B (offline ONNX scaffold), and 7C (cloud opt-in via Claude Vision) shipped. Phase 7D (polish + a11y) deferred.
 
 **Tab placement:** Imaging is at index 1 (between InputTab and PerioChartTab). All `setActiveTab(N)` calls and the `TAB_NAMES` array assume this ordering — see the Tabs section above.
 
@@ -154,7 +154,25 @@ Now accepts `stageIVSubtype`, `kmWidth`, `cementRetained` in addition to the Pha
 
 **CSP changes (Phase 7B):** `connect-src 'none'` → `'self'`; added `'wasm-unsafe-eval'` (script-src) and `worker-src 'self' blob:` (ONNX Runtime spawns Web Workers from blob URLs); `img-src` extended with `blob:`. See Security posture above.
 
-**References added:** Krois 2019 (PMID 31186466) — CNN bone-loss detection. Schwendicke 2020 (PMID 32092430) — DL/clinician concordance, justifies "AI-assisted" framing.
+**References added:** Krois 2019 (PMID 31186466), Schwendicke 2020 (PMID 32092430), Anthropic Claude Vision (Phase 7C cloud mode).
+
+### Phase 7C — Cloud mode (Claude Vision via Vercel Edge function)
+
+**Endpoint:** `api/vision.js` is a Vercel Edge function. Reads `ANTHROPIC_API_KEY` from server env (never exposed to the browser) and proxies to `https://api.anthropic.com/v1/messages`. The browser only ever talks to `/api/vision` (same-origin), so **no CSP relaxation was needed for 7C** — `connect-src 'self'` from 7B is sufficient. Don't add `api.anthropic.com` to `connect-src`.
+
+**Env vars:** `ANTHROPIC_API_KEY` must be set in Vercel project env (Production + Preview). When absent, the function returns 503 `not_configured` and the UI shows a bilingual "API key not configured" error. This is intentional — the deploy doesn't fail, just the cloud button does.
+
+**Model:** `claude-sonnet-4-6` with `max_tokens: 1024` and a tight JSON-schema prompt (he/en variants). Defense-in-depth on the response: `sanitizeResult` clamps numbers, filters arrays, caps the notes field at 240 chars — the client never sees the raw upstream response.
+
+**Client flow:** `postToVisionAPI({canvas, lang})` re-encodes the canvas to JPEG quality 0.85 with a 1280px max edge before posting. This keeps the body well under Vercel Edge's request limit and matches Claude Vision's working resolution. JSON body: `{imageBase64, mediaType:'image/jpeg', lang}`.
+
+**Per-image consent:** `cloudConsent` state in ImagingTab is reset whenever the file changes (`useEffect` watches `imagingFile?.dataUrl`). The Analyze button is disabled until the box is checked. The bilingual disclosure explicitly states the image goes to Anthropic's servers and that the clinician must redact identifiers.
+
+**Findings panel additions:** when `imagingResult.source === 'cloud'`, the panel renders three extra cards (Caries / Periapical / Calculus) plus an optional Notes block. Empty arrays render as "—".
+
+**Letter integration:** `makeLetter` adds an "Additional Radiographic Flags" / "דגלים רדיוגרפיים נוספים" block after the main AI-assisted line, but only when `imagingDerived.isCloud && (caries.length || periapical.length || calculus.length)`. Both branches carry the "AI-assisted · requires clinician confirmation" disclaimer.
+
+**Error code map (UI shows bilingual messages):** `NOT_CONFIGURED` → key missing, `TOO_LARGE` → image rejected by validator, `UPSTREAM_ERROR`/`UPSTREAM_UNREACHABLE` → Anthropic 5xx or network, `UNPARSEABLE` → response wasn't valid JSON. The function never echoes upstream error bodies back to the client.
 
 ## Session recovery tip
 

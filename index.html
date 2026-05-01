@@ -348,6 +348,17 @@ const S = {
     imgFileName:'קובץ', imgDimensions:'מידות', imgFileSize:'גודל',
     imgMode:'מצב ניתוח', imgOffline:'מקומי (ללא רשת)', imgCloud:'ענן (Claude Vision)',
     imgCloudComingSoon:'מצב ענן יתווסף בשלב 7C',
+    imgCloudConsentTitle:'הצהרת הסכמה — מצב ענן',
+    imgCloudConsentBody:'התמונה תישלח לשרת Anthropic לצורך ניתוח. יש להסיר/לטשטש פרטים מזהים של המטופל מהקובץ לפני שליחה. ההסכמה היא לתמונה הספציפית הזו בלבד.',
+    imgCloudConsentCheck:'אני מאשר/ת — התמונה הזו לא מכילה פרטים מזהים והניתוח הוא לצורך החלטה קלינית בלבד',
+    imgAnalyzeCloud:'נתח (ענן)', imgAnalyzeCloudFor:'שלח לניתוח ענן',
+    imgCloudErrNotConfigured:'מפתח API של Anthropic לא מוגדר בשרת — פנה למנהל המערכת',
+    imgCloudErrTooLarge:'התמונה גדולה מדי לשליחה — נסה תמונה קטנה יותר',
+    imgCloudErrUpstream:'שירות הניתוח לא זמין כרגע — נסה שוב מאוחר יותר',
+    imgCloudErrUnparseable:'תגובת השרת לא הייתה תקנית — נסה שוב או השתמש במצב מקומי',
+    imgCariesTitle:'דגלי עששת', imgPeriapicalTitle:'נגעים פריאפיקליים', imgCalculusTitle:'אבן/טרטר',
+    imgCloudNotes:'הערות',
+    imgCloudFlaggedLetter:'דגלים רדיוגרפיים נוספים (בסיוע AI · דורש אישור)',
     imgAnalyze:'נתח (מקומי)', imgAnalyzing:'מנתח…', imgReanalyze:'נתח שוב',
     imgRunDemo:'הרץ דמו (ערכים מדומים)', imgDemoBadge:'דמו',
     imgFindings:'ממצאים (בסיוע AI)',
@@ -487,6 +498,17 @@ const S = {
     imgFileName:'File', imgDimensions:'Dimensions', imgFileSize:'Size',
     imgMode:'Analysis mode', imgOffline:'Offline (no network)', imgCloud:'Cloud (Claude Vision)',
     imgCloudComingSoon:'Cloud mode arrives in Phase 7C',
+    imgCloudConsentTitle:'Consent disclosure — Cloud mode',
+    imgCloudConsentBody:'This image will be sent to Anthropic’s servers for analysis. Patient identifiers must be redacted/blurred from the file before upload. Consent is for this specific image only.',
+    imgCloudConsentCheck:'I confirm — this image contains no patient identifiers and analysis is for clinical decision support only',
+    imgAnalyzeCloud:'Analyze (cloud)', imgAnalyzeCloudFor:'Submit for cloud analysis',
+    imgCloudErrNotConfigured:'Anthropic API key not configured on the server — contact the administrator',
+    imgCloudErrTooLarge:'Image too large to send — try a smaller image',
+    imgCloudErrUpstream:'Analysis service unavailable — please try again later',
+    imgCloudErrUnparseable:'Server response was malformed — retry or fall back to offline mode',
+    imgCariesTitle:'Caries flags', imgPeriapicalTitle:'Periapical lesions', imgCalculusTitle:'Calculus',
+    imgCloudNotes:'Notes',
+    imgCloudFlaggedLetter:'Additional Radiographic Flags (AI-assisted · requires clinician confirmation)',
     imgAnalyze:'Analyze (offline)', imgAnalyzing:'Analyzing…', imgReanalyze:'Re-analyze',
     imgRunDemo:'Run demo (mock values)', imgDemoBadge:'DEMO',
     imgFindings:'Findings (AI-assisted)',
@@ -823,6 +845,16 @@ const REFERENCES = [
     usedHe:'הסכמה גבוהה בין מודלים מבוססי-DL לקלינאים בהערכת RBL — הצדקת מצב ניתוח עזר',
     usedEn:'DL/clinician concordance for radiographic interpretation — rationale for AI-assisted (not autonomous) findings',
     url:'https://pubmed.ncbi.nlm.nih.gov/32092430/'
+  },
+  {
+    id:'anthropicVision2024',
+    authors:'Anthropic',
+    year:2024,
+    title:'Claude Vision — Multimodal Image Understanding (API Documentation)',
+    journal:'docs.anthropic.com',
+    usedHe:'מודל הראייה של Claude לניתוח צילומי שיניים במצב ענן (Phase 7C) — דגלי עששת/פריאפיקלי/אבן',
+    usedEn:'Claude Vision multimodal API powering the Phase 7C cloud-mode caries / periapical / calculus flags',
+    url:'https://docs.anthropic.com/en/docs/build-with-claude/vision'
   }
 ];
 
@@ -1139,6 +1171,63 @@ function postprocessOnnxOutput(_output){
   return [];
 }
 
+async function postToVisionAPI({canvas, lang}){
+  /* Phase 7C — cloud opt-in. Re-encodes the canvas to JPEG with a max edge
+     of 1280px (typical Claude Vision sweet spot, also keeps body under
+     Vercel's edge body limit) and POSTs to /api/vision. Returns the same
+     shape as runOnnxInference plus optional caries/periapical/calculus/notes
+     arrays. Throws Error with a stable code so the UI can map to a specific
+     bilingual message. */
+  const maxEdge = 1280;
+  const scale = Math.min(1, maxEdge / Math.max(canvas.width, canvas.height));
+  const dw = Math.round(canvas.width * scale);
+  const dh = Math.round(canvas.height * scale);
+  const off = document.createElement('canvas');
+  off.width = dw; off.height = dh;
+  const ctx = off.getContext('2d');
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, dw, dh);
+  ctx.drawImage(canvas, 0, 0, dw, dh);
+  const dataUrl = off.toDataURL('image/jpeg', 0.85);
+  const imageBase64 = dataUrl.split(',')[1] || '';
+  if(!imageBase64) throw new Error('IMAGE_ENCODE_FAILED');
+
+  let resp;
+  try {
+    resp = await fetch('/api/vision', {
+      method:'POST',
+      headers:{'content-type':'application/json'},
+      body: JSON.stringify({ imageBase64, mediaType:'image/jpeg', lang }),
+    });
+  } catch(e){
+    throw new Error('UPSTREAM_UNREACHABLE');
+  }
+
+  let json;
+  try { json = await resp.json(); }
+  catch { throw new Error('UNPARSEABLE'); }
+
+  if(!resp.ok){
+    if(resp.status === 503 || json?.error === 'not_configured') throw new Error('NOT_CONFIGURED');
+    if(resp.status === 413 || json?.error === 'image_too_large') throw new Error('TOO_LARGE');
+    if(resp.status === 502 && json?.error === 'unparseable') throw new Error('UNPARSEABLE');
+    throw new Error('UPSTREAM_ERROR');
+  }
+
+  return {
+    rblEstimate:  Number.isFinite(json.rblEstimate)  ? Math.round(json.rblEstimate)  : null,
+    worstSiteRbl: Number.isFinite(json.worstSiteRbl) ? Math.round(json.worstSiteRbl) : null,
+    vblEstimate:  Number.isFinite(json.vblEstimate)  ? Math.round(json.vblEstimate)  : null,
+    perToothMedian: Number.isFinite(json.rblEstimate) ? Math.round(json.rblEstimate) : null,
+    confidence: ['low','med','high'].includes(json.confidence) ? json.confidence : 'low',
+    source: 'cloud',
+    caries:     Array.isArray(json.caries)     ? json.caries     : [],
+    periapical: Array.isArray(json.periapical) ? json.periapical : [],
+    calculus:   Array.isArray(json.calculus)   ? json.calculus   : [],
+    notes: typeof json.notes === 'string' ? json.notes : '',
+  };
+}
+
 function generateDemoImagingResult(){
   /* Deterministic mock — used so the rest of the pipeline (Findings panel,
      Apply button, letter integration) can be exercised end-to-end before the
@@ -1157,8 +1246,12 @@ function generateDemoImagingResult(){
 function computeImagingDerived(result){
   /* Pure aggregator: takes whatever the inference function (or cloud or demo)
      returned and shapes it into the values the engine consumes. Keeps the
-     same chartFilled / chartDerived gate pattern — see CLAUDE.md. */
+     same chartFilled / chartDerived gate pattern — see CLAUDE.md.
+     Cloud-only arrays (caries / periapical / calculus / notes) pass through
+     as empty arrays for non-cloud sources so the letter renderer doesn't
+     need to null-check. */
   if(!result) return null;
+  const isCloud = result.source === 'cloud';
   return {
     rblPercent:  Number.isFinite(result.rblEstimate)  ? result.rblEstimate  : null,
     vbl:         Number.isFinite(result.vblEstimate)  ? result.vblEstimate  : null,
@@ -1166,6 +1259,11 @@ function computeImagingDerived(result){
     confidence:  result.confidence || 'low',
     source:      result.source || 'unknown',
     isDemo:      result.source === 'demo',
+    isCloud,
+    caries:     isCloud && Array.isArray(result.caries)     ? result.caries     : [],
+    periapical: isCloud && Array.isArray(result.periapical) ? result.periapical : [],
+    calculus:   isCloud && Array.isArray(result.calculus)   ? result.calculus   : [],
+    notes:      isCloud && typeof result.notes === 'string' ? result.notes      : '',
   };
 }
 
@@ -1356,7 +1454,7 @@ ICD-10: ${icd||'—'}${isPerio?'':''}
 • BOP: ${bop||'—'}%${cigsN>=10?`\n• עישון: ${cigsN} סיגריות/יום (Grade C)`:''}${!isNaN(pyN)&&pyN>0?`\n• מינון מצטבר: ${pyN} pack-years`:''}${!isNaN(hval)&&hval>=8.0?`\n• סוכרת: HbA1c ${hval}% ≥8.0% — לא מאוזן (Grade C)`:!isNaN(hval)&&hval>=7.0?`\n• סוכרת: HbA1c ${hval}% 7.0–7.9% — מאוזן חלקית (Grade B floor)`:''}${stageIVSubtype?`\n• תת-סיווג: Stage IV-${stageIVSubtype.slice(2)} (Herrera 2022)`:''}${kmWidth?`\n• רוחב מוקוזה קרטינית: ${kmWidth} מ"מ${parseFloat(kmWidth)<2?' — ⚠ <2מ"מ סיכון מוגבר (Roccuzzo 2016)':''}`:''}${cementRetained==='cement'?'\n• צורת חיבור פרוטזה: ציפוי (cement) — שמירה על ניקיון חיונית (Wittneben 2014)':cementRetained==='screw'?'\n• צורת חיבור פרוטזה: ברגית (screw)':''}${chartFilled?`\n• FMBS (אחוז דימום מלא): ${chartDerived.fmbs}%\n• FMPS (אחוז רובד מלא): ${chartDerived.fmps}%\n• אתרים עם PD ≥5 מ"מ: ${chartDerived.sites5plus} (מתוך ${chartDerived.measured} אתרים נמדדים, ${chartDerived.presentTeeth} שיניים)`:''}
 
 הערכת סיכון לשתלים (IDRA): ${idraHe}${idraRisk==='HIGH'?'\n⚠ נדרש ייצוב פריודונטלי מלא לפני שיקול שתלים':''}${periDx?`\nאבחנה פריו-אימפלנט (Berglundh 2018): ${piHe[periDx]}`:''}
-${imagingFilled?`\nממצאים רדיוגרפיים (בסיוע AI):\n• הערכת %RBL כוללת: ${imagingDerived.rblPercent}%${imagingDerived.worstSiteRbl!=null?`\n• אתר חמור ביותר: ${imagingDerived.worstSiteRbl}%`:''}${imagingDerived.vbl!=null?`\n• VBL מוערך: ${imagingDerived.vbl} מ"מ`:''}\n• ביטחון: ${imagingDerived.confidence==='high'?'גבוה':imagingDerived.confidence==='med'?'בינוני':'נמוך'} · הצעה בלבד — אישור קליני מחייב\n`:''}
+${imagingFilled?`\nממצאים רדיוגרפיים (בסיוע AI):\n• הערכת %RBL כוללת: ${imagingDerived.rblPercent}%${imagingDerived.worstSiteRbl!=null?`\n• אתר חמור ביותר: ${imagingDerived.worstSiteRbl}%`:''}${imagingDerived.vbl!=null?`\n• VBL מוערך: ${imagingDerived.vbl} מ"מ`:''}\n• ביטחון: ${imagingDerived.confidence==='high'?'גבוה':imagingDerived.confidence==='med'?'בינוני':'נמוך'} · הצעה בלבד — אישור קליני מחייב${imagingDerived.isCloud&&(imagingDerived.caries.length||imagingDerived.periapical.length||imagingDerived.calculus.length)?`\n\nדגלים רדיוגרפיים נוספים (בסיוע AI · דורש אישור):${imagingDerived.caries.length?`\n• עששת: ${imagingDerived.caries.join(', ')}`:''}${imagingDerived.periapical.length?`\n• נגעים פריאפיקליים: ${imagingDerived.periapical.join(', ')}`:''}${imagingDerived.calculus.length?`\n• אבן/טרטר: ${imagingDerived.calculus.join(', ')}`:''}`:''}\n`:''}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 המלצות טיפול (EFP S3 — Sanz/Herrera 2020):
@@ -1412,7 +1510,7 @@ Key Findings:
 • BOP: ${bop||'—'}%${cigsN>=10?`\n• Smoking: ${cigsN} cig/day (Grade C modifier)`:''}${!isNaN(pyN)&&pyN>0?`\n• Cumulative dose: ${pyN} pack-years`:''}${!isNaN(hval)&&hval>=8.0?`\n• Diabetes: HbA1c ${hval}% ≥8.0% — uncontrolled (Grade C modifier)`:!isNaN(hval)&&hval>=7.0?`\n• Diabetes: HbA1c ${hval}% 7.0–7.9% — partially controlled (Grade B floor)`:''}${stageIVSubtype?`\n• Subtype: Stage IV-${stageIVSubtype.slice(2)} (Herrera 2022)`:''}${kmWidth?`\n• Keratinized mucosa width: ${kmWidth} mm${parseFloat(kmWidth)<2?' — ⚠ <2mm elevated risk (Roccuzzo 2016)':''}`:''}${cementRetained==='cement'?'\n• Prosthesis retention: cement — meticulous hygiene essential (Wittneben 2014)':cementRetained==='screw'?'\n• Prosthesis retention: screw-retained':''}${chartFilled?`\n• FMBS (Full-Mouth Bleeding Score): ${chartDerived.fmbs}%\n• FMPS (Full-Mouth Plaque Score): ${chartDerived.fmps}%\n• Sites with PD ≥5 mm: ${chartDerived.sites5plus} (of ${chartDerived.measured} measured sites across ${chartDerived.presentTeeth} teeth)`:''}
 
 Implant Disease Risk Assessment (IDRA): ${idraEn}${idraRisk==='HIGH'?'\n⚠ Full periodontal stabilization required before implant consideration':''}${periDx?`\nPeri-Implant Diagnosis (Berglundh 2018): ${piEn[periDx]}`:''}
-${imagingFilled?`\nRadiographic Findings (AI-assisted):\n• Overall %RBL estimate: ${imagingDerived.rblPercent}%${imagingDerived.worstSiteRbl!=null?`\n• Worst-site %RBL: ${imagingDerived.worstSiteRbl}%`:''}${imagingDerived.vbl!=null?`\n• VBL estimate: ${imagingDerived.vbl} mm`:''}\n• Confidence: ${imagingDerived.confidence==='high'?'high':imagingDerived.confidence==='med'?'medium':'low'} · Suggestion only — clinician confirmation required\n`:''}
+${imagingFilled?`\nRadiographic Findings (AI-assisted):\n• Overall %RBL estimate: ${imagingDerived.rblPercent}%${imagingDerived.worstSiteRbl!=null?`\n• Worst-site %RBL: ${imagingDerived.worstSiteRbl}%`:''}${imagingDerived.vbl!=null?`\n• VBL estimate: ${imagingDerived.vbl} mm`:''}\n• Confidence: ${imagingDerived.confidence==='high'?'high':imagingDerived.confidence==='med'?'medium':'low'} · Suggestion only — clinician confirmation required${imagingDerived.isCloud&&(imagingDerived.caries.length||imagingDerived.periapical.length||imagingDerived.calculus.length)?`\n\nAdditional Radiographic Flags (AI-assisted · requires clinician confirmation):${imagingDerived.caries.length?`\n• Caries: ${imagingDerived.caries.join(', ')}`:''}${imagingDerived.periapical.length?`\n• Periapical lesions: ${imagingDerived.periapical.join(', ')}`:''}${imagingDerived.calculus.length?`\n• Calculus: ${imagingDerived.calculus.join(', ')}`:''}`:''}\n`:''}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 Treatment Recommendations (EFP S3 — Sanz/Herrera 2020):
@@ -1895,6 +1993,11 @@ function ImagingTab({imagingFile, setImagingFile,
   const [analysisError, setAnalysisError] = useState('');
   const [analyzing, setAnalyzing] = useState(false);
   const [dragOver, setDragOver] = useState(false);
+  /* Per-image consent — always reset when the file changes, so consent never
+     carries over from a previous image. Phase 7C requires it before any
+     cloud analysis call. */
+  const [cloudConsent, setCloudConsent] = useState(false);
+  useEffect(() => { setCloudConsent(false); }, [imagingFile?.dataUrl]);
 
   /* Draw the loaded image onto the canvas, fitted to a max display width while
      preserving aspect. Re-runs whenever imagingFile changes. */
@@ -1972,13 +2075,22 @@ function ImagingTab({imagingFile, setImagingFile,
     setAnalysisError('');
     setAnalyzing(true);
     try {
-      const result = await runOnnxInference(canvasRef.current);
+      const result = imagingMode === 'cloud'
+        ? await postToVisionAPI({canvas: canvasRef.current, lang})
+        : await runOnnxInference(canvasRef.current);
       setImagingResult(result);
       setImagingApplied(false);
     } catch(e){
       const code = e && e.message;
+      /* Offline error codes */
       if(code === 'RUNTIME_MISSING')      setAnalysisError(t('imgRuntimeMissing'));
       else if(code === 'MODEL_MISSING')   setAnalysisError(t('imgModelMissing'));
+      /* Cloud error codes */
+      else if(code === 'NOT_CONFIGURED')  setAnalysisError(t('imgCloudErrNotConfigured'));
+      else if(code === 'TOO_LARGE')       setAnalysisError(t('imgCloudErrTooLarge'));
+      else if(code === 'UPSTREAM_ERROR' || code === 'UPSTREAM_UNREACHABLE')
+                                          setAnalysisError(t('imgCloudErrUpstream'));
+      else if(code === 'UNPARSEABLE')     setAnalysisError(t('imgCloudErrUnparseable'));
       else                                 setAnalysisError(t('imgAnalysisFailed'));
     } finally {
       setAnalyzing(false);
@@ -2119,25 +2231,49 @@ function ImagingTab({imagingFile, setImagingFile,
                     onChange={()=>setImagingMode('offline')} />
                   {t('imgOffline')}
                 </label>
-                <label style={{display:'flex',alignItems:'center',gap:8,cursor:'not-allowed',color:'#475569',fontSize:14}}>
-                  <input type="radio" name="img-mode" value="cloud" disabled />
+                <label style={{display:'flex',alignItems:'center',gap:8,cursor:'pointer',color:'#E2E8F0',fontSize:14}}>
+                  <input type="radio" name="img-mode" value="cloud"
+                    checked={imagingMode==='cloud'}
+                    onChange={()=>setImagingMode('cloud')} />
                   {t('imgCloud')}
-                  <span style={{fontSize:11,color:'#64748B',marginInlineStart:4}}>· {t('imgCloudComingSoon')}</span>
                 </label>
               </div>
+
+              {/* Cloud-mode consent — required per-image before Analyze enables */}
+              {imagingMode === 'cloud' && (
+                <div style={{
+                  marginTop:14,padding:'12px 14px',borderRadius:8,
+                  background:'#1F1A0D',border:'1px solid #7F4F1D',
+                }}>
+                  <div style={{fontSize:12,fontWeight:700,color:'#FCD9A5',marginBottom:6,letterSpacing:0.5,textTransform:'uppercase'}}>
+                    ⚠ {t('imgCloudConsentTitle')}
+                  </div>
+                  <div style={{fontSize:13,color:'#E2E8F0',lineHeight:1.55,marginBottom:10}}>
+                    {t('imgCloudConsentBody')}
+                  </div>
+                  <label style={{display:'flex',gap:8,alignItems:'flex-start',cursor:'pointer',color:'#FCD9A5',fontSize:13,lineHeight:1.5}}>
+                    <input type="checkbox" checked={cloudConsent} onChange={(e)=>setCloudConsent(e.target.checked)} style={{marginTop:3,flexShrink:0}}/>
+                    <span>{t('imgCloudConsentCheck')}</span>
+                  </label>
+                </div>
+              )}
 
               <div style={{marginTop:14,display:'flex',gap:10,flexWrap:'wrap'}}>
                 <button
                   onClick={onAnalyze}
-                  disabled={analyzing}
+                  disabled={analyzing || (imagingMode==='cloud' && !cloudConsent)}
                   style={{
                     padding:'10px 18px',borderRadius:8,border:'1px solid #2DD4BF',
-                    background: analyzing ? '#0A1828' : '#0D2D2D',
-                    color:'#5EEAD4',cursor: analyzing ? 'wait' : 'pointer',
-                    fontSize:14,fontWeight:600,opacity: analyzing ? 0.6 : 1,
+                    background: (analyzing || (imagingMode==='cloud' && !cloudConsent)) ? '#0A1828' : '#0D2D2D',
+                    color:'#5EEAD4',
+                    cursor: analyzing ? 'wait' : (imagingMode==='cloud' && !cloudConsent) ? 'not-allowed' : 'pointer',
+                    fontSize:14,fontWeight:600,
+                    opacity: (analyzing || (imagingMode==='cloud' && !cloudConsent)) ? 0.55 : 1,
                   }}
                 >
-                  {analyzing ? t('imgAnalyzing') : (imagingResult && imagingResult.source==='onnx' ? t('imgReanalyze') : t('imgAnalyze'))}
+                  {analyzing ? t('imgAnalyzing')
+                    : imagingMode==='cloud' ? (imagingResult && imagingResult.source==='cloud' ? t('imgReanalyze') : t('imgAnalyzeCloud'))
+                    : (imagingResult && imagingResult.source==='onnx' ? t('imgReanalyze') : t('imgAnalyze'))}
                 </button>
                 <button
                   onClick={onRunDemo}
@@ -2207,8 +2343,36 @@ function ImagingTab({imagingFile, setImagingFile,
                     </div>
                   </div>
 
+                  {imagingResult.source === 'cloud' && (
+                    <div style={{marginTop:14,display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))',gap:10}}>
+                      {[
+                        {key:'caries',     label:t('imgCariesTitle'),     items:imagingResult.caries     || []},
+                        {key:'periapical', label:t('imgPeriapicalTitle'), items:imagingResult.periapical || []},
+                        {key:'calculus',   label:t('imgCalculusTitle'),   items:imagingResult.calculus   || []},
+                      ].map(({key,label,items}) => (
+                        <div key={key} style={{padding:'10px 12px',background:'#060D14',borderRadius:8,border:'1px solid #1A3050'}}>
+                          <div style={{fontSize:11,color:'#64748B',marginBottom:6,textTransform:'uppercase',letterSpacing:0.5,fontWeight:600}}>{label}</div>
+                          {items.length === 0 ? (
+                            <div style={{fontSize:13,color:'#475569',fontStyle:'italic'}}>—</div>
+                          ) : (
+                            <ul style={{margin:0,padding:'0 0 0 18px',color:'#E2E8F0',fontSize:13,lineHeight:1.55}}>
+                              {items.map((s,i)=>(<li key={i}>{s}</li>))}
+                            </ul>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {imagingResult.source === 'cloud' && imagingResult.notes && (
+                    <div style={{marginTop:12,padding:'10px 14px',background:'#060D14',borderRadius:8,border:'1px solid #1A3050'}}>
+                      <div style={{fontSize:11,color:'#64748B',marginBottom:4,textTransform:'uppercase',letterSpacing:0.5,fontWeight:600}}>{t('imgCloudNotes')}</div>
+                      <div style={{fontSize:13,color:'#E2E8F0',lineHeight:1.55}}>{imagingResult.notes}</div>
+                    </div>
+                  )}
+
                   <div style={{marginTop:10,fontSize:11,color:'#64748B',fontStyle:'italic'}}>
-                    {t('imgCariesNote')} · {t('imgDisclaimer')}
+                    {imagingResult.source !== 'cloud' && <>{t('imgCariesNote')} · </>}{t('imgDisclaimer')}
                   </div>
 
                   <div style={{marginTop:14,display:'flex',gap:10,flexWrap:'wrap'}}>
