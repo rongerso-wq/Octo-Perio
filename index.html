@@ -388,6 +388,12 @@ const S = {
     imgBucketSevere:'מתקדם (>33% — Stage III/IV)',
     imgPillBucketPrefix:'הערכת AI',
     imgPillReviewHint:'(לסקירה מלאה — לשונית הדמיה)',
+    imgA11yDropzone:'אזור העלאת תמונה. לחץ Enter או רווח לבחירת קובץ JPEG או PNG, או גרור קובץ לכאן.',
+    imgA11yAnalyzing:'מנתח תמונה, נא להמתין',
+    imgA11yAnalysisDone:'הניתוח הושלם',
+    imgA11yConsentRequired:'ניתוח ענן מושבת עד אישור הסכמה',
+    imgA11yFindings:'תוצאות ניתוח AI',
+    imgA11yBucketPill:'הערכת אובדן עצם רדיוגרפי',
     letterRadiographicAi:'דגלים רדיוגרפיים בסיוע AI',
     chartTitle:'תרשים פריודונטלי (6-PPC)',
     chartSubtitle:'תרשים מלא — 32 שיניים, 6 אתרים לכל שן. לחץ על תא לעריכה. נקודות: דימום / מוגלה / רובד.',
@@ -549,6 +555,12 @@ const S = {
     imgBucketSevere:'Severe (>33% — Stage III/IV)',
     imgPillBucketPrefix:'AI assessment',
     imgPillReviewHint:'(see Imaging tab for full review)',
+    imgA11yDropzone:'Image upload area. Press Enter or Space to select a JPEG or PNG, or drag a file here.',
+    imgA11yAnalyzing:'Analyzing image, please wait',
+    imgA11yAnalysisDone:'Analysis complete',
+    imgA11yConsentRequired:'Cloud analysis is disabled until consent is confirmed',
+    imgA11yFindings:'AI analysis findings',
+    imgA11yBucketPill:'Radiographic bone-loss assessment',
     letterRadiographicAi:'AI-Assisted Radiographic Flags',
     chartTitle:'Periodontal Chart (6-PPC)',
     chartSubtitle:'Full-mouth chart — 32 teeth, 6 sites per tooth. Click a cell to edit. Dots: bleeding / suppuration / plaque.',
@@ -2171,6 +2183,8 @@ function ImagingTab({imagingFile, setImagingFile,
           <div
             role="button"
             tabIndex={0}
+            aria-label={t('imgA11yDropzone')}
+            aria-describedby="imaging-dropzone-hint"
             onClick={() => inputRef.current?.click()}
             onKeyDown={(e) => { if(e.key==='Enter'||e.key===' '){ e.preventDefault(); inputRef.current?.click(); } }}
             onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
@@ -2186,11 +2200,11 @@ function ImagingTab({imagingFile, setImagingFile,
               transition: 'all 0.15s',
             }}
           >
-            <div style={{fontSize:38,opacity:0.6,marginBottom:10}}>⊕</div>
+            <div style={{fontSize:38,opacity:0.6,marginBottom:10}} aria-hidden="true">⊕</div>
             <div style={{color:'#E2E8F0',fontWeight:600,fontSize:16,marginBottom:6}}>
               {t('imgUpload')}
             </div>
-            <div style={{color:'#7B8AA4',fontSize:13}}>
+            <div id="imaging-dropzone-hint" style={{color:'#7B8AA4',fontSize:13}}>
               {t('imgUploadHint')}
             </div>
           </div>
@@ -2270,15 +2284,25 @@ function ImagingTab({imagingFile, setImagingFile,
                 {t('imgMode')}
               </div>
               {/* Segmented control — visual weight encodes the choice's gravity:
-                  offline = teal (safe/local), cloud = red (PHI leaves device). */}
-              <div role="radiogroup" aria-label={t('imgMode')} style={{
-                display:'inline-flex',padding:3,borderRadius:10,
-                background:'#06121F',border:'1px solid #1A3050',
-              }}>
+                  offline = teal (safe/local), cloud = red (PHI leaves device).
+                  Roving tabindex + arrow-key navigation per WAI-ARIA radiogroup. */}
+              <div
+                role="radiogroup"
+                aria-label={t('imgMode')}
+                onKeyDown={(e)=>{
+                  if(e.key==='ArrowRight'||e.key==='ArrowDown'){ e.preventDefault(); setImagingMode('cloud'); }
+                  else if(e.key==='ArrowLeft'||e.key==='ArrowUp'){ e.preventDefault(); setImagingMode('offline'); }
+                }}
+                style={{
+                  display:'inline-flex',padding:3,borderRadius:10,
+                  background:'#06121F',border:'1px solid #1A3050',
+                }}
+              >
                 <button
                   type="button"
                   role="radio"
                   aria-checked={imagingMode==='offline'}
+                  tabIndex={imagingMode==='offline' ? 0 : -1}
                   onClick={()=>setImagingMode('offline')}
                   style={{
                     display:'flex',alignItems:'center',gap:8,
@@ -2299,6 +2323,7 @@ function ImagingTab({imagingFile, setImagingFile,
                   type="button"
                   role="radio"
                   aria-checked={imagingMode==='cloud'}
+                  tabIndex={imagingMode==='cloud' ? 0 : -1}
                   onClick={()=>setImagingMode('cloud')}
                   style={{
                     display:'flex',alignItems:'center',gap:8,
@@ -2323,22 +2348,27 @@ function ImagingTab({imagingFile, setImagingFile,
                   Red palette + heavier border encode "irreversible network action"
                   so a clinician under time pressure can't mistake this for a tip. */}
               {imagingMode === 'cloud' && (
-                <div style={{
-                  marginTop:14,padding:'14px 16px',borderRadius:10,
-                  background:'#1F0A0A',border:'2px solid #DC2626',
-                  boxShadow:'0 0 0 1px rgba(220,38,38,.18), 0 4px 16px rgba(0,0,0,.3)',
-                }}>
+                <section
+                  role="region"
+                  aria-labelledby="imaging-consent-title"
+                  aria-describedby="imaging-consent-body"
+                  style={{
+                    marginTop:14,padding:'14px 16px',borderRadius:10,
+                    background:'#1F0A0A',border:'2px solid #DC2626',
+                    boxShadow:'0 0 0 1px rgba(220,38,38,.18), 0 4px 16px rgba(0,0,0,.3)',
+                  }}
+                >
                   <div style={{display:'flex',alignItems:'flex-start',gap:10,marginBottom:8}}>
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FCA5A5" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink:0,marginTop:1}} aria-hidden="true">
                       <path d="M10.3 3.5 1.7 18a2 2 0 0 0 1.7 3h17.2a2 2 0 0 0 1.7-3L13.7 3.5a2 2 0 0 0-3.4 0z"/>
                       <path d="M12 9v4"/>
                       <circle cx="12" cy="17" r=".9" fill="#FCA5A5"/>
                     </svg>
-                    <div style={{fontSize:13,fontWeight:800,color:'#FCA5A5',letterSpacing:0.6,textTransform:'uppercase',lineHeight:1.3}}>
+                    <h3 id="imaging-consent-title" style={{margin:0,fontSize:13,fontWeight:800,color:'#FCA5A5',letterSpacing:0.6,textTransform:'uppercase',lineHeight:1.3}}>
                       {t('imgCloudConsentTitle')}
-                    </div>
+                    </h3>
                   </div>
-                  <div style={{fontSize:13.5,color:'#F1F5F9',lineHeight:1.6,marginBottom:12,whiteSpace:'pre-line'}}>
+                  <div id="imaging-consent-body" style={{fontSize:13.5,color:'#F1F5F9',lineHeight:1.6,marginBottom:12,whiteSpace:'pre-line'}}>
                     {t('imgCloudConsentBody')}
                   </div>
                   <label style={{
@@ -2352,13 +2382,14 @@ function ImagingTab({imagingFile, setImagingFile,
                     <input type="checkbox" checked={cloudConsent} onChange={(e)=>setCloudConsent(e.target.checked)} style={{marginTop:3,flexShrink:0,accentColor:'#DC2626'}}/>
                     <span>{t('imgCloudConsentCheck')}</span>
                   </label>
-                </div>
+                </section>
               )}
 
-              <div style={{marginTop:14,display:'flex',gap:10,flexWrap:'wrap'}}>
+              <div aria-busy={analyzing} style={{marginTop:14,display:'flex',gap:10,flexWrap:'wrap'}}>
                 <button
                   onClick={onAnalyze}
                   disabled={analyzing || (imagingMode==='cloud' && !cloudConsent)}
+                  aria-describedby={imagingMode==='cloud' && !cloudConsent ? 'imaging-analyze-blocked' : undefined}
                   style={{
                     padding:'10px 18px',borderRadius:8,border:'1px solid #2DD4BF',
                     background: (analyzing || (imagingMode==='cloud' && !cloudConsent)) ? '#0A1828' : '#0D2D2D',
@@ -2385,6 +2416,28 @@ function ImagingTab({imagingFile, setImagingFile,
                 </button>
               </div>
 
+              {imagingMode==='cloud' && !cloudConsent && (
+                <span id="imaging-analyze-blocked" style={{position:'absolute',width:1,height:1,overflow:'hidden',clip:'rect(0 0 0 0)'}}>
+                  {t('imgA11yConsentRequired')}
+                </span>
+              )}
+
+              {/* Polite live region for analysis state — voices "Analyzing…" and
+                  "Analysis complete: {bucket}" without stealing focus. */}
+              <div role="status" aria-live="polite" aria-atomic="true" style={{position:'absolute',width:1,height:1,overflow:'hidden',clip:'rect(0 0 0 0)'}}>
+                {analyzing
+                  ? t('imgA11yAnalyzing')
+                  : imagingResult
+                    ? `${t('imgA11yAnalysisDone')}: ${
+                        imagingResult.rblBucket==='none'     ? t('imgBucketNone')
+                      : imagingResult.rblBucket==='mild'     ? t('imgBucketMild')
+                      : imagingResult.rblBucket==='moderate' ? t('imgBucketModerate')
+                      : imagingResult.rblBucket==='severe'   ? t('imgBucketSevere')
+                      : t('imgBucketUnavailable')
+                      }`
+                    : ''}
+              </div>
+
               {analysisError && (
                 <div role="alert" style={{
                   marginTop:12,padding:'10px 14px',borderRadius:8,
@@ -2402,12 +2455,16 @@ function ImagingTab({imagingFile, setImagingFile,
                               : imagingResult.confidence==='med'  ? t('imgConfMed')
                               : t('imgConfLow');
               return (
-                <div style={{
-                  marginTop:16,padding:16,borderRadius:10,
-                  background:'#0A1828',border:'1px solid #1A3050',
-                }}>
+                <section
+                  role="region"
+                  aria-labelledby="imaging-findings-title"
+                  style={{
+                    marginTop:16,padding:16,borderRadius:10,
+                    background:'#0A1828',border:'1px solid #1A3050',
+                  }}
+                >
                   <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:14,flexWrap:'wrap'}}>
-                    <div style={{color:'#E2E8F0',fontSize:15,fontWeight:600}}>{t('imgFindings')}</div>
+                    <h3 id="imaging-findings-title" style={{margin:0,color:'#E2E8F0',fontSize:15,fontWeight:600}}>{t('imgFindings')}</h3>
                     {imagingResult.isDemo && (
                       <span style={{
                         fontSize:11,fontWeight:700,padding:'2px 8px',borderRadius:4,
@@ -2445,10 +2502,14 @@ function ImagingTab({imagingFile, setImagingFile,
                         </div>
                         {p ? (
                           <div style={{display:'flex',alignItems:'center',gap:10,flexWrap:'wrap'}}>
-                            <span style={{
-                              fontSize:14,fontWeight:700,padding:'6px 14px',borderRadius:999,
-                              background:p.bg,color:p.fg,border:`1px solid ${p.border}`,letterSpacing:0.3,
-                            }}>{p.label}</span>
+                            <span
+                              role="status"
+                              aria-label={`${t('imgA11yBucketPill')}: ${p.label}`}
+                              style={{
+                                fontSize:14,fontWeight:700,padding:'6px 14px',borderRadius:999,
+                                background:p.bg,color:p.fg,border:`1px solid ${p.border}`,letterSpacing:0.3,
+                              }}
+                            >{p.label}</span>
                             <span style={{fontSize:12,color:'#7B8AA4',fontStyle:'italic'}}>{t('imgBucketHelp')}</span>
                           </div>
                         ) : (
@@ -2515,7 +2576,7 @@ function ImagingTab({imagingFile, setImagingFile,
                       {t('imgClear')}
                     </button>
                   </div>
-                </div>
+                </section>
               );
             })()}
           </div>
