@@ -4,14 +4,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-**OctoPerio** — Hebrew/English bilingual clinical decision support tool for Rambam Medical Center (Haifa) periodontics residents. Implements AAP/EFP 2018 staging/grading, IDRA implant-risk octagon (Heitz-Mayfield 2020), Berglundh 2018 peri-implant case definitions, Chapple 2018 stability, Tonetti 2018 case-type triage, and EFP S3 stepwise treatment recommendations (Sanz/Herrera 2020). Generates a chart-ready bilingual referral letter with ICD-10, Israeli ID, and signing-clinician block per MoH Circular 2/2012.
+**OctoPerio** — Hebrew/English bilingual clinical decision support tool for periodontics residents (institution-neutral as of commit `4159037`). Implements AAP/EFP 2018 staging/grading, IDRA implant-risk octagon (Heitz-Mayfield 2020), Berglundh 2018 peri-implant case definitions, Chapple 2018 stability, Tonetti 2018 case-type triage, and EFP S3 stepwise treatment recommendations (Sanz/Herrera 2020). Generates a chart-ready bilingual referral letter with ICD-10, Israeli ID, and signing-clinician block per MoH Circular 2/2012.
+
+**Imaging contract (Phase 7C v2):** AI imaging is qualitative-only — bucket label (`none`/`mild`/`moderate`/`severe`) plus flag arrays. The clinician enters every mm/% measurement; AI never writes to `rblPercent` or `vbl`. Don't reintroduce numeric vision output without discussing first.
 
 ## Run / Build
 
-There is no build, package manager, or test runner. To run:
+There is no build, package manager, or test runner for the static app. To run:
 
 - Open `index.html` directly in Chrome (`file://` works — the CSP and vendored assets are designed for offline operation).
 - For testing: enter CAL 6mm, RBL 40%, Age 45, PD 7mm, Furcation III, Smoking 15 cig/day → expect Stage IV Grade C.
+
+**Serverless:** `api/vision.js` is a Vercel Edge function deployed via `vercel deploy`. Required env: `ANTHROPIC_API_KEY` (Production + Preview). Optional env: `ALLOWED_ORIGINS` (comma-list of additional allowed origins beyond the auto-set `VERCEL_URL` / `VERCEL_BRANCH_URL` / `VERCEL_PROJECT_PRODUCTION_URL`).
 
 ## Architecture — Single-File Standalone Artifact
 
@@ -119,33 +123,33 @@ Now accepts `stageIVSubtype`, `kmWidth`, `cementRetained` in addition to the Pha
 
 ## Phase 7 — Imaging tab (radiographic AI)
 
-**Status:** Phase 7A (file viewer), 7B (offline ONNX scaffold), and 7C (cloud opt-in via Claude Vision) shipped. Phase 7D (polish + a11y) deferred.
+**Status:** Phase 7A (file viewer), 7B (offline ONNX scaffold), and 7C (cloud opt-in via Claude Vision) shipped. **Phase 7C v2** (qualitative-only schema) shipped — VLMs are unreliable at quantitative measurement (Liu 2024, DOI 10.1016/j.jdent.2024.105041), so AI no longer produces calibrated mm/%. The clinician enters those manually. Phase 7D (polish + a11y) deferred.
 
 **Tab placement:** Imaging is at index 1 (between InputTab and PerioChartTab). All `setActiveTab(N)` calls and the `TAB_NAMES` array assume this ordering — see the Tabs section above.
 
 **State (App-level, all in React memory, never persisted):**
 - `imagingFile = { name, type, size, dataUrl, width, height } | null`
-- `imagingMode = 'offline' | 'cloud'` (cloud disabled until 7C)
-- `imagingResult = { rblEstimate, worstSiteRbl, vblEstimate, perToothMedian, confidence, source } | null`
-- `imagingApplied = boolean` — flips true only when user explicitly clicks Apply
+- `imagingMode = 'offline' | 'cloud'`
+- `imagingResult = { rblBucket:'none'|'mild'|'moderate'|'severe'|null, confidence, source, caries?, periapical?, calculus?, notes? } | null`
+- `imagingApplied = boolean` — flips true only when user explicitly clicks "Include in letter"
 
-**Derived gate (`imagingFilled` / `imagingDerived`)** mirrors the chart pattern. Crucial rule: `imagingFilled = imagingApplied && !imagingDerived.isDemo`. Demo results never reach the engine or the letter — they exist purely to test the pipeline before a real `.onnx` lands.
+**Derived gate (`imagingFilled` / `imagingDerived`)** mirrors the chart pattern. Crucial rule: `imagingFilled = imagingApplied && !imagingDerived.isDemo`. v2: this gate now controls ONLY whether the qualitative AI-flags block appears in the letter — `rblPercent` / `vbl` come from the chart or manual entry, never from imaging.
 
 **Inference plumbing:**
 - `loadOnnxRuntime()` lazy-loads `vendor/onnxruntime-web/ort.min.js` once. Throws `RUNTIME_MISSING` if absent.
 - `getOnnxSession()` creates an `ort.InferenceSession` from `vendor/models/perio-rbl.onnx` with `executionProviders: ['webgpu', 'wasm']`. Throws `MODEL_MISSING` if file absent.
 - `canvasToTensor(canvas, 640, ort)` does letterboxed resize → CHW Float32Array normalized to [0,1].
-- `runOnnxInference(canvas)` returns `{rblEstimate, worstSiteRbl, vblEstimate, perToothMedian, confidence, source:'onnx'}` or throws (`RUNTIME_MISSING` / `MODEL_MISSING` / `INFERENCE_FAILED`). The UI maps each error to a specific bilingual message.
-- **`postprocessOnnxOutput(_output)` is a stub that returns `[]`** — this forces `INFERENCE_FAILED` until you replace its body with NMS + landmark grouping (CEJ / ABC / apex per tooth) matching whatever model head actually ships. Per-tooth %RBL = (ABC.y − CEJ.y) / (apex.y − CEJ.y) × 100; median = overall, max = worst-site, VBL ≈ (worst − median) scaled.
+- `runOnnxInference(canvas)` returns `{rblBucket, confidence, source:'onnx'}` or throws (`RUNTIME_MISSING` / `MODEL_MISSING` / `INFERENCE_FAILED`). v2: the function still computes a per-tooth %RBL median internally if a real model lands, then maps to an AAP-keyed bucket (<1 → none, <15 → mild, 15–33 → moderate, >33 → severe). The UI maps each error to a specific bilingual message.
+- **`postprocessOnnxOutput(_output)` is a stub that returns `[]`** — this forces `INFERENCE_FAILED` until you replace its body with NMS + landmark grouping (CEJ / ABC / apex per tooth) matching whatever model head actually ships. Per-tooth %RBL = (ABC.y − CEJ.y) / (apex.y − CEJ.y) × 100.
 
-**Demo path** (`generateDemoImagingResult`) returns hard-coded numbers tagged `source:'demo'`. The Findings panel renders a "DEMO" badge and the `imagingFilled` gate excludes demo results — so the letter never picks them up. Use this to exercise Findings → Apply → InputTab pill → letter end-to-end without the real model.
+**Demo path** (`generateDemoImagingResult`) returns hard-coded `{rblBucket:'moderate', confidence:'med', caries, calculus, notes, source:'demo'}`. The Findings panel renders a "DEMO" badge and the `imagingFilled` gate excludes demo results — so the letter never picks them up.
 
-**Apply flow:**
-- ImagingTab Apply button: writes `rblEstimate → rblPercent` and `vblEstimate → vbl` via `handleImagingApply`, then sets `imagingApplied=true` locally.
-- InputTab pill (top of Periodontal Findings card): only renders when `imagingResult && !imagingApplied`. Clicking it calls `handleImagingApplyFromInputPill` which does the same write **and** flips `imagingApplied`. The pill disappears after one click.
-- Both routes converge — never write to `rblPercent`/`vbl` automatically. Click-through is mandatory.
+**Apply flow (v2):**
+- ImagingTab "Include in letter" button: only flips `imagingApplied=true`. **Never writes to `rblPercent` or `vbl`** — those stay the clinician's responsibility.
+- InputTab pill: purely informational advisory ("AI assessment: moderate · see Imaging tab"). No apply action — it disappears once the user clicks Include in letter on the Imaging tab.
+- The bucket label is rendered next to the InputTab pill and on the Imaging tab Findings panel for sanity-check, never auto-applied.
 
-**makeLetter signature** now takes `imagingFilled, imagingDerived` in addition to Phase 1–6 params. Both `he` and `en` branches emit a "Radiographic Findings (AI-assisted)" / "ממצאים רדיוגרפיים (בסיוע AI)" block with confidence label and a "Suggestion only — clinician confirmation required" disclaimer. Block only appears when `imagingFilled` is true.
+**makeLetter signature** takes `imagingFilled, imagingDerived` in addition to Phase 1–6 params. Both `he` and `en` branches emit an "AI-Assisted Radiographic Flags" / "דגלים רדיוגרפיים בסיוע AI" block when `imagingFilled` is true. Block contents: bucket label (e.g. "Moderate bone loss (15–33%)"), qualitative flags (caries / periapical / calculus / notes), confidence label, and an explicit disclaimer that mm/% measurements were entered manually by the clinician.
 
 **Vendor assets to ship for production offline path:**
 - `vendor/onnxruntime-web/ort.min.js` (+ accompanying `.wasm` files in same folder) — ONNX Runtime Web, MIT license
@@ -162,13 +166,15 @@ Now accepts `stageIVSubtype`, `kmWidth`, `cementRetained` in addition to the Pha
 
 **Env vars:** `ANTHROPIC_API_KEY` must be set in Vercel project env (Production + Preview). When absent, the function returns 503 `not_configured` and the UI shows a bilingual "API key not configured" error. This is intentional — the deploy doesn't fail, just the cloud button does.
 
-**Model:** `claude-sonnet-4-6` with `max_tokens: 1024` and a tight JSON-schema prompt (he/en variants). Defense-in-depth on the response: `sanitizeResult` clamps numbers, filters arrays, caps the notes field at 240 chars — the client never sees the raw upstream response.
+**Model:** `claude-sonnet-4-6` with `max_tokens: 1024` and a tight JSON-schema prompt (he/en variants). Defense-in-depth on the response: `sanitizeResult` allows only the `none`/`mild`/`moderate`/`severe` bucket (anything else → `null`), strips bidi/control/zero-width chars and characters outside an ASCII+Hebrew+punctuation whitelist, drops strings matching prompt-injection patterns (`ignore/disregard/forget/override … previous/system/instruction`) or role markers (`system:` / `user:`), caps `notes` at 240 chars and array entries at 80 chars × 12 items. The client never sees the raw upstream response.
+
+**Hardening (request gates, in order):** method=POST → Origin must be in `ALLOWED_ORIGINS` (403 `forbidden_origin` if missing or unknown) → per-IP token-bucket rate limit (`RATE_LIMIT=10` per `RATE_WINDOW_MS=60_000` per warm Edge instance, 429 `rate_limited` over) → `ANTHROPIC_API_KEY` present (503 `not_configured`) → content-type `application/json` (415) → image size cap `MAX_BASE64_CHARS=7_000_000` (~5MB binary, 413) → mediaType in `image/jpeg`/`image/png` (415) → magic-byte check on the base64 prefix (`/9j/` for JPEG, `iVBORw0KGgo` for PNG) to defeat MIME spoofing (415 `bad_image_bytes`).
 
 **Client flow:** `postToVisionAPI({canvas, lang})` re-encodes the canvas to JPEG quality 0.85 with a 1280px max edge before posting. This keeps the body well under Vercel Edge's request limit and matches Claude Vision's working resolution. JSON body: `{imageBase64, mediaType:'image/jpeg', lang}`.
 
 **Per-image consent:** `cloudConsent` state in ImagingTab is reset whenever the file changes (`useEffect` watches `imagingFile?.dataUrl`). The Analyze button is disabled until the box is checked. The bilingual disclosure explicitly states the image goes to Anthropic's servers and that the clinician must redact identifiers.
 
-**Findings panel additions:** when `imagingResult.source === 'cloud'`, the panel renders three extra cards (Caries / Periapical / Calculus) plus an optional Notes block. Empty arrays render as "—".
+**Findings panel additions (v2):** when `imagingResult.source === 'cloud'`, the panel renders a single bucket pill (none/mild/moderate/severe) plus three flag cards (Caries / Periapical / Calculus) and an optional Notes block. Empty arrays render as "—".
 
 **Letter integration:** `makeLetter` adds an "Additional Radiographic Flags" / "דגלים רדיוגרפיים נוספים" block after the main AI-assisted line, but only when `imagingDerived.isCloud && (caries.length || periapical.length || calculus.length)`. Both branches carry the "AI-assisted · requires clinician confirmation" disclaimer.
 
@@ -185,3 +191,4 @@ If a session was compacted mid-implementation, triad-debate and subagent outputs
 - Adding a new bilingual string: add to both `STRINGS.he` and `STRINGS.en`. Never hardcode Hebrew or English in JSX — use `t('key')`.
 - Vendoring more libraries: drop the file into `vendor/`, reference with relative path, never use `unpkg`/`cdn` URLs.
 - **Language detection in JSX**: use the `lang` prop directly (e.g., `lang==='he'`), not `t('btnLang')`. Pass `lang` explicitly to any tab component that needs to branch on language inside JSX.
+- **AI imaging is qualitative-only.** It never produces calibrated mm/% numbers and must never write to `rblPercent` / `vbl`. If you reintroduce numeric output from a vision model (offline ONNX or cloud), you're outside the Phase 7C v2 honest-scope contract — discuss before merging.

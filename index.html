@@ -19,7 +19,7 @@
             perio: {
               bg: '#060D14', surface: '#0C1A28', panel: '#0F2035',
               border: '#1A3050', accent: '#2DD4BF', accentDim: '#1A8A7B',
-              text: '#E2E8F0', textDim: '#94A3B8', muted: '#64748B',
+              text: '#E2E8F0', textDim: '#94A3B8', muted: '#7B8AA4',
             }
           },
           fontFamily: {
@@ -51,7 +51,7 @@
     .card-title{font-size:.68rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#2DD4BF;margin-bottom:14px;}
 
     .tab-btn{padding:12px 22px;min-height:44px;font-weight:700;font-size:.82rem;border-bottom:2px solid transparent;
-      color:#64748B;cursor:pointer;transition:all .15s;white-space:nowrap;
+      color:#7B8AA4;cursor:pointer;transition:all .15s;white-space:nowrap;
       background:none;border-top:none;border-left:none;border-right:none;font-family:'Heebo',Arial,sans-serif;}
     .tab-btn:hover{color:#94A3B8;}
     .tab-btn:focus-visible{outline:none;box-shadow:inset 0 0 0 2px #2DD4BF;border-radius:6px;}
@@ -77,13 +77,17 @@
       transition:opacity .25s ease;
       user-select:none;-webkit-user-select:none;
       white-space:nowrap;
-      display:flex;align-items:baseline;gap:6px;
+      display:none;align-items:baseline;gap:6px;
     }
+    /* Watermark is hidden by default on every tab — clinician-facing tool
+       should not carry author branding. Pass ?author=1 to opt in (portfolio /
+       demo contexts). */
+    body.show-author .author-signature{display:flex;}
     .author-signature:hover{opacity:.88;}
     .author-signature .sig-prefix{
       font-family:'Inter',sans-serif;font-weight:400;
       font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;
-      color:#64748B;
+      color:#7B8AA4;
     }
     .author-signature .sig-name{
       font-size:1.25rem;line-height:1;
@@ -97,8 +101,8 @@
       .author-signature .sig-prefix{display:none;}
       .author-signature .sig-name{font-size:1.05rem;}
     }
-    /* Hide the watermark when on the Output tab (the letter is the artefact) */
-    body.tab-output .author-signature{display:none;}
+    /* Even when ?author=1 is set, suppress the watermark on Output (letter is the artefact). */
+    body.tab-output .author-signature{display:none!important;}
 
     @media (prefers-reduced-motion: reduce){
       .fade-in, *{animation:none!important;transition:none!important;}
@@ -120,7 +124,7 @@
     .tooth-num{font-weight:700;color:#94A3B8;font-family:'Inter',sans-serif;letter-spacing:.02em;}
     .tooth-flags{display:flex;gap:4px;font-size:.55rem;font-family:'Inter',sans-serif;height:11px;align-items:center;}
     .tooth-actions{display:flex;gap:1px;}
-    .tooth-actions button{background:transparent;color:#475569;border:1px solid transparent;
+    .tooth-actions button{background:transparent;color:#7B8AA4;border:1px solid transparent;
       cursor:pointer;padding:1px 4px;font-size:.6rem;font-family:'Inter',sans-serif;border-radius:3px;line-height:1;}
     .tooth-actions button:hover{color:#5EEAD4;border-color:#1A3050;background:#0C1A28;}
     .tooth-actions button.active{color:#5EEAD4;background:#0C1A28;border-color:#2DD4BF44;}
@@ -349,31 +353,42 @@ const S = {
     imgMode:'מצב ניתוח', imgOffline:'מקומי (ללא רשת)', imgCloud:'ענן (Claude Vision)',
     imgCloudComingSoon:'מצב ענן יתווסף בשלב 7C',
     imgCloudConsentTitle:'הצהרת הסכמה — מצב ענן',
-    imgCloudConsentBody:'התמונה תישלח לשרת Anthropic לצורך ניתוח. יש להסיר/לטשטש פרטים מזהים של המטופל מהקובץ לפני שליחה. ההסכמה היא לתמונה הספציפית הזו בלבד.',
-    imgCloudConsentCheck:'אני מאשר/ת — התמונה הזו לא מכילה פרטים מזהים והניתוח הוא לצורך החלטה קלינית בלבד',
+    imgCloudConsentBody:'התמונה תישלח לשרתי Anthropic — חברה אמריקאית, שרתים בארה״ב — לצורך ניתוח על-ידי מודל Claude Vision.\n\nעל פי תנאי השירות של Anthropic, התמונות עשויות להישמר עד 30 ימים לצורך בדיקת שימוש לרעה.\n\nהכלי הזה אינו מוגדר כ-HIPAA Business Associate ואינו מאושר להעברה של מידע בריאות מוגן (PHI).\n\nלפני שליחה — יש להסיר או לטשטש מהקובץ כל פרט מזהה של המטופל: שם, תעודת זהות, תאריך לידה, מספר תיק, ומטא-דאטה של DICOM.\n\nההסכמה תקפה לתמונה הספציפית הזו בלבד.',
+    imgCloudConsentCheck:'אני מאשר/ת שקראתי את ההצהרה לעיל, שהתמונה הזו אינה מכילה פרטי מטופל מזהים, ושאני מבין/ה שהכלי אינו BAA לפי HIPAA',
     imgAnalyzeCloud:'נתח (ענן)', imgAnalyzeCloudFor:'שלח לניתוח ענן',
     imgCloudErrNotConfigured:'מפתח API של Anthropic לא מוגדר בשרת — פנה למנהל המערכת',
     imgCloudErrTooLarge:'התמונה גדולה מדי לשליחה — נסה תמונה קטנה יותר',
     imgCloudErrUpstream:'שירות הניתוח לא זמין כרגע — נסה שוב מאוחר יותר',
     imgCloudErrUnparseable:'תגובת השרת לא הייתה תקנית — נסה שוב או השתמש במצב מקומי',
+    imgCloudErrForbidden:'הגישה לשירות נחסמה — נסה לטעון את העמוד מחדש מהדומיין הרשמי',
+    imgCloudErrRateLimited:'יותר מדי בקשות — המתן דקה לפני ניסיון נוסף',
+    imgCloudErrBadImage:'הקובץ אינו תמונת JPEG/PNG תקנית — נסה תמונה אחרת',
     imgCariesTitle:'דגלי עששת', imgPeriapicalTitle:'נגעים פריאפיקליים', imgCalculusTitle:'אבן/טרטר',
     imgCloudNotes:'הערות',
     imgCloudFlaggedLetter:'דגלים רדיוגרפיים נוספים (בסיוע AI · דורש אישור)',
     imgAnalyze:'נתח (מקומי)', imgAnalyzing:'מנתח…', imgReanalyze:'נתח שוב',
     imgRunDemo:'הרץ דמו (ערכים מדומים)', imgDemoBadge:'דמו',
     imgFindings:'ממצאים (בסיוע AI)',
-    imgRblEstimate:'הערכת %RBL כוללת', imgWorstSiteRbl:'אתר חמור ביותר', imgVblEstimate:'VBL מוערך (מ"מ)',
-    imgPerToothMedian:'חציון לפי שן', imgConfidence:'ביטחון',
+    imgConfidence:'ביטחון',
     imgConfLow:'נמוך', imgConfMed:'בינוני', imgConfHigh:'גבוה',
-    imgApply:'החל על RBL/VBL', imgApplied:'הוחל ✓', imgClear:'נקה ממצאים',
+    imgApply:'כלול במכתב הפנייה', imgApplied:'נכלל במכתב ✓', imgClear:'נקה ממצאים',
     imgNoResult:'עדיין לא רץ ניתוח',
     imgCariesNote:'דגלי עששת / נגעים פריאפיקליים זמינים רק במצב ענן',
-    imgDisclaimer:'הצעה בלבד — אישור קליני מחייב',
+    imgDisclaimer:'הצעה איכותית בלבד — מדידות %RBL ומ"מ נשארות באחריות הקלינאי',
     imgModelMissing:'מודל ONNX לא נטען. הוסף את perio-rbl.onnx ל-vendor/models/ כדי להפעיל ניתוח אמיתי.',
     imgRuntimeMissing:'ספריית ONNX Runtime לא נטענה. הוסף את ort.min.js ל-vendor/onnxruntime-web/.',
     imgAnalysisFailed:'הניתוח נכשל — נסה שוב או השתמש בערכים ידניים',
-    imgAiSuggested:'מוצע ע"י AI', imgAiPillApply:'החל',
-    letterRadiographicAi:'ממצאים רדיוגרפיים (בסיוע AI)',
+    imgAiSuggested:'מוצע ע"י AI',
+    imgBucketLabel:'הערכת אובדן עצם רדיוגרפי',
+    imgBucketHelp:'קטגוריה איכותית בלבד — הקלינאי מזין % ומ"מ ידנית',
+    imgBucketUnavailable:'לא ניתן להעריך מהצילום',
+    imgBucketNone:'ללא אובדן עצם נראה',
+    imgBucketMild:'קל (<15% — Stage I)',
+    imgBucketModerate:'בינוני (15–33% — Stage II)',
+    imgBucketSevere:'מתקדם (>33% — Stage III/IV)',
+    imgPillBucketPrefix:'הערכת AI',
+    imgPillReviewHint:'(לסקירה מלאה — לשונית הדמיה)',
+    letterRadiographicAi:'דגלים רדיוגרפיים בסיוע AI',
     chartTitle:'תרשים פריודונטלי (6-PPC)',
     chartSubtitle:'תרשים מלא — 32 שיניים, 6 אתרים לכל שן. לחץ על תא לעריכה. נקודות: דימום / מוגלה / רובד.',
     chartFMBS:'FMBS', chartFMPS:'FMPS', chartMaxPD:'Max PD', chartWorstCAL:'Worst CAL',
@@ -499,31 +514,42 @@ const S = {
     imgMode:'Analysis mode', imgOffline:'Offline (no network)', imgCloud:'Cloud (Claude Vision)',
     imgCloudComingSoon:'Cloud mode arrives in Phase 7C',
     imgCloudConsentTitle:'Consent disclosure — Cloud mode',
-    imgCloudConsentBody:'This image will be sent to Anthropic’s servers for analysis. Patient identifiers must be redacted/blurred from the file before upload. Consent is for this specific image only.',
-    imgCloudConsentCheck:'I confirm — this image contains no patient identifiers and analysis is for clinical decision support only',
+    imgCloudConsentBody:'This image will be sent to Anthropic’s servers — a US company, servers located in the United States — for analysis by the Claude Vision model.\n\nUnder Anthropic’s commercial terms, images may be retained for up to 30 days for abuse review.\n\nThis tool is NOT a HIPAA Business Associate and is NOT approved for transmitting Protected Health Information (PHI).\n\nBefore uploading — remove or blur every patient identifier from the file: name, ID number, date of birth, chart number, and DICOM metadata.\n\nConsent applies to this specific image only.',
+    imgCloudConsentCheck:'I confirm I have read the disclosure above, this image contains no patient identifiers, and I understand this tool is not a HIPAA Business Associate',
     imgAnalyzeCloud:'Analyze (cloud)', imgAnalyzeCloudFor:'Submit for cloud analysis',
     imgCloudErrNotConfigured:'Anthropic API key not configured on the server — contact the administrator',
     imgCloudErrTooLarge:'Image too large to send — try a smaller image',
     imgCloudErrUpstream:'Analysis service unavailable — please try again later',
     imgCloudErrUnparseable:'Server response was malformed — retry or fall back to offline mode',
+    imgCloudErrForbidden:'Access blocked — please reload the page from the official domain',
+    imgCloudErrRateLimited:'Too many requests — please wait a minute before retrying',
+    imgCloudErrBadImage:'File is not a valid JPEG/PNG image — try a different file',
     imgCariesTitle:'Caries flags', imgPeriapicalTitle:'Periapical lesions', imgCalculusTitle:'Calculus',
     imgCloudNotes:'Notes',
     imgCloudFlaggedLetter:'Additional Radiographic Flags (AI-assisted · requires clinician confirmation)',
     imgAnalyze:'Analyze (offline)', imgAnalyzing:'Analyzing…', imgReanalyze:'Re-analyze',
     imgRunDemo:'Run demo (mock values)', imgDemoBadge:'DEMO',
     imgFindings:'Findings (AI-assisted)',
-    imgRblEstimate:'Overall %RBL estimate', imgWorstSiteRbl:'Worst-site %RBL', imgVblEstimate:'VBL estimate (mm)',
-    imgPerToothMedian:'Per-tooth median', imgConfidence:'Confidence',
+    imgConfidence:'Confidence',
     imgConfLow:'low', imgConfMed:'medium', imgConfHigh:'high',
-    imgApply:'Apply to RBL/VBL', imgApplied:'Applied ✓', imgClear:'Clear findings',
+    imgApply:'Include in referral letter', imgApplied:'Included in letter ✓', imgClear:'Clear findings',
     imgNoResult:'No analysis run yet',
     imgCariesNote:'Caries / periapical lesion flags require Cloud mode',
-    imgDisclaimer:'Suggestion only — clinician must confirm',
+    imgDisclaimer:'Qualitative suggestion only — %RBL and mm measurements remain the clinician’s responsibility',
     imgModelMissing:'ONNX model not vendored. Drop perio-rbl.onnx into vendor/models/ to enable real analysis.',
     imgRuntimeMissing:'ONNX Runtime not vendored. Drop ort.min.js into vendor/onnxruntime-web/.',
     imgAnalysisFailed:'Analysis failed — retry or fall back to manual entry',
-    imgAiSuggested:'AI-suggested', imgAiPillApply:'Apply',
-    letterRadiographicAi:'Radiographic Findings (AI-assisted)',
+    imgAiSuggested:'AI-suggested',
+    imgBucketLabel:'Radiographic bone-loss assessment',
+    imgBucketHelp:'Qualitative category only — clinician enters % and mm manually',
+    imgBucketUnavailable:'Unable to assess from radiograph',
+    imgBucketNone:'No visible bone loss',
+    imgBucketMild:'Mild (<15% — Stage I)',
+    imgBucketModerate:'Moderate (15–33% — Stage II)',
+    imgBucketSevere:'Severe (>33% — Stage III/IV)',
+    imgPillBucketPrefix:'AI assessment',
+    imgPillReviewHint:'(see Imaging tab for full review)',
+    letterRadiographicAi:'AI-Assisted Radiographic Flags',
     chartTitle:'Periodontal Chart (6-PPC)',
     chartSubtitle:'Full-mouth chart — 32 teeth, 6 sites per tooth. Click a cell to edit. Dots: bleeding / suppuration / plaque.',
     chartFMBS:'FMBS', chartFMPS:'FMPS', chartMaxPD:'Max PD', chartWorstCAL:'Worst CAL',
@@ -1123,9 +1149,12 @@ function canvasToTensor(canvas, size, ort){
 }
 
 async function runOnnxInference(canvas){
-  /* Returns { rblEstimate, worstSiteRbl, vblEstimate, perToothMedian,
-     confidence, source:'onnx' } or throws an Error with message
-     'RUNTIME_MISSING' | 'MODEL_MISSING' | 'INFERENCE_FAILED'. */
+  /* v2: Returns { rblBucket, confidence, source:'onnx' } or throws an Error
+     with message 'RUNTIME_MISSING' | 'MODEL_MISSING' | 'INFERENCE_FAILED'.
+     The function is currently unreachable in production — postprocessOnnxOutput
+     is a `[]` stub until a real .onnx ships. When it does, this function
+     converts the model's mm/% output to an AAP-keyed bucket; the clinician
+     enters mm/% themselves either way. */
   const ort = await loadOnnxRuntime();
   const session = await getOnnxSession();
   const tensor = canvasToTensor(canvas, IMG_INPUT_SIZE, ort);
@@ -1149,14 +1178,11 @@ async function runOnnxInference(canvas){
   const rbls = tooth.map(t => t.rbl).filter(v => v != null && !isNaN(v)).sort((a,b)=>a-b);
   if(!rbls.length) throw new Error('INFERENCE_FAILED');
   const median = rbls.length % 2 ? rbls[(rbls.length-1)/2] : (rbls[rbls.length/2-1]+rbls[rbls.length/2])/2;
-  const worst = rbls[rbls.length-1];
-  const vbl = Math.max(0, Math.round((worst - median) / 10));
   const meanConf = tooth.reduce((s,t)=>s+(t.conf||0),0)/tooth.length;
+  /* AAP/EFP 2018 stage cutoffs: <15% → I, 15-33% → II, >33% → III/IV. */
+  const bucket = median < 1 ? 'none' : median < 15 ? 'mild' : median <= 33 ? 'moderate' : 'severe';
   return {
-    rblEstimate: Math.round(median),
-    worstSiteRbl: Math.round(worst),
-    vblEstimate: vbl,
-    perToothMedian: Math.round(median),
+    rblBucket: bucket,
     confidence: meanConf >= 0.7 ? 'high' : meanConf >= 0.5 ? 'med' : 'low',
     source: 'onnx',
   };
@@ -1210,15 +1236,16 @@ async function postToVisionAPI({canvas, lang}){
   if(!resp.ok){
     if(resp.status === 503 || json?.error === 'not_configured') throw new Error('NOT_CONFIGURED');
     if(resp.status === 413 || json?.error === 'image_too_large') throw new Error('TOO_LARGE');
+    if(resp.status === 403 || json?.error === 'forbidden_origin') throw new Error('FORBIDDEN');
+    if(resp.status === 429 || json?.error === 'rate_limited') throw new Error('RATE_LIMITED');
+    if(json?.error === 'bad_image_bytes' || json?.error === 'bad_media_type') throw new Error('BAD_IMAGE');
     if(resp.status === 502 && json?.error === 'unparseable') throw new Error('UNPARSEABLE');
     throw new Error('UPSTREAM_ERROR');
   }
 
+  const ALLOWED_BUCKETS = ['none','mild','moderate','severe'];
   return {
-    rblEstimate:  Number.isFinite(json.rblEstimate)  ? Math.round(json.rblEstimate)  : null,
-    worstSiteRbl: Number.isFinite(json.worstSiteRbl) ? Math.round(json.worstSiteRbl) : null,
-    vblEstimate:  Number.isFinite(json.vblEstimate)  ? Math.round(json.vblEstimate)  : null,
-    perToothMedian: Number.isFinite(json.rblEstimate) ? Math.round(json.rblEstimate) : null,
+    rblBucket: ALLOWED_BUCKETS.includes(json.rblBucket) ? json.rblBucket : null,
     confidence: ['low','med','high'].includes(json.confidence) ? json.confidence : 'low',
     source: 'cloud',
     caries:     Array.isArray(json.caries)     ? json.caries     : [],
@@ -1230,32 +1257,31 @@ async function postToVisionAPI({canvas, lang}){
 
 function generateDemoImagingResult(){
   /* Deterministic mock — used so the rest of the pipeline (Findings panel,
-     Apply button, letter integration) can be exercised end-to-end before the
-     real .onnx ships. Clearly tagged source:'demo' so the UI shows a DEMO
-     badge and the letter never picks it up. */
+     letter integration) can be exercised end-to-end. Clearly tagged
+     source:'demo' so the UI shows a DEMO badge and the letter never picks
+     it up. v2 schema: bucket-only, no fake mm/% precision. */
   return {
-    rblEstimate: 38,
-    worstSiteRbl: 52,
-    vblEstimate: 3,
-    perToothMedian: 36,
+    rblBucket: 'moderate',
     confidence: 'med',
     source: 'demo',
+    caries: ['16','26'],
+    periapical: [],
+    calculus: ['mandibular lingual'],
+    notes: 'Demo data — moderate generalised bone loss with localised mandibular calculus.',
   };
 }
 
 function computeImagingDerived(result){
-  /* Pure aggregator: takes whatever the inference function (or cloud or demo)
-     returned and shapes it into the values the engine consumes. Keeps the
-     same chartFilled / chartDerived gate pattern — see CLAUDE.md.
-     Cloud-only arrays (caries / periapical / calculus / notes) pass through
-     as empty arrays for non-cloud sources so the letter renderer doesn't
-     need to null-check. */
+  /* Pure aggregator. v2: AI never produces calibrated mm/% — the clinician
+     enters those by reading the radiograph themselves. We surface a
+     categorical bucket (AAP/EFP 2018-keyed) plus qualitative flags. The
+     engine's rblPercent / vbl come from manual entry or the chart, never
+     from imaging. */
   if(!result) return null;
+  const ALLOWED = ['none','mild','moderate','severe'];
   const isCloud = result.source === 'cloud';
   return {
-    rblPercent:  Number.isFinite(result.rblEstimate)  ? result.rblEstimate  : null,
-    vbl:         Number.isFinite(result.vblEstimate)  ? result.vblEstimate  : null,
-    worstSiteRbl:Number.isFinite(result.worstSiteRbl) ? result.worstSiteRbl : null,
+    rblBucket:   ALLOWED.includes(result.rblBucket) ? result.rblBucket : null,
     confidence:  result.confidence || 'low',
     source:      result.source || 'unknown',
     isDemo:      result.source === 'demo',
@@ -1454,7 +1480,15 @@ ICD-10: ${icd||'—'}${isPerio?'':''}
 • BOP: ${bop||'—'}%${cigsN>=10?`\n• עישון: ${cigsN} סיגריות/יום (Grade C)`:''}${!isNaN(pyN)&&pyN>0?`\n• מינון מצטבר: ${pyN} pack-years`:''}${!isNaN(hval)&&hval>=8.0?`\n• סוכרת: HbA1c ${hval}% ≥8.0% — לא מאוזן (Grade C)`:!isNaN(hval)&&hval>=7.0?`\n• סוכרת: HbA1c ${hval}% 7.0–7.9% — מאוזן חלקית (Grade B floor)`:''}${stageIVSubtype?`\n• תת-סיווג: Stage IV-${stageIVSubtype.slice(2)} (Herrera 2022)`:''}${kmWidth?`\n• רוחב מוקוזה קרטינית: ${kmWidth} מ"מ${parseFloat(kmWidth)<2?' — ⚠ <2מ"מ סיכון מוגבר (Roccuzzo 2016)':''}`:''}${cementRetained==='cement'?'\n• צורת חיבור פרוטזה: ציפוי (cement) — שמירה על ניקיון חיונית (Wittneben 2014)':cementRetained==='screw'?'\n• צורת חיבור פרוטזה: ברגית (screw)':''}${chartFilled?`\n• FMBS (אחוז דימום מלא): ${chartDerived.fmbs}%\n• FMPS (אחוז רובד מלא): ${chartDerived.fmps}%\n• אתרים עם PD ≥5 מ"מ: ${chartDerived.sites5plus} (מתוך ${chartDerived.measured} אתרים נמדדים, ${chartDerived.presentTeeth} שיניים)`:''}
 
 הערכת סיכון לשתלים (IDRA): ${idraHe}${idraRisk==='HIGH'?'\n⚠ נדרש ייצוב פריודונטלי מלא לפני שיקול שתלים':''}${periDx?`\nאבחנה פריו-אימפלנט (Berglundh 2018): ${piHe[periDx]}`:''}
-${imagingFilled?`\nממצאים רדיוגרפיים (בסיוע AI):\n• הערכת %RBL כוללת: ${imagingDerived.rblPercent}%${imagingDerived.worstSiteRbl!=null?`\n• אתר חמור ביותר: ${imagingDerived.worstSiteRbl}%`:''}${imagingDerived.vbl!=null?`\n• VBL מוערך: ${imagingDerived.vbl} מ"מ`:''}\n• ביטחון: ${imagingDerived.confidence==='high'?'גבוה':imagingDerived.confidence==='med'?'בינוני':'נמוך'} · הצעה בלבד — אישור קליני מחייב${imagingDerived.isCloud&&(imagingDerived.caries.length||imagingDerived.periapical.length||imagingDerived.calculus.length)?`\n\nדגלים רדיוגרפיים נוספים (בסיוע AI · דורש אישור):${imagingDerived.caries.length?`\n• עששת: ${imagingDerived.caries.join(', ')}`:''}${imagingDerived.periapical.length?`\n• נגעים פריאפיקליים: ${imagingDerived.periapical.join(', ')}`:''}${imagingDerived.calculus.length?`\n• אבן/טרטר: ${imagingDerived.calculus.join(', ')}`:''}`:''}\n`:''}
+${imagingFilled?(()=>{
+  const bucketHe={none:'ללא אובדן עצם נראה',mild:'אובדן עצם קל (<15%)',moderate:'אובדן עצם בינוני (15–33%)',severe:'אובדן עצם מתקדם (>33%)'};
+  const confHe={high:'גבוה',med:'בינוני',low:'נמוך'};
+  const bucketLine = imagingDerived.rblBucket ? `\n• הערכה איכותית: ${bucketHe[imagingDerived.rblBucket]}` : '';
+  const flagsBlock = imagingDerived.isCloud && (imagingDerived.caries.length||imagingDerived.periapical.length||imagingDerived.calculus.length||imagingDerived.notes)
+    ? `${imagingDerived.caries.length?`\n• עששת חשודה: ${imagingDerived.caries.join(', ')}`:''}${imagingDerived.periapical.length?`\n• נגעים פריאפיקליים: ${imagingDerived.periapical.join(', ')}`:''}${imagingDerived.calculus.length?`\n• אבן/טרטר: ${imagingDerived.calculus.join(', ')}`:''}${imagingDerived.notes?`\n• הערות: ${imagingDerived.notes}`:''}`
+    : '';
+  return `\nדגלים רדיוגרפיים בסיוע AI (אישור קליני מחייב — מדידות %RBL ומ"מ הוזנו ידנית על ידי הקלינאי):${bucketLine}${flagsBlock}\n• ביטחון: ${confHe[imagingDerived.confidence]||'נמוך'}\n`;
+})():''}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 המלצות טיפול (EFP S3 — Sanz/Herrera 2020):
@@ -1510,7 +1544,15 @@ Key Findings:
 • BOP: ${bop||'—'}%${cigsN>=10?`\n• Smoking: ${cigsN} cig/day (Grade C modifier)`:''}${!isNaN(pyN)&&pyN>0?`\n• Cumulative dose: ${pyN} pack-years`:''}${!isNaN(hval)&&hval>=8.0?`\n• Diabetes: HbA1c ${hval}% ≥8.0% — uncontrolled (Grade C modifier)`:!isNaN(hval)&&hval>=7.0?`\n• Diabetes: HbA1c ${hval}% 7.0–7.9% — partially controlled (Grade B floor)`:''}${stageIVSubtype?`\n• Subtype: Stage IV-${stageIVSubtype.slice(2)} (Herrera 2022)`:''}${kmWidth?`\n• Keratinized mucosa width: ${kmWidth} mm${parseFloat(kmWidth)<2?' — ⚠ <2mm elevated risk (Roccuzzo 2016)':''}`:''}${cementRetained==='cement'?'\n• Prosthesis retention: cement — meticulous hygiene essential (Wittneben 2014)':cementRetained==='screw'?'\n• Prosthesis retention: screw-retained':''}${chartFilled?`\n• FMBS (Full-Mouth Bleeding Score): ${chartDerived.fmbs}%\n• FMPS (Full-Mouth Plaque Score): ${chartDerived.fmps}%\n• Sites with PD ≥5 mm: ${chartDerived.sites5plus} (of ${chartDerived.measured} measured sites across ${chartDerived.presentTeeth} teeth)`:''}
 
 Implant Disease Risk Assessment (IDRA): ${idraEn}${idraRisk==='HIGH'?'\n⚠ Full periodontal stabilization required before implant consideration':''}${periDx?`\nPeri-Implant Diagnosis (Berglundh 2018): ${piEn[periDx]}`:''}
-${imagingFilled?`\nRadiographic Findings (AI-assisted):\n• Overall %RBL estimate: ${imagingDerived.rblPercent}%${imagingDerived.worstSiteRbl!=null?`\n• Worst-site %RBL: ${imagingDerived.worstSiteRbl}%`:''}${imagingDerived.vbl!=null?`\n• VBL estimate: ${imagingDerived.vbl} mm`:''}\n• Confidence: ${imagingDerived.confidence==='high'?'high':imagingDerived.confidence==='med'?'medium':'low'} · Suggestion only — clinician confirmation required${imagingDerived.isCloud&&(imagingDerived.caries.length||imagingDerived.periapical.length||imagingDerived.calculus.length)?`\n\nAdditional Radiographic Flags (AI-assisted · requires clinician confirmation):${imagingDerived.caries.length?`\n• Caries: ${imagingDerived.caries.join(', ')}`:''}${imagingDerived.periapical.length?`\n• Periapical lesions: ${imagingDerived.periapical.join(', ')}`:''}${imagingDerived.calculus.length?`\n• Calculus: ${imagingDerived.calculus.join(', ')}`:''}`:''}\n`:''}
+${imagingFilled?(()=>{
+  const bucketEn={none:'No visible bone loss',mild:'Mild bone loss (<15%)',moderate:'Moderate bone loss (15–33%)',severe:'Severe bone loss (>33%)'};
+  const confEn={high:'high',med:'medium',low:'low'};
+  const bucketLine = imagingDerived.rblBucket ? `\n• Qualitative assessment: ${bucketEn[imagingDerived.rblBucket]}` : '';
+  const flagsBlock = imagingDerived.isCloud && (imagingDerived.caries.length||imagingDerived.periapical.length||imagingDerived.calculus.length||imagingDerived.notes)
+    ? `${imagingDerived.caries.length?`\n• Caries flags: ${imagingDerived.caries.join(', ')}`:''}${imagingDerived.periapical.length?`\n• Periapical lesions: ${imagingDerived.periapical.join(', ')}`:''}${imagingDerived.calculus.length?`\n• Calculus: ${imagingDerived.calculus.join(', ')}`:''}${imagingDerived.notes?`\n• Notes: ${imagingDerived.notes}`:''}`
+    : '';
+  return `\nAI-Assisted Radiographic Flags (requires clinician confirmation — %RBL and mm measurements were entered manually by the clinician):${bucketLine}${flagsBlock}\n• Confidence: ${confEn[imagingDerived.confidence]||'low'}\n`;
+})():''}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 Treatment Recommendations (EFP S3 — Sanz/Herrera 2020):
@@ -1709,7 +1751,7 @@ function ReasoningPanel({steps,t}){
               {i+1}
             </div>
             <div style={{flex:1}}>
-              <div style={{fontSize:'.72rem',color:'#64748B',marginBottom:2}}>{t(st.key)}</div>
+              <div style={{fontSize:'.72rem',color:'#7B8AA4',marginBottom:2}}>{t(st.key)}</div>
               <div style={{fontSize:'.86rem',fontFamily:'Inter,sans-serif',direction:'ltr',
                 color:st.hl?'#E2E8F0':'#CBD5E1',fontWeight:st.hl?700:400}}>
                 {val}
@@ -1829,7 +1871,7 @@ function InputTab({st,set,t,idValid,chartFilled,chartDerived,setChart,onCompute,
               {t('btnLoadDemo')}
             </button>
             <button onClick={()=>setDemoDismissed(true)} aria-label={t('demoDismiss')} style={{
-              background:'transparent',color:'#64748B',border:'1px solid transparent',
+              background:'transparent',color:'#7B8AA4',border:'1px solid transparent',
               borderRadius:8,width:32,height:32,cursor:'pointer',fontSize:'1.1rem',
               lineHeight:1,fontFamily:'Inter,sans-serif'
             }}>×</button>
@@ -1857,7 +1899,7 @@ function InputTab({st,set,t,idValid,chartFilled,chartDerived,setChart,onCompute,
           <FSelect label={t('caseType')} value={st.caseTypeOverride} onChange={v=>set('caseTypeOverride',v)} opts={ctOpts}/>
           <FSelect label={t('txStatus')} value={st.txStatusOverride} onChange={v=>set('txStatusOverride',v)} opts={txOpts}/>
         </Card>
-        <Card title={<span>{t('secRecords')}<span style={{fontSize:'.6rem',fontWeight:500,color:'#475569',marginInlineStart:8,letterSpacing:0,textTransform:'none'}}>· {t('secRecordsCite')}</span></span>}>
+        <Card title={<span>{t('secRecords')}<span style={{fontSize:'.6rem',fontWeight:500,color:'#7B8AA4',marginInlineStart:8,letterSpacing:0,textTransform:'none'}}>· {t('secRecordsCite')}</span></span>}>
           <div className="records-grid" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'0 12px'}}>
             <FInput label={t('residentName')} value={st.residentName} onChange={v=>set('residentName',v)} placeholder="—"/>
             <FInput label={t('licenseNo')} value={st.licenseNo} onChange={v=>set('licenseNo',v)} placeholder="—"/>
@@ -1868,31 +1910,31 @@ function InputTab({st,set,t,idValid,chartFilled,chartDerived,setChart,onCompute,
       </div>
 
       <Card title={t('secPerio')} style={{marginBottom:16}}>
-        {imagingResult && !imagingApplied && (
-          <div style={{
-            marginBottom:14,padding:'10px 14px',borderRadius:8,
-            background:'#0D2D2D',border:'1px solid #1D7F7F',
-            display:'flex',gap:10,alignItems:'center',flexWrap:'wrap',
-          }}>
-            <span style={{fontSize:11,fontWeight:700,padding:'2px 8px',borderRadius:4,
-              background:'#082525',color:'#5EEAD4',letterSpacing:0.5}}>
-              {imagingResult.source==='demo' ? t('imgDemoBadge') : t('imgAiSuggested')}
-            </span>
-            <span className="clinical-num" style={{fontSize:13,color:'#A5F0F0'}}>
-              RBL {imagingResult.rblEstimate}% · VBL {imagingResult.vblEstimate}mm
-            </span>
-            <button
-              onClick={() => { onImagingApply && onImagingApply(imagingResult); }}
-              style={{
-                padding:'4px 12px',borderRadius:6,border:'1px solid #2DD4BF',
-                background:'#0A1828',color:'#5EEAD4',cursor:'pointer',fontSize:12,fontWeight:600,
-                marginInlineStart:'auto',
-              }}
-            >
-              {t('imgAiPillApply')}
-            </button>
-          </div>
-        )}
+        {imagingResult && !imagingApplied && (() => {
+          /* Advisory pill — purely informational. v2 never auto-writes mm/%
+             into the engine; the bucket is a triage hint the clinician can
+             use to sanity-check their own read of the radiograph. */
+          const b = imagingResult.rblBucket;
+          const bucketLabel = b ? t('imgBucket'+b.charAt(0).toUpperCase()+b.slice(1)) : t('imgBucketUnavailable');
+          return (
+            <div style={{
+              marginBottom:14,padding:'10px 14px',borderRadius:8,
+              background:'#0D2D2D',border:'1px solid #1D7F7F',
+              display:'flex',gap:10,alignItems:'center',flexWrap:'wrap',
+            }}>
+              <span style={{fontSize:11,fontWeight:700,padding:'2px 8px',borderRadius:4,
+                background:'#082525',color:'#5EEAD4',letterSpacing:0.5}}>
+                {imagingResult.source==='demo' ? t('imgDemoBadge') : t('imgAiSuggested')}
+              </span>
+              <span style={{fontSize:13,color:'#A5F0F0'}}>
+                {t('imgPillBucketPrefix')}: <strong>{bucketLabel}</strong>
+              </span>
+              <span style={{fontSize:11,color:'#7B8AA4',fontStyle:'italic'}}>
+                {t('imgPillReviewHint')}
+              </span>
+            </div>
+          );
+        })()}
         <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(190px,1fr))',gap:'12px 20px'}}>
           <FInput label={t('calWorst')} type="number" min="0" max="20" step=".5" value={st.calWorst} onChange={v=>set('calWorst',v)} placeholder="mm"/>
           <FInput label={t('rbl')} type="number" min="0" max="100" value={st.rblPercent} onChange={v=>set('rblPercent',v)} placeholder="%"/>
@@ -1943,7 +1985,7 @@ function InputTab({st,set,t,idValid,chartFilled,chartDerived,setChart,onCompute,
           <button onClick={onCompute} disabled={!hasInput} title={!hasInput?t('btnComputeDisabled'):''} style={{
             width:'100%',padding:'14px 0',
             background:hasInput?'#2DD4BF':'#1A3050',
-            color:hasInput?'#060D14':'#64748B',
+            color:hasInput?'#060D14':'#7B8AA4',
             fontWeight:800,fontSize:'1rem',borderRadius:12,border:'none',
             cursor:hasInput?'pointer':'not-allowed',
             fontFamily:'Heebo,Arial,sans-serif',
@@ -2088,6 +2130,9 @@ function ImagingTab({imagingFile, setImagingFile,
       /* Cloud error codes */
       else if(code === 'NOT_CONFIGURED')  setAnalysisError(t('imgCloudErrNotConfigured'));
       else if(code === 'TOO_LARGE')       setAnalysisError(t('imgCloudErrTooLarge'));
+      else if(code === 'FORBIDDEN')       setAnalysisError(t('imgCloudErrForbidden'));
+      else if(code === 'RATE_LIMITED')    setAnalysisError(t('imgCloudErrRateLimited'));
+      else if(code === 'BAD_IMAGE')       setAnalysisError(t('imgCloudErrBadImage'));
       else if(code === 'UPSTREAM_ERROR' || code === 'UPSTREAM_UNREACHABLE')
                                           setAnalysisError(t('imgCloudErrUpstream'));
       else if(code === 'UNPARSEABLE')     setAnalysisError(t('imgCloudErrUnparseable'));
@@ -2145,7 +2190,7 @@ function ImagingTab({imagingFile, setImagingFile,
             <div style={{color:'#E2E8F0',fontWeight:600,fontSize:16,marginBottom:6}}>
               {t('imgUpload')}
             </div>
-            <div style={{color:'#64748B',fontSize:13}}>
+            <div style={{color:'#7B8AA4',fontSize:13}}>
               {t('imgUploadHint')}
             </div>
           </div>
@@ -2189,9 +2234,9 @@ function ImagingTab({imagingFile, setImagingFile,
               marginTop:14,display:'flex',flexWrap:'wrap',gap:18,
               fontSize:13,color:'#94A3B8',
             }}>
-              <div><span style={{color:'#64748B'}}>{t('imgFileName')}:</span> <span style={{color:'#E2E8F0'}}>{imagingFile.name}</span></div>
-              <div className="clinical-num"><span style={{color:'#64748B'}}>{t('imgDimensions')}:</span> <span style={{color:'#E2E8F0'}}>{imagingFile.width}×{imagingFile.height}px</span></div>
-              <div className="clinical-num"><span style={{color:'#64748B'}}>{t('imgFileSize')}:</span> <span style={{color:'#E2E8F0'}}>{formatBytes(imagingFile.size)}</span></div>
+              <div><span style={{color:'#7B8AA4'}}>{t('imgFileName')}:</span> <span style={{color:'#E2E8F0'}}>{imagingFile.name}</span></div>
+              <div className="clinical-num"><span style={{color:'#7B8AA4'}}>{t('imgDimensions')}:</span> <span style={{color:'#E2E8F0'}}>{imagingFile.width}×{imagingFile.height}px</span></div>
+              <div className="clinical-num"><span style={{color:'#7B8AA4'}}>{t('imgFileSize')}:</span> <span style={{color:'#E2E8F0'}}>{formatBytes(imagingFile.size)}</span></div>
             </div>
 
             {/* Actions */}
@@ -2224,35 +2269,87 @@ function ImagingTab({imagingFile, setImagingFile,
               <div style={{color:'#94A3B8',fontSize:13,marginBottom:10,fontWeight:600}}>
                 {t('imgMode')}
               </div>
-              <div style={{display:'flex',gap:14,flexWrap:'wrap'}}>
-                <label style={{display:'flex',alignItems:'center',gap:8,cursor:'pointer',color:'#E2E8F0',fontSize:14}}>
-                  <input type="radio" name="img-mode" value="offline"
-                    checked={imagingMode==='offline'}
-                    onChange={()=>setImagingMode('offline')} />
+              {/* Segmented control — visual weight encodes the choice's gravity:
+                  offline = teal (safe/local), cloud = red (PHI leaves device). */}
+              <div role="radiogroup" aria-label={t('imgMode')} style={{
+                display:'inline-flex',padding:3,borderRadius:10,
+                background:'#06121F',border:'1px solid #1A3050',
+              }}>
+                <button
+                  type="button"
+                  role="radio"
+                  aria-checked={imagingMode==='offline'}
+                  onClick={()=>setImagingMode('offline')}
+                  style={{
+                    display:'flex',alignItems:'center',gap:8,
+                    padding:'8px 14px',borderRadius:7,border:'none',cursor:'pointer',
+                    fontSize:14,fontWeight:600,letterSpacing:0.2,
+                    background: imagingMode==='offline' ? '#0D2D2D' : 'transparent',
+                    color: imagingMode==='offline' ? '#5EEAD4' : '#94A3B8',
+                    boxShadow: imagingMode==='offline' ? 'inset 0 0 0 1px #2DD4BF' : 'none',
+                    transition:'all .15s ease',
+                  }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M12 2 4 5v7c0 5 3.5 8.5 8 10 4.5-1.5 8-5 8-10V5l-8-3z"/>
+                  </svg>
                   {t('imgOffline')}
-                </label>
-                <label style={{display:'flex',alignItems:'center',gap:8,cursor:'pointer',color:'#E2E8F0',fontSize:14}}>
-                  <input type="radio" name="img-mode" value="cloud"
-                    checked={imagingMode==='cloud'}
-                    onChange={()=>setImagingMode('cloud')} />
+                </button>
+                <button
+                  type="button"
+                  role="radio"
+                  aria-checked={imagingMode==='cloud'}
+                  onClick={()=>setImagingMode('cloud')}
+                  style={{
+                    display:'flex',alignItems:'center',gap:8,
+                    padding:'8px 14px',borderRadius:7,border:'none',cursor:'pointer',
+                    fontSize:14,fontWeight:600,letterSpacing:0.2,
+                    background: imagingMode==='cloud' ? '#2A0A0A' : 'transparent',
+                    color: imagingMode==='cloud' ? '#FCA5A5' : '#94A3B8',
+                    boxShadow: imagingMode==='cloud' ? 'inset 0 0 0 1px #DC2626' : 'none',
+                    transition:'all .15s ease',
+                  }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M17.5 19a4.5 4.5 0 0 0 1-8.9A6 6 0 0 0 6.6 8 5 5 0 0 0 7 18h10.5z"/>
+                    <path d="M12 12v6"/>
+                    <path d="m9 15 3-3 3 3"/>
+                  </svg>
                   {t('imgCloud')}
-                </label>
+                </button>
               </div>
 
-              {/* Cloud-mode consent — required per-image before Analyze enables */}
+              {/* Cloud-mode consent — required per-image before Analyze enables.
+                  Red palette + heavier border encode "irreversible network action"
+                  so a clinician under time pressure can't mistake this for a tip. */}
               {imagingMode === 'cloud' && (
                 <div style={{
-                  marginTop:14,padding:'12px 14px',borderRadius:8,
-                  background:'#1F1A0D',border:'1px solid #7F4F1D',
+                  marginTop:14,padding:'14px 16px',borderRadius:10,
+                  background:'#1F0A0A',border:'2px solid #DC2626',
+                  boxShadow:'0 0 0 1px rgba(220,38,38,.18), 0 4px 16px rgba(0,0,0,.3)',
                 }}>
-                  <div style={{fontSize:12,fontWeight:700,color:'#FCD9A5',marginBottom:6,letterSpacing:0.5,textTransform:'uppercase'}}>
-                    ⚠ {t('imgCloudConsentTitle')}
+                  <div style={{display:'flex',alignItems:'flex-start',gap:10,marginBottom:8}}>
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FCA5A5" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink:0,marginTop:1}} aria-hidden="true">
+                      <path d="M10.3 3.5 1.7 18a2 2 0 0 0 1.7 3h17.2a2 2 0 0 0 1.7-3L13.7 3.5a2 2 0 0 0-3.4 0z"/>
+                      <path d="M12 9v4"/>
+                      <circle cx="12" cy="17" r=".9" fill="#FCA5A5"/>
+                    </svg>
+                    <div style={{fontSize:13,fontWeight:800,color:'#FCA5A5',letterSpacing:0.6,textTransform:'uppercase',lineHeight:1.3}}>
+                      {t('imgCloudConsentTitle')}
+                    </div>
                   </div>
-                  <div style={{fontSize:13,color:'#E2E8F0',lineHeight:1.55,marginBottom:10}}>
+                  <div style={{fontSize:13.5,color:'#F1F5F9',lineHeight:1.6,marginBottom:12,whiteSpace:'pre-line'}}>
                     {t('imgCloudConsentBody')}
                   </div>
-                  <label style={{display:'flex',gap:8,alignItems:'flex-start',cursor:'pointer',color:'#FCD9A5',fontSize:13,lineHeight:1.5}}>
-                    <input type="checkbox" checked={cloudConsent} onChange={(e)=>setCloudConsent(e.target.checked)} style={{marginTop:3,flexShrink:0}}/>
+                  <label style={{
+                    display:'flex',gap:10,alignItems:'flex-start',cursor:'pointer',
+                    color:'#FECACA',fontSize:13.5,lineHeight:1.5,fontWeight:600,
+                    padding:'8px 10px',borderRadius:6,
+                    background: cloudConsent ? 'rgba(220,38,38,.12)' : 'transparent',
+                    border:'1px solid '+(cloudConsent ? '#DC2626' : '#7F1D1D'),
+                    transition:'background .15s ease',
+                  }}>
+                    <input type="checkbox" checked={cloudConsent} onChange={(e)=>setCloudConsent(e.target.checked)} style={{marginTop:3,flexShrink:0,accentColor:'#DC2626'}}/>
                     <span>{t('imgCloudConsentCheck')}</span>
                   </label>
                 </div>
@@ -2328,20 +2425,38 @@ function ImagingTab({imagingFile, setImagingFile,
                     </span>
                   </div>
 
-                  <div className="clinical-num" style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))',gap:12,direction:'ltr'}}>
-                    <div style={{padding:'10px 12px',background:'#060D14',borderRadius:8,border:'1px solid #1A3050'}}>
-                      <div style={{fontSize:11,color:'#64748B',marginBottom:4,textTransform:'uppercase',letterSpacing:0.5}}>{t('imgRblEstimate')}</div>
-                      <div style={{fontSize:24,color:'#E2E8F0',fontWeight:700}}>{imagingResult.rblEstimate}<span style={{fontSize:14,color:'#64748B'}}>%</span></div>
-                    </div>
-                    <div style={{padding:'10px 12px',background:'#060D14',borderRadius:8,border:'1px solid #1A3050'}}>
-                      <div style={{fontSize:11,color:'#64748B',marginBottom:4,textTransform:'uppercase',letterSpacing:0.5}}>{t('imgWorstSiteRbl')}</div>
-                      <div style={{fontSize:24,color:'#E2E8F0',fontWeight:700}}>{imagingResult.worstSiteRbl}<span style={{fontSize:14,color:'#64748B'}}>%</span></div>
-                    </div>
-                    <div style={{padding:'10px 12px',background:'#060D14',borderRadius:8,border:'1px solid #1A3050'}}>
-                      <div style={{fontSize:11,color:'#64748B',marginBottom:4,textTransform:'uppercase',letterSpacing:0.5}}>{t('imgVblEstimate')}</div>
-                      <div style={{fontSize:24,color:'#E2E8F0',fontWeight:700}}>{imagingResult.vblEstimate}<span style={{fontSize:14,color:'#64748B'}}>mm</span></div>
-                    </div>
-                  </div>
+                  {(() => {
+                    /* Bucket pill — qualitative AAP-keyed assessment.
+                       Honest scope: no mm/% precision, just a category.
+                       Color encodes severity: none=teal, mild=cyan,
+                       moderate=amber, severe=red. */
+                    const b = imagingResult.rblBucket;
+                    const palette = {
+                      none:     {bg:'#0D2D2D',fg:'#5EEAD4',border:'#1D7F7F',label:t('imgBucketNone')},
+                      mild:     {bg:'#0D1F2D',fg:'#7DD3FC',border:'#1D5F7F',label:t('imgBucketMild')},
+                      moderate: {bg:'#2D1F0D',fg:'#FCD34D',border:'#7F5F1D',label:t('imgBucketModerate')},
+                      severe:   {bg:'#2D0D0D',fg:'#FCA5A5',border:'#7F1D1D',label:t('imgBucketSevere')},
+                    };
+                    const p = b && palette[b];
+                    return (
+                      <div style={{padding:'14px 16px',background:'#060D14',borderRadius:8,border:'1px solid #1A3050'}}>
+                        <div style={{fontSize:11,color:'#7B8AA4',marginBottom:8,textTransform:'uppercase',letterSpacing:0.5,fontWeight:600}}>
+                          {t('imgBucketLabel')}
+                        </div>
+                        {p ? (
+                          <div style={{display:'flex',alignItems:'center',gap:10,flexWrap:'wrap'}}>
+                            <span style={{
+                              fontSize:14,fontWeight:700,padding:'6px 14px',borderRadius:999,
+                              background:p.bg,color:p.fg,border:`1px solid ${p.border}`,letterSpacing:0.3,
+                            }}>{p.label}</span>
+                            <span style={{fontSize:12,color:'#7B8AA4',fontStyle:'italic'}}>{t('imgBucketHelp')}</span>
+                          </div>
+                        ) : (
+                          <div style={{fontSize:13,color:'#94A3B8',fontStyle:'italic'}}>{t('imgBucketUnavailable')}</div>
+                        )}
+                      </div>
+                    );
+                  })()}
 
                   {imagingResult.source === 'cloud' && (
                     <div style={{marginTop:14,display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))',gap:10}}>
@@ -2351,9 +2466,9 @@ function ImagingTab({imagingFile, setImagingFile,
                         {key:'calculus',   label:t('imgCalculusTitle'),   items:imagingResult.calculus   || []},
                       ].map(({key,label,items}) => (
                         <div key={key} style={{padding:'10px 12px',background:'#060D14',borderRadius:8,border:'1px solid #1A3050'}}>
-                          <div style={{fontSize:11,color:'#64748B',marginBottom:6,textTransform:'uppercase',letterSpacing:0.5,fontWeight:600}}>{label}</div>
+                          <div style={{fontSize:11,color:'#7B8AA4',marginBottom:6,textTransform:'uppercase',letterSpacing:0.5,fontWeight:600}}>{label}</div>
                           {items.length === 0 ? (
-                            <div style={{fontSize:13,color:'#475569',fontStyle:'italic'}}>—</div>
+                            <div style={{fontSize:13,color:'#7B8AA4',fontStyle:'italic'}}>—</div>
                           ) : (
                             <ul style={{margin:0,padding:'0 0 0 18px',color:'#E2E8F0',fontSize:13,lineHeight:1.55}}>
                               {items.map((s,i)=>(<li key={i}>{s}</li>))}
@@ -2366,12 +2481,12 @@ function ImagingTab({imagingFile, setImagingFile,
 
                   {imagingResult.source === 'cloud' && imagingResult.notes && (
                     <div style={{marginTop:12,padding:'10px 14px',background:'#060D14',borderRadius:8,border:'1px solid #1A3050'}}>
-                      <div style={{fontSize:11,color:'#64748B',marginBottom:4,textTransform:'uppercase',letterSpacing:0.5,fontWeight:600}}>{t('imgCloudNotes')}</div>
+                      <div style={{fontSize:11,color:'#7B8AA4',marginBottom:4,textTransform:'uppercase',letterSpacing:0.5,fontWeight:600}}>{t('imgCloudNotes')}</div>
                       <div style={{fontSize:13,color:'#E2E8F0',lineHeight:1.55}}>{imagingResult.notes}</div>
                     </div>
                   )}
 
-                  <div style={{marginTop:10,fontSize:11,color:'#64748B',fontStyle:'italic'}}>
+                  <div style={{marginTop:10,fontSize:11,color:'#7B8AA4',fontStyle:'italic'}}>
                     {imagingResult.source !== 'cloud' && <>{t('imgCariesNote')} · </>}{t('imgDisclaimer')}
                   </div>
 
@@ -2785,7 +2900,7 @@ function PerioChartTab({chart, setChart, t}){
         <span className="chart-pill"><span className="label">{t('chartFMPS')}</span><span className="val">{stats.fmps}%</span></span>
         <span className="chart-pill"><span className="label">{t('chartMaxPD')}</span><span className="val">{stats.maxPD || '—'}{stats.maxPD?' mm':''}</span></span>
         <span className="chart-pill"><span className="label">{t('chartWorstCAL')}</span><span className="val">{stats.worstCAL || '—'}{stats.worstCAL?' mm':''}</span></span>
-        <span style={{fontSize:'.7rem',color:'#64748B',marginInlineStart:8}}>· {stats.measured} sites</span>
+        <span style={{fontSize:'.7rem',color:'#7B8AA4',marginInlineStart:8}}>· {stats.measured} sites</span>
         <button onClick={handleReset} style={{
           marginInlineStart:'auto',background:'#0F2035',color:'#94A3B8',
           border:'1px solid #1A3050',borderRadius:6,padding:'5px 12px',
@@ -2811,12 +2926,12 @@ function PerioChartTab({chart, setChart, t}){
       <div className="perio-chart-wrap" style={{overflowX:'auto',padding:'10px 0',background:'#080F18',borderRadius:10,border:'1px solid #0F2035'}}>
         <div className="perio-chart" role="grid" aria-label={t('chartGridLabel')}>
           {showArchLabel && (
-            <div style={{fontSize:'.62rem',color:'#475569',letterSpacing:'.1em',textTransform:'uppercase',
+            <div style={{fontSize:'.62rem',color:'#7B8AA4',letterSpacing:'.1em',textTransform:'uppercase',
               textAlign:'center',marginBottom:2,fontFamily:'Inter,sans-serif'}}>{t('chartMaxilla')}</div>
           )}
           {renderArches()}
           {showMandLabel && (
-            <div style={{fontSize:'.62rem',color:'#475569',letterSpacing:'.1em',textTransform:'uppercase',
+            <div style={{fontSize:'.62rem',color:'#7B8AA4',letterSpacing:'.1em',textTransform:'uppercase',
               textAlign:'center',marginTop:2,fontFamily:'Inter,sans-serif'}}>{t('chartMandible')}</div>
           )}
         </div>
@@ -2839,7 +2954,7 @@ function PerioChartTab({chart, setChart, t}){
         <div style={{display:'flex',alignItems:'center',gap:5}}>
           <span className="site-dot plaque"/>{t('chartLegendPlaque')}
         </div>
-        <div className="bidi-isolate" style={{color:'#475569',fontSize:'.68rem',marginInlineStart:'auto',fontFamily:'Inter,sans-serif'}}>
+        <div className="bidi-isolate" style={{color:'#7B8AA4',fontSize:'.68rem',marginInlineStart:'auto',fontFamily:'Inter,sans-serif'}}>
           {t('chartHotkeys')}
         </div>
       </div>
@@ -2860,7 +2975,7 @@ function DiagTab({dx,caseType,txStatus,icd,chartFilled,chartDerived,risk,st,age,
     return (
       <div className="fade-in tab-content" style={{padding:'20px 16px',maxWidth:960,margin:'0 auto'}}>
         <div style={{background:'#0F2035',borderRadius:14,padding:'24px 22px',marginBottom:18,textAlign:'center'}}>
-          <div style={{fontSize:'.66rem',fontWeight:700,color:'#64748B',letterSpacing:'.12em',marginBottom:8}}>CASE TYPE — Tonetti 2018</div>
+          <div style={{fontSize:'.66rem',fontWeight:700,color:'#7B8AA4',letterSpacing:'.12em',marginBottom:8}}>CASE TYPE — Tonetti 2018</div>
           <div style={{fontSize:'1.4rem',fontWeight:800,color:ctColor,marginBottom:6}}>{ctMap[caseType]||t('undef')}</div>
           <div style={{fontSize:'.78rem',color:'#94A3B8',fontFamily:'Inter,sans-serif',direction:'ltr'}}>ICD-10: {icd||'—'}</div>
         </div>
@@ -2875,7 +2990,7 @@ function DiagTab({dx,caseType,txStatus,icd,chartFilled,chartDerived,risk,st,age,
       </div>
     );
   }
-  if(!dx) return <div style={{padding:48,textAlign:'center',color:'#64748B'}}>{t('noData')}</div>;
+  if(!dx) return <div style={{padding:48,textAlign:'center',color:'#7B8AA4'}}>{t('noData')}</div>;
   const extLabel=t(dx.extent)||t('undef');
   const txLabel=txStatus==='stable'?t('txStable'):txStatus==='remission'?t('txRemission'):txStatus==='unstable'?t('txUnstable'):txStatus==='therapy'?t('txTherapy'):t('txUntreated');
   const txColor=txStatus==='stable'?'#22C55E':txStatus==='remission'?'#F59E0B':txStatus==='unstable'?'#EF4444':'#94A3B8';
@@ -2886,12 +3001,12 @@ function DiagTab({dx,caseType,txStatus,icd,chartFilled,chartDerived,risk,st,age,
         <GradeBadge grade={dx.grade}/>
         <div className="badge-ext" style={{background:'#0C1A28',border:'1px solid #1A3050',borderRadius:16,
           padding:'14px 28px',textAlign:'center',minWidth:110}}>
-          <div style={{fontSize:'.6rem',fontWeight:600,letterSpacing:'.1em',color:'#64748B',marginBottom:4}}>{t('extLabel').toUpperCase()}</div>
+          <div style={{fontSize:'.6rem',fontWeight:600,letterSpacing:'.1em',color:'#7B8AA4',marginBottom:4}}>{t('extLabel').toUpperCase()}</div>
           <div style={{fontWeight:700,fontSize:'1.1rem',color:'#E2E8F0'}}>{extLabel}</div>
         </div>
         <div className="badge-status" style={{background:'#0C1A28',border:`1px solid ${txColor}88`,borderRadius:16,
           padding:'14px 24px',textAlign:'center',minWidth:130}}>
-          <div style={{fontSize:'.6rem',fontWeight:600,letterSpacing:'.1em',color:'#64748B',marginBottom:4}}>STATUS</div>
+          <div style={{fontSize:'.6rem',fontWeight:600,letterSpacing:'.1em',color:'#7B8AA4',marginBottom:4}}>STATUS</div>
           <div style={{fontWeight:700,fontSize:'.95rem',color:txColor}}>{txLabel}</div>
         </div>
       </div>
@@ -2902,7 +3017,7 @@ function DiagTab({dx,caseType,txStatus,icd,chartFilled,chartDerived,risk,st,age,
         direction:'ltr',fontFamily:'Inter,sans-serif',fontSize:'.98rem',fontWeight:600,
         color:'#5EEAD4',textAlign:'center',letterSpacing:'.01em'}}>
         Periodontitis Stage {dx.stage} Grade {dx.grade} — {extLabel}
-        <span style={{marginInlineStart:12,marginInlineEnd:12,color:'#64748B',fontWeight:400,fontSize:'.78rem'}}>·</span>
+        <span style={{marginInlineStart:12,marginInlineEnd:12,color:'#7B8AA4',fontWeight:400,fontSize:'.78rem'}}>·</span>
         <span style={{color:'#94A3B8',fontWeight:600,fontSize:'.85rem'}}>ICD: <span style={{color:'#5EEAD4'}}>{icd||'—'}</span></span>
         {dx.gradeScore!==null&&<span style={{marginInlineStart:12,marginInlineEnd:12,color:'#94A3B8',fontWeight:400,fontSize:'.8rem',fontVariantNumeric:'tabular-nums'}}>
           (Grade Score: {dx.gradeScore.toFixed(3)})
@@ -2924,7 +3039,7 @@ function DiagTab({dx,caseType,txStatus,icd,chartFilled,chartDerived,risk,st,age,
           })()}
           <span className="chart-pill"><span className="label">{t('chartFMPS')}</span><span className="val">{chartDerived.fmps}%</span></span>
           <span className="chart-pill"><span className="label">PD ≥5mm</span><span className="val">{chartDerived.sites5plus}</span></span>
-          <span style={{fontSize:'.68rem',color:'#475569',alignSelf:'center'}}>· {chartDerived.measured} sites · {chartDerived.presentTeeth} teeth</span>
+          <span style={{fontSize:'.68rem',color:'#7B8AA4',alignSelf:'center'}}>· {chartDerived.measured} sites · {chartDerived.presentTeeth} teeth</span>
         </div>
       )}
 
@@ -2941,7 +3056,7 @@ function DiagTab({dx,caseType,txStatus,icd,chartFilled,chartDerived,risk,st,age,
           <div style={{fontSize:'.96rem',fontWeight:700,color:'#FCD34D',fontFamily:'Inter,sans-serif',direction:'ltr'}}>
             {t(dx.stageIVSubtype==='IVA'?'stageIVA':dx.stageIVSubtype==='IVB'?'stageIVB':'stageIVC')}
           </div>
-          <div style={{fontSize:'.72rem',color:'#64748B',marginTop:4,fontFamily:'Inter'}}>
+          <div style={{fontSize:'.72rem',color:'#7B8AA4',marginTop:4,fontFamily:'Inter'}}>
             Herrera et al. 2022, J Clin Periodontol — PMID 35569036
           </div>
         </Card>
@@ -2972,11 +3087,11 @@ function DiagTab({dx,caseType,txStatus,icd,chartFilled,chartDerived,risk,st,age,
                 </div>
                 <div style={{flex:1}}>
                   <div style={{fontSize:'.86rem',color:'#E2E8F0'}}>{lang==='he'?s.he:s.en}</div>
-                  <div style={{fontSize:'.68rem',color:'#64748B',marginTop:3,fontFamily:'Inter',direction:'ltr'}}>{s.dur}</div>
+                  <div style={{fontSize:'.68rem',color:'#7B8AA4',marginTop:3,fontFamily:'Inter',direction:'ltr'}}>{s.dur}</div>
                 </div>
               </div>
             ))}
-            <div style={{fontSize:'.66rem',color:'#475569',marginTop:10,fontFamily:'Inter',direction:'ltr'}}>
+            <div style={{fontSize:'.66rem',color:'#7B8AA4',marginTop:10,fontFamily:'Inter',direction:'ltr'}}>
               Sanz/Herrera EFP S3 — PMID 32383274 · Herrera Stage IV — PMID 35569036
             </div>
           </Card>
@@ -3015,7 +3130,7 @@ function DiagTab({dx,caseType,txStatus,icd,chartFilled,chartDerived,risk,st,age,
                 {lang==='he'?pra.recallHe:pra.recallEn}
               </span>
             </div>
-            <div style={{fontSize:'.66rem',color:'#475569',marginTop:8,fontFamily:'Inter',direction:'ltr'}}>
+            <div style={{fontSize:'.66rem',color:'#7B8AA4',marginTop:8,fontFamily:'Inter',direction:'ltr'}}>
               Lang & Tonetti 2003 — PMID 15643744 · {pra.highN} high-risk factor{pra.highN!==1?'s':''}
             </div>
           </Card>
@@ -3050,9 +3165,9 @@ function IDRATab({scores,risk,periDx,t}){
           <table style={{width:'100%',borderCollapse:'collapse'}}>
             <thead>
               <tr>
-                <th style={{textAlign:'start',fontSize:'.68rem',color:'#64748B',paddingBottom:8,fontWeight:600}}>{t('idraVec')}</th>
-                <th style={{textAlign:'center',fontSize:'.68rem',color:'#64748B',paddingBottom:8,fontWeight:600,width:70}}>{t('idraScoreH')}</th>
-                <th style={{textAlign:'center',fontSize:'.68rem',color:'#64748B',paddingBottom:8,fontWeight:600,width:52}}>{t('idraZone')}</th>
+                <th style={{textAlign:'start',fontSize:'.68rem',color:'#7B8AA4',paddingBottom:8,fontWeight:600}}>{t('idraVec')}</th>
+                <th style={{textAlign:'center',fontSize:'.68rem',color:'#7B8AA4',paddingBottom:8,fontWeight:600,width:70}}>{t('idraScoreH')}</th>
+                <th style={{textAlign:'center',fontSize:'.68rem',color:'#7B8AA4',paddingBottom:8,fontWeight:600,width:52}}>{t('idraZone')}</th>
               </tr>
             </thead>
             <tbody>
@@ -3084,7 +3199,7 @@ function IDRATab({scores,risk,periDx,t}){
       <Card style={{marginBottom:14}}>
         <div style={{display:'flex',alignItems:'center',gap:18,flexWrap:'wrap'}}>
           <div>
-            <div style={{fontSize:'.68rem',color:'#64748B',marginBottom:8,fontWeight:600,
+            <div style={{fontSize:'.68rem',color:'#7B8AA4',marginBottom:8,fontWeight:600,
               letterSpacing:'.08em',textTransform:'uppercase'}}>{t('idraRiskH')}</div>
             <RiskBadge risk={risk} label={riskLabel}/>
           </div>
@@ -3100,7 +3215,7 @@ function IDRATab({scores,risk,periDx,t}){
         <div style={{display:'flex',alignItems:'center',gap:18,flexWrap:'wrap'}}>
           <div style={{
             background:'#0C1A28',
-            color:periDx?piColor:'#64748B',
+            color:periDx?piColor:'#7B8AA4',
             borderRadius:10,padding:'10px 20px',fontWeight:700,fontSize:'.95rem',
             border:`1px solid ${periDx?piColor+'88':'#1A3050'}`
           }}>
@@ -3110,7 +3225,7 @@ function IDRATab({scores,risk,periDx,t}){
             {piDesc||t('piNotApplicable')}
           </div>
         </div>
-        <div style={{marginTop:10,fontSize:'.7rem',color:'#475569',fontFamily:'Inter'}}>
+        <div style={{marginTop:10,fontSize:'.7rem',color:'#7B8AA4',fontFamily:'Inter'}}>
           Berglundh et al. 2018, J Clin Periodontol — PMID 29926948
         </div>
       </Card>
@@ -3171,7 +3286,7 @@ function OutputTab({dx,risk,periDx,caseType,txStatus,icd,chartFilled,chartDerive
   },[dx,risk,periDx,caseType,txStatus,icd,chartFilled,chartDerived,imagingFilled,imagingDerived,st,lang,age]);
 
   const isPerio = caseType==='periodontitis';
-  if(isPerio && !dx) return <div style={{padding:48,textAlign:'center',color:'#64748B'}}>{t('noData')}</div>;
+  if(isPerio && !dx) return <div style={{padding:48,textAlign:'center',color:'#7B8AA4'}}>{t('noData')}</div>;
 
   const extLabel = dx ? (t(dx.extent)||t('undef')) : '';
   const ctKey = {health:'ctHealth',gingivitis:'ctGingivitis',npd:'ctNPD',endoPerio:'ctEndoPerio',periodontitis:'ctPerio'}[caseType];
@@ -3213,13 +3328,13 @@ function OutputTab({dx,risk,periDx,caseType,txStatus,icd,chartFilled,chartDerive
         </div>
         <div style={{marginTop:12}}>
           <div style={{fontSize:'.66rem',fontWeight:700,letterSpacing:'.08em',
-            textTransform:'uppercase',color:'#64748B',marginBottom:6}}>{t('sptInt')}</div>
+            textTransform:'uppercase',color:'#7B8AA4',marginBottom:6}}>{t('sptInt')}</div>
           <div style={{display:'inline-flex',alignItems:'center',gap:8,
             background:'#0C1A28',border:'1px solid #2DD4BF44',borderRadius:8,
             padding:'6px 14px'}}>
             <span style={{fontSize:'.95rem',fontWeight:700,color:'#5EEAD4',fontFamily:'Inter,sans-serif'}}>{t(sptIntervalKey(risk))}</span>
           </div>
-          <div style={{fontSize:'.68rem',color:'#64748B',marginTop:6}}>{t('sptSrc')}</div>
+          <div style={{fontSize:'.68rem',color:'#7B8AA4',marginTop:6}}>{t('sptSrc')}</div>
         </div>
       </Card>
 
@@ -3305,9 +3420,9 @@ function RefsTab({lang,t}){
                   {lang==='he'?r.usedHe:r.usedEn}
                 </div>
                 {(r.pmid||r.doi) && (
-                  <div style={{fontFamily:'Inter,sans-serif',fontSize:'.72rem',color:'#64748B',direction:'ltr'}}>
+                  <div style={{fontFamily:'Inter,sans-serif',fontSize:'.72rem',color:'#7B8AA4',direction:'ltr'}}>
                     {r.pmid && <span>PMID {r.pmid}</span>}
-                    {r.pmid && r.doi && <span style={{margin:'0 8px',color:'#475569'}}>·</span>}
+                    {r.pmid && r.doi && <span style={{margin:'0 8px',color:'#7B8AA4'}}>·</span>}
                     {r.doi && <span>DOI {r.doi}</span>}
                   </div>
                 )}
@@ -3361,7 +3476,7 @@ function Navbar({t,lang,onToggle}){
           <IconGlobe/> {t('btnLang')}
         </button>
         <button onClick={()=>window.print()} style={{
-          background:'none',color:'#64748B',border:'none',cursor:'pointer',padding:4,display:'flex'
+          background:'none',color:'#7B8AA4',border:'none',cursor:'pointer',padding:4,display:'flex'
         }}>
           <IconPrint/>
         </button>
@@ -3419,13 +3534,16 @@ function App(){
   const [txStatusOverride,setTxStatusOverride]=useState('auto');
   /* 6-PPC periodontal chart */
   const [chart,setChart]=useState(()=>createBlankChart());
-  /* Radiographic imaging.
+  /* Radiographic imaging — Phase 7C v2 (qualitative-only).
      imagingFile   = { name, type, size, dataUrl, width, height } | null
-     imagingMode   = 'offline' | 'cloud'  (cloud arrives Phase 7C)
-     imagingResult = { rblEstimate, worstSiteRbl, vblEstimate, perToothMedian,
-                       confidence:'low'|'med'|'high', source:'onnx'|'demo'|'cloud',
-                       caries?:[], periapical?:[], calculus?:[] } | null
-     imagingApplied = boolean — true once user clicked Apply, used to suppress double-apply */
+     imagingMode   = 'offline' | 'cloud'
+     imagingResult = { rblBucket:'none'|'mild'|'moderate'|'severe'|null,
+                       confidence:'low'|'med'|'high',
+                       source:'onnx'|'demo'|'cloud',
+                       caries?:[], periapical?:[], calculus?:[], notes?:'' } | null
+     imagingApplied = boolean — true once user clicked "Include in letter".
+                      v2: gate ONLY controls whether qualitative AI flags
+                      reach the letter; mm/% are clinician-entered. */
   const [imagingFile,setImagingFile]=useState(null);
   const [imagingMode,setImagingMode]=useState('offline');
   const [imagingResult,setImagingResult]=useState(null);
@@ -3464,10 +3582,13 @@ function App(){
 
   const t=useCallback(k=>S[lang][k]??k,[lang]);
 
-  /* Toggle body class so CSS can hide the author signature on the Output tab. */
+  /* Toggle body class so CSS can scope per-tab styles. Watermark only renders
+     when ?author=1 is present (clinician-facing default = no author chrome). */
   React.useEffect(()=>{
     const TAB_NAMES=['input','imaging','chart','dx','idra','output','refs'];
-    document.body.className = `tab-${TAB_NAMES[activeTab]||'input'}`;
+    const showAuthor = typeof window !== 'undefined'
+      && new URLSearchParams(window.location.search).get('author') === '1';
+    document.body.className = `tab-${TAB_NAMES[activeTab]||'input'}${showAuthor ? ' show-author' : ''}`;
   },[activeTab]);
 
   const toggleLang=()=>{
@@ -3499,18 +3620,15 @@ function App(){
   const imagingFilled = imagingApplied && imagingDerived && !imagingDerived.isDemo;
 
   const handleImagingApply=useCallback((result)=>{
-    /* Apply is the explicit gesture that flips imagingFilled and writes back
-       to rblPercent / vbl. Stays a click-through — never auto-write. */
+    /* v2: Apply only flips imagingApplied so the qualitative AI-flags block
+       reaches the letter. We never auto-write mm/% to the engine — VLMs
+       are unreliable at quantitative measurement (Liu 2024) and the
+       clinician enters those values themselves by reading the radiograph. */
     if(!result) return;
-    if(Number.isFinite(result.rblEstimate)) setRblPercent(String(result.rblEstimate));
-    if(Number.isFinite(result.vblEstimate) && result.vblEstimate > 0) setVbl(String(result.vblEstimate));
   },[]);
-  const handleImagingApplyFromInputPill=useCallback((result)=>{
-    /* Pill on InputTab also writes to imagingApplied so the gate flips and the
-       letter picks up the AI-assisted block. */
-    handleImagingApply(result);
-    setImagingApplied(true);
-  },[handleImagingApply]);
+  const handleImagingApplyFromInputPill=useCallback(()=>{
+    /* Kept for prop-shape compatibility; v2 pill is informational only. */
+  },[]);
 
   const dx=useMemo(()=>computeDiagnosis({
     calWorst:    chartFilled ? String(chartDerived.calWorst)     : calWorst,
